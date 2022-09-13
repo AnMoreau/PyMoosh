@@ -1,10 +1,15 @@
 # PyMoosh
 
+
+
 PyMoosh is the python version of Moosh, an Octave/Matlab code meant as a swiss knife for the study of multilayered structures from an optical point of view.
 
 Not all the features of Moosh have yet been transferred into PyMoosh, but this work is in progress. Plus, given the really nice feedbacks I had recently on PyMoosh and the plans ahead, you can count on the fact that PyMoosh is high on my priority list.
 
 I've recently discovered the Jupyter Notebooks, and I'll use them extensively to illustrate how Moosh works and how much physics/optics can be made with such a tool. I have really discovered over the years how far this may go, and I am pretty sure you will be surprised too. This is the kind of codes we use to do our research on an everyday basis.
+
+
+## References
 
 If you use PyMoosh and if this is relevant, please cite the [paper associated to Moosh](https://openresearchsoftware.metajnl.com/articles/10.5334/jors.100/)
 
@@ -19,3 +24,16 @@ If you use PyMoosh and if this is relevant, please cite the [paper associated to
   publisher={Ubiquity Press}
 }
 ```
+
+And with PyMoosh, we've done cool things, like [comparing evolutionary algorithms and real evolution for the first time in history](https://www.nature.com/articles/s41598-020-68719-3).
+
+## Contributors
+
+Here is a list of contributors to PyMoosh (one way or another) so far:
+
+* Pauline Bennet
+* Peter Wiecha
+* Demetrio Macias
+* Anorld Capo-Chichi
+
+and the contributors to the original Moosh program should not be forgotten : Josselin Defrance, Rémi Pollès, Fabien Krayzel, Paul-Henri Tichit, Jessica Benedicto mainly. Special thanks to Gérard Granet and Jean-Pierre Plumey.
