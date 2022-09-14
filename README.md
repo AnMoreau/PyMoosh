@@ -10,7 +10,7 @@ I've recently discovered the Jupyter Notebooks, and I'll use them extensively to
 
 ## For specialists
 
-PyMoosh is based on a scattering matrix formalism to solve Maxwell's equations in a multilayered structure. This makes PyMoosh unconditionally stable, allowing to explore even advanced properties of such multilayers, find poles and zeros of the scattering matrix (and thus guided modes)
+PyMoosh is based on a scattering matrix formalism to solve Maxwell's equations in a multilayered structure. This makes PyMoosh unconditionally stable, allowing to explore even advanced properties of such multilayers, find poles and zeros of the scattering matrix (and thus guided modes), and many other things...
 
 
 ## References

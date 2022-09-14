@@ -164,6 +164,8 @@ def coefficient(struct,wavelength,incidence,polarization):
         t (complex): transmission coefficient
         R (float): Reflectance (energy reflection)
         T (float): Transmittance (energie transmission)
+
+
     R and T are the energy coefficients (real quantities)
 
     .. warning: The transmission coefficients have a meaning only if the lower medium
