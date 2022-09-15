@@ -6,7 +6,7 @@ setup(
     version='1.0',
     license='TBD',
     author="Antoine Moreau",
-    author_email='antoine.moreau@univ-bpclermont.fr',
+    author_email='antoine.moreau@uca.fr',
     packages=find_packages('code'),
     package_dir={'': 'code'},
     url='https://github.com/AnMoreau/PyMoosh',
