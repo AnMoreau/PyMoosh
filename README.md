@@ -15,7 +15,7 @@ PyMoosh is based on a scattering matrix formalism to solve Maxwell's equations i
 
 ## References
 
-If you use PyMoosh and if this is relevant, please cite the [paper associated to Moosh](https://openresearchsoftware.metajnl.com/articles/10.5334/jors.100/)
+If you use PyMoosh and if this is relevant, please cite the [paper associated with Moosh](https://openresearchsoftware.metajnl.com/articles/10.5334/jors.100/)
 
 ```
 @article{defrance2016moosh,
@@ -35,7 +35,7 @@ Even if PyMoosh is quite simple, this is a research-grade program. We actually d
 
 Here is a list of contributors to PyMoosh (one way or another) so far:
 
-* Pauline Bennet
+* Pauline Bennet (@Ellawin)
 * Peter Wiecha
 * Demetrio Macias
 * Anorld Capo-Chichi
