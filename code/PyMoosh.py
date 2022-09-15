@@ -556,3 +556,26 @@ def Spectrum(structure,incidence,polarization,wl_min,wl_max,n_points):
         r[k],t[k],R[k],T[k]=coefficient(structure,wl[k],theta,polarization)
 
     return wl,r,t,R,T
+
+
+def Visu_struct(struct,wavelength):
+    Epsilon,Mu=struct.polarizability(wavelength)
+    thickness=np.array(struct.thickness)
+    Type=struct.layer_type
+    idx=0
+    h=np.zeros(thickness.size)
+    for k in thickness:
+        h[idx]=np.sum(thickness[:idx])
+        idx+=1
+    N=int(sum(thickness))
+    Nb=10000
+    Eps = abs(Epsilon)
+    coef=1/max(Eps[Type])
+    M=np.zeros((N,Nb))
+    M[0:int(thickness[1]),:]=1-Eps[Type[1]]*coef
+    z=int(thickness[1])
+    for j in np.arange(2,thickness.size):
+        M[z+1:z+int(thickness[j]),:]=1-Eps[Type[j]]*coef
+        z=z+int(thickness[j])
+    
+    return M 
