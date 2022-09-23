@@ -8,6 +8,14 @@ Not all the features of Moosh have yet been transferred into PyMoosh, but this w
 
 I've recently discovered the Jupyter Notebooks, and I'll use them extensively to illustrate how Moosh works and how much physics/optics can be made with such a tool. I have really discovered over the years how far this may go, and I am pretty sure you will be surprised too. This is the kind of codes we use to do our research on an everyday basis.
 
+## Installation
+
+You can type
+
+``` pip install PyMoosh ```
+
+it should work !
+
 ## For specialists
 
 PyMoosh is based on a scattering matrix formalism to solve Maxwell's equations in a multilayered structure. This makes PyMoosh unconditionally stable, allowing to explore even advanced properties of such multilayers, find poles and zeros of the scattering matrix (and thus guided modes), and many other things...
