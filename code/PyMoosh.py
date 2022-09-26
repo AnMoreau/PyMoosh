@@ -50,7 +50,25 @@ class Structure:
     """
 
     def __init__(self, materials, layer_type, thickness):
-        self.materials = materials
+
+        materials_final=list()
+        print("List of materials:")
+        for mat in materials:
+            if isinstance(mat,float):
+                new_mat=MaterialFactory(MaterialEnum.CUSTOM)(epsilon=mat,mu=1)
+                materials_final.append(new_mat)
+                print("Custom:",mat)
+            if isinstance(mat,str):
+                #TODO : check the material exists, otherwise
+                print(mat.upper())
+                new_mat=eval('MaterialFactory(MaterialEnum.'+mat.upper()+')')
+                materials_final.append(new_mat)
+            # TODO : If it's a function, assume it's the permittivity, define a custom, dispersive, materials
+            if isinstance(mat,list):
+                materials_final.append(MaterialFactory(MaterialEnum.CUSTOM)(epsilon=mat[0],mu=mat[1]))
+                print("Custom:",mat)
+
+        self.materials = materials_final
         self.layer_type = layer_type
         self.thickness = thickness
 
@@ -69,7 +87,7 @@ class Structure:
         for k, material in enumerate(self.materials):
             # Populate epsilon and mu arrays from the material.
             epsilon[k] = material.get_permittivity(wavelength=wavelength)
-            mu[k] = material.get_permeability()
+            mu[k] = material.get_permeability(wavelength=wavelength)
 
         return epsilon, mu
 

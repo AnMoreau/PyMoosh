@@ -20,7 +20,7 @@ class CustomMaterial:
     def get_permittivity(self, **kwargs):
         return self.epsilon
 
-    def get_permeability(self):
+    def get_permeability(self, **kwargs):
         return self.mu
 
 
@@ -50,7 +50,8 @@ class NonConductingMaterial:
                                  zip(permittivity_list, permittivity_cmplx)]
 
         return np.interp(wavelength, wavelength_list, permittivity_list)
-    def get_permeability(self):
+
+    def get_permeability(self,**kwargs) -> float:
         return 1.0
 
 class ConductingMaterial:
