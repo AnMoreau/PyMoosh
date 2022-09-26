@@ -5,3 +5,5 @@
 exclude
 code/__pycache__
 notebooks/.ipynb_checkpoints
+code/*.egg-info
+dist
