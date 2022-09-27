@@ -2,6 +2,8 @@ import numpy as np
 from materials import *
 from math import *
 
+import copy
+
 
 class Structure:
     """Each instance of Structure describes a multilayer completely.
@@ -193,7 +195,6 @@ def coefficient(struct, wavelength, incidence, polarization):
     .. warning: The transmission coefficients have a meaning only if the lower medium
     is lossless, or they have no true meaning.
     """
-    import copy
     # In order to get a phase that corresponds to the expected reflected coefficient,
     # we make the height of the upper (lossless) medium vanish. It changes only the
     # phase of the reflection coefficient.
@@ -299,7 +300,6 @@ def absorption(struct, wavelength, incidence, polarization):
     is lossless, or they have no true meaning.
 
     """
-    import copy
     # The medium may be dispersive. The permittivity and permability of each
     # layer has to be computed each time.
     Epsilon, Mu = struct.polarizability(wavelength)
@@ -683,3 +683,85 @@ def Photo(struct,incidence,polarization,wl_min,wl_max,active_layers,number_point
     conversion_efficiency = total_current/total_current_max
 
     return conversion_efficiency,total_current,total_current_max,wavelength_list,photon_density,total_absorbed
+
+def dispersion(struct,alpha,wavelength,polarization):
+
+    Epsilon, Mu = struct.polarizability(wavelength)
+    thickness = copy.deepcopy(struct.thickness)
+    # In order to ensure that the phase reference is at the beginning
+    # of the first layer.
+    thickness[0] = 0
+    Type = struct.layer_type
+    # The boundary conditions will change when the polarization changes.
+    if polarization == 0:
+        f = Mu
+    else:
+        f = Epsilon
+    # Wavevector in vacuum.
+    k0 = 2 * np.pi / wavelength
+    # Number of layers
+    g = len(struct.layer_type)
+    # Wavevector k_x, horizontal
+    #alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k0 * np.sin(incidence)
+    # Computation of the vertical wavevectors k_z
+    gamma = np.sqrt(
+        Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g) * alpha ** 2)
+    # Be cautious if the upper medium is a negative index one.
+    if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
+        gamma[0] = -gamma[0]
+
+    # Changing the determination of the square root to achieve perfect stability
+    if g > 2:
+        gamma[1:g - 2] = gamma[1:g - 2] * (
+                    1 - 2 * (np.imag(gamma[1:g - 2]) < 0))
+    # Outgoing wave condition for the last medium
+    if np.real(Epsilon[Type[g - 1]]) < 0 and np.real(
+            Mu[Type[g - 1]]) < 0 and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[
+        Type[g - 1]] * k0 ** 2 - alpha ** 2)) != 0:
+        gamma[g - 1] = -np.sqrt(
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
+    else:
+        gamma[g - 1] = np.sqrt(
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
+    T = np.zeros(((2 * g, 2, 2)), dtype=complex)
+
+    # first S matrice
+    T[0] = [[0, 1], [1, 0]]
+    for k in range(g - 1):
+        # Layer scattering matrix
+        t = np.exp((1j) * gamma[k] * thickness[k])
+        T[2 * k + 1] = [[0, t], [t, 0]]
+        # Interface scattering matrix
+        b1 = gamma[k] / f[Type[k]]
+        b2 = gamma[k + 1] / f[Type[k + 1]]
+        T[2 * k + 2] = [[(b1 - b2) / (b1 + b2), 2 * b2 / (b1 + b2)],
+                        [2 * b1 / (b1 + b2), (b2 - b1) / (b1 + b2)]]
+    t = np.exp((1j) * gamma[g - 1] * thickness[g - 1])
+    T[2 * g - 1] = [[0, t], [t, 0]]
+    # Once the scattering matrixes have been prepared, now let us combine them
+    A = np.zeros(((2 * g - 1, 2, 2)), dtype=complex)
+    A[0] = T[0]
+
+    for j in range(len(T) - 2):
+        A[j + 1] = cascade(A[j], T[j + 1])
+    # reflection coefficient of the whole structure
+    r = A[len(A) - 1][0, 0]
+
+    r=sqrt(1/abs(r))
+
+    return r
+
+def Map(struct,wavelength,polarization,real_bounds,imag_bounds,n_real,n_imag):
+
+    k_0=2*np.pi/wavelength
+    X=np.linspace(real_bounds[0],real_bounds[1],n_real)
+    Y=np.linspace(imag_bounds[0],imag_bounds[1],n_imag)
+    xa,xb=np.meshgrid(X*k_0,Y*k_0)
+    M=xa+1j*xb
+
+    T=np.zeros((n_real,n_imag),dtype=complex)
+    for k in range(n_real):
+        for l in range(n_imag):
+            T[k,l]=1/dispersion(struct,M[k,l],wavelength,polarization)
+
+    return X,Y,T,k_0
