@@ -667,19 +667,19 @@ def Photo(struct,incidence,polarization,wl_min,wl_max,active_layers,number_point
     theta=incidence*np.pi/180
     wavelength_list=np.linspace(wl_min,wl_max,number_points)
 
-    max_current_density = np.zeros(number_points, dtype = float)
+    photon_density = np.zeros(number_points, dtype = float)
     total_absorbed = np.zeros(number_points, dtype = float)
     spectrum = np.zeros(number_points, dtype = float)
 
     for k in range(number_points):
         absorb,r,t,R,T = absorption(struct,wavelength_list[k],theta,polarization)
-        max_current_density[k] = solar(wavelength_list[k])
+        photon_density[k] = solar(wavelength_list[k])
         total_absorbed[k] = np.sum(absorb[active_layers])
         spectrum[k] = am1_5(wavelength_list[k])
 
-    current_density = np.multiply(max_current_density,total_absorbed)
-    total_current_max = np.trapz(max_current_density,wavelength_list)*1e3
+    current_density = np.multiply(photon_density,total_absorbed)
+    total_current_max = np.trapz(photon_density,wavelength_list)*1e3
     total_current = np.trapz(current_density,wavelength_list)*1e3
     conversion_efficiency = total_current/total_current_max
 
-    return conversion_efficiency,total_current,total_current_max,wavelength_list,spectrum,total_absorbed
+    return conversion_efficiency,total_current,total_current_max,wavelength_list,photon_density,total_absorbed
