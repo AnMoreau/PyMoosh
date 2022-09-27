@@ -87,7 +87,7 @@ class ConductingMaterial:
         chi_f = -omega_p ** 2 * f0 / (w * (w + 1j * gamma0))
         epsilon = 1 + chi_f + chi_b
         return epsilon
-    def get_permeability(self):
+    def get_permeability(self, **kwargs):
         return 1.0
 
 class BK7(NonConductingMaterial):
