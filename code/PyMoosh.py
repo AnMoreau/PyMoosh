@@ -743,6 +743,7 @@ def dispersion(alpha,struct,wavelength,polarization):
     r = A[len(A) - 1][0, 0]
 
     return 1/np.abs(r)
+#    return 1/r
 
 def Map(struct,wavelength,polarization,real_bounds,imag_bounds,n_real,n_imag):
 
@@ -755,22 +756,25 @@ def Map(struct,wavelength,polarization,real_bounds,imag_bounds,n_real,n_imag):
     T=np.zeros((n_real,n_imag),dtype=complex)
     for k in range(n_real):
         for l in range(n_imag):
-            T[k,l]=dispersion(M[k,l],struct,wavelength,polarization)
+            T[k,l]=1/dispersion(M[k,l],struct,wavelength,polarization)
 
     return X,Y,T,k_0
 
 def Guided_modes(struct,wavelength,polarization,neff_min,neff_max):
 
-    tolerance = 1e-12
-    initial_points = 50
+    tolerance = 1e-10
+    initial_points = 20
     k_0=2*np.pi/wavelength
-    kx_start = np.linspace(neff_min*k_0,neff_max*k_0,initial_points,dtype=complex)
+    neff_start = np.linspace(neff_min,neff_max,initial_points,dtype=complex)
     modes=[]
-    for kx in kx_start:
-        solution = optim.newton(dispersion,kx,args=(struct,wavelength,polarization),tol=tolerance,full_output = True)
+    for neff in neff_start:
+#        solution = optim.newton(dispersion,kx,args=(struct,wavelength,polarization),tol=tolerance,full_output = True)
 #        solution = optim.minimize(dispersion,kx,args=(struct,wavelength,polarization))
+        solution = steepest(neff,tolerance,1000,struct,wavelength,polarization)
         print(solution)
-        if (np.min(modes-solution)>1e-5*k_0):
+        if (len(modes)==0):
+            modes.append(solution)
+        elif (min(abs(modes-solution))>1e-5*k_0):
             modes.append(solution)
 
     return modes
@@ -801,6 +805,7 @@ def muller(starting_points,tol,step_max,struct,wl,pol):
         f[2]=dispersion(new_x,struct,wl,pol)
         print("Nouvelles valeurs:",step,new_x/k_0,f[2])
         step += 1
+
     return x[2]/k_0
 
 def steepest(start,tol,step_max,struct,wl,pol):
@@ -816,10 +821,12 @@ def steepest(start,tol,step_max,struct,wl,pol):
 
         grad = (
         dispersion(z+dz,struct,wl,pol)
-        -dispersion(z-dz,struct,wl,pol)
+        -current
+#        -dispersion(z-dz,struct,wl,pol)
         +1j*(dispersion(z+1j*dz,struct,wl,pol)
-        -dispersion(z-1j*dz,struct,wl,pol))
-        )/(2*dz)
+#        -dispersion(z-1j*dz,struct,wl,pol))
+        -current)
+        )/(dz)
 
         if abs(grad)!=0 :
             z_new = z - delta * grad / abs(grad)
