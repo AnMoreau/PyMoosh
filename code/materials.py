@@ -4,59 +4,56 @@ from scipy.special import wofz
 import json
 from enum import Enum
 
-
-class CustomMaterial:
+class experimental_data:
     """
-    Class for user defined material.
-    """
-
-    def __init__(self, epsilon: complex = 1.0, mu: complex = 1.0,
-                 name: str = "custom") -> None:
-        self.name = name
-        self.epsilon = epsilon
-        self.mu = mu
-        self._custom = True
-
-    def get_permittivity(self, **kwargs):
-        return self.epsilon
-
-    def get_permeability(self, **kwargs):
-        return self.mu
-
-
-class NonConductingMaterial:
-    """
-    Generic class to handle non-conducting material.
+    Class of materials defined by their permittivity measured for
+    well defined values of the wavelength in vacuum. We make asin
+    interpolation to get the most accurate value of the permittivity.
+    Two lists are thus expected:
+    - wavelength_list
+    - permittivities (potentially complex)
     """
 
-    def __init__(self, material_data: dict) -> None:
-        self.name = material_data["name"]
-        self.material_data = material_data
-        self._custom = False
+    def __init__(self, wavelength_list,permittivities):
 
-    def get_permittivity(self, **kwargs) -> float:
-        """
-        Get the permittivity using interpolation
-        """
-        wavelength = kwargs["wavelength"]
-        wavelength_list = self.material_data["wavelengths"]
-        permittivity_list = self.material_data["permittivities_real"]
-        # Get the complex permittivity if needed
-        if "permittivity_imag" in self.material_data.keys():
-            permittivity_cmplx = self.material_data["permittivity_imag"]
-            # Loop over both list to reconstruct complex permittivity
-            permittivity_list = [esp_real + 1j * eps_imag for esp_real,
-                                                              eps_imag in
-                                 zip(permittivity_list, permittivity_cmplx)]
+        self.wavelength_list = np.array(wavelength_list, dtype = float)
+        self.permittivities  = np.array(permittivities, dtype = complex)
 
+    def get_permittivity(self, wavelength):
         return np.interp(wavelength, wavelength_list, permittivity_list)
 
-    def get_permeability(self,**kwargs) -> float:
+    def get_permeability(self, wavelength):
         return 1.0
 
-class ConductingMaterial:
+class simple_non_dispersive:
+
+    def __init__(self,permittivity):
+        self.permittivity = permittivity
+
+    def get_permittivity(self,wavelength):
+        return self.permittivity
+
+    def get_permeability(self,wavelength):
+        return 1.0
+
+
+class magnetic_non_dispersive:
+
+    def __init__(self,permittivity,permeability):
+
+        self.permittivity = permittivity
+        self.permeabilty  = permeability
+
+    def get_permittivity(self,wavelength):
+        return self.permittivity
+
+    def get_permeability(self,wavelength):
+        return self.permeability
+
+
+class BBmodel:
     """
-    Generic class to handle conducting material
+    Material described using a Brendel Bormann model for a metal.
     """
 
     def __init__(self, material_data: dict) -> None:
@@ -89,6 +86,40 @@ class ConductingMaterial:
         return epsilon
     def get_permeability(self, **kwargs):
         return 1.0
+
+
+
+
+class NonConductingMaterial:
+    """
+    Generic class to handle non-conducting material.
+    """
+
+    def __init__(self, material_data: dict) -> None:
+        self.name = material_data["name"]
+        self.material_data = material_data
+        self._custom = False
+
+    def get_permittivity(self, **kwargs) -> float:
+        """
+        Get the permittivity using interpolation
+        """
+        wavelength = kwargs["wavelength"]
+        wavelength_list = self.material_data["wavelengths"]
+        permittivity_list = self.material_data["permittivities_real"]
+        # Get the complex permittivity if needed
+        if "permittivity_imag" in self.material_data.keys():
+            permittivity_cmplx = self.material_data["permittivity_imag"]
+            # Loop over both list to reconstruct complex permittivity
+            permittivity_list = [esp_real + 1j * eps_imag for esp_real,
+                                                              eps_imag in
+                                 zip(permittivity_list, permittivity_cmplx)]
+
+        return np.interp(wavelength, wavelength_list, permittivity_list)
+
+    def get_permeability(self,**kwargs) -> float:
+        return 1.0
+
 
 class BK7(NonConductingMaterial):
     def __init__(self, material_data: dict) -> None:

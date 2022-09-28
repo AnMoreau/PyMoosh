@@ -59,18 +59,21 @@ class Structure:
         print("List of materials:")
         for mat in materials:
             if isinstance(mat,float):
-                new_mat=MaterialFactory(MaterialEnum.CUSTOM)(epsilon=mat,mu=1)
+                new_mat = simple_non_dispersive(mat)
                 materials_final.append(new_mat)
-                print("Custom:",mat)
+                print("Simple non dispersive:",mat)
+            if isinstance(mat,list):
+                newmat = magnetic_non_dispersive(mat[0],mat[1])
+                materials_final.append(new_mat)
+                print("Magnetic non dispersive: epsilon=", mat[0]," mu=",mat[1])
+            if isinstance()
+
             if isinstance(mat,str):
                 #TODO : check the material exists, otherwise
                 print(mat.upper())
                 new_mat=eval('MaterialFactory(MaterialEnum.'+mat.upper()+')')
                 materials_final.append(new_mat)
             # TODO : If it's a function, assume it's the permittivity, define a custom, dispersive, materials
-            if isinstance(mat,list):
-                materials_final.append(MaterialFactory(MaterialEnum.CUSTOM)(epsilon=mat[0],mu=mat[1]))
-                print("Custom:",mat)
 
         self.materials = materials_final
         self.layer_type = layer_type
