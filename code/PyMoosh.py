@@ -1,6 +1,8 @@
 import numpy as np
+import scipy.optimize as optim
 from materials import *
 from math import *
+
 
 import copy
 
@@ -684,7 +686,7 @@ def Photo(struct,incidence,polarization,wl_min,wl_max,active_layers,number_point
 
     return conversion_efficiency,total_current,total_current_max,wavelength_list,photon_density,total_absorbed
 
-def dispersion(struct,alpha,wavelength,polarization):
+def dispersion(alpha,struct,wavelength,polarization):
 
     Epsilon, Mu = struct.polarizability(wavelength)
     thickness = copy.deepcopy(struct.thickness)
@@ -701,28 +703,21 @@ def dispersion(struct,alpha,wavelength,polarization):
     k0 = 2 * np.pi / wavelength
     # Number of layers
     g = len(struct.layer_type)
-    # Wavevector k_x, horizontal
-    #alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k0 * np.sin(incidence)
     # Computation of the vertical wavevectors k_z
     gamma = np.sqrt(
         Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g) * alpha ** 2)
-    # Be cautious if the upper medium is a negative index one.
-    if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
-        gamma[0] = -gamma[0]
 
     # Changing the determination of the square root to achieve perfect stability
     if g > 2:
         gamma[1:g - 2] = gamma[1:g - 2] * (
                     1 - 2 * (np.imag(gamma[1:g - 2]) < 0))
-    # Outgoing wave condition for the last medium
-    if np.real(Epsilon[Type[g - 1]]) < 0 and np.real(
-            Mu[Type[g - 1]]) < 0 and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[
-        Type[g - 1]] * k0 ** 2 - alpha ** 2)) != 0:
-        gamma[g - 1] = -np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
-    else:
-        gamma[g - 1] = np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
+    # Changing the determination of the square root in the external medium
+    # to better see the structure of the complex plane.
+    gamma[0] = gamma[0] * (
+                    1 - 2 * (np.angle(gamma[0])<-np.pi/5)  )
+    gamma[g-1] = gamma[g-1] * (
+                1 - 2 * (np.angle(gamma[g-1])<-np.pi/5)  )
+
     T = np.zeros(((2 * g, 2, 2)), dtype=complex)
 
     # first S matrice
@@ -747,9 +742,7 @@ def dispersion(struct,alpha,wavelength,polarization):
     # reflection coefficient of the whole structure
     r = A[len(A) - 1][0, 0]
 
-    r=sqrt(1/abs(r))
-
-    return r
+    return 1/np.abs(r)
 
 def Map(struct,wavelength,polarization,real_bounds,imag_bounds,n_real,n_imag):
 
@@ -762,6 +755,91 @@ def Map(struct,wavelength,polarization,real_bounds,imag_bounds,n_real,n_imag):
     T=np.zeros((n_real,n_imag),dtype=complex)
     for k in range(n_real):
         for l in range(n_imag):
-            T[k,l]=1/dispersion(struct,M[k,l],wavelength,polarization)
+            T[k,l]=dispersion(M[k,l],struct,wavelength,polarization)
 
     return X,Y,T,k_0
+
+def Guided_modes(struct,wavelength,polarization,neff_min,neff_max):
+
+    tolerance = 1e-12
+    initial_points = 50
+    k_0=2*np.pi/wavelength
+    kx_start = np.linspace(neff_min*k_0,neff_max*k_0,initial_points,dtype=complex)
+    modes=[]
+    for kx in kx_start:
+        solution = optim.newton(dispersion,kx,args=(struct,wavelength,polarization),tol=tolerance,full_output = True)
+#        solution = optim.minimize(dispersion,kx,args=(struct,wavelength,polarization))
+        print(solution)
+        if (np.min(modes-solution)>1e-5*k_0):
+            modes.append(solution)
+
+    return modes
+
+def muller(starting_points,tol,step_max,struct,wl,pol):
+
+    k_0 = 2* np.pi / wl
+    x=np.array(starting_points) * k_0
+    f=np.array([dispersion(x[0],struct,wl,pol),dispersion(x[1],struct,wl,pol),dispersion(x[2],struct,wl,pol)])
+    step=0
+    print(x,"\n step :",step,"\n",f)
+
+    while (f[2]>tol) and (step<step_max):
+        #print(x,"\n step :",step,"\n valeur de f", f[2] )
+        q=(x[2]-x[1])/(x[1]-x[0])
+        A = q * f[2] - q*(1+ q) * f[1] + q * q * f[0]
+        B = (2*q+1) * f[2] - (1+q)**2 * f[1] + q*q * f[0]
+        C = (1+q) * f[2]
+        temp = np.sqrt(B*B-4*A*C)
+        D = max([abs(B+temp),abs(B-temp)])
+        new_x = x[2]-(x[2]-x[1]) * 2 * C / D
+        #new_x= x[2] - 2*C/D
+        x[0]=x[1]
+        x[1]=x[2]
+        x[2]=new_x
+        f[0]=f[1]
+        f[1]=f[2]
+        f[2]=dispersion(new_x,struct,wl,pol)
+        print("Nouvelles valeurs:",step,new_x/k_0,f[2])
+        step += 1
+    return x[2]/k_0
+
+def steepest(start,tol,step_max,struct,wl,pol):
+
+    k_0 = 2 * np.pi / wl
+    z=start*k_0
+    delta = abs(z) * 0.001
+    dz= 0.01 * delta
+    step = 0
+    current = dispersion(z,struct,wl,pol)
+
+    while (current > tol) and (step < step_max):
+
+        grad = (
+        dispersion(z+dz,struct,wl,pol)
+        -dispersion(z-dz,struct,wl,pol)
+        +1j*(dispersion(z+1j*dz,struct,wl,pol)
+        -dispersion(z-1j*dz,struct,wl,pol))
+        )/(2*dz)
+
+        if abs(grad)!=0 :
+            z_new = z - delta * grad / abs(grad)
+        else:
+            print("Time to get out of here ! Gradient is null")
+            step = step_max
+
+        value_new = dispersion(z_new,struct,wl,pol)
+        if (value_new > current):
+            # The path not taken
+            delta = delta / 2.
+            dz = dz / 2.
+        else:
+            current = value_new
+            z = z_new
+            print("Step", step, z,current)
+        step = step + 1
+
+    print("End of the loop")
+    if step == step_max:
+        print("Warning: maximum number of steps reached")
+
+    return z/k_0
