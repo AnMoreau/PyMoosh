@@ -2,8 +2,7 @@ import numpy as np
 import scipy.optimize as optim
 from materials import *
 from math import *
-
-
+import sys
 import copy
 
 
@@ -58,22 +57,45 @@ class Structure:
         materials_final=list()
         print("List of materials:")
         for mat in materials:
+            if issubclass(mat,Material):
+                materials_final.append(mat)
             if isinstance(mat,float):
-                new_mat = simple_non_dispersive(mat)
-                materials_final.append(new_mat)
-                print("Simple non dispersive:",mat)
+                new_mat = Material(mat)
+                materials_final.append(mat)
+                print("Simple, non dispersive:",mat)
             if isinstance(mat,list):
-                newmat = magnetic_non_dispersive(mat[0],mat[1])
+                newmat = MagneticND(mat[0],mat[1])
                 materials_final.append(new_mat)
-                print("Magnetic non dispersive: epsilon=", mat[0]," mu=",mat[1])
-            if isinstance()
-
+                print("Magnetic, non dispersive: epsilon=", mat[0]," mu=",mat[1])
             if isinstance(mat,str):
+                f=open("../data/material_data.json")
+                database = json.load(f)
+                if mat in database:
+                    material_data = database[mat]
+                    model = material_data("model")
+                    match model:
+                    case "ExpData":
+                        wl=material_data("wavelength_list")
+                        epsilon = material_data("permittivities")
+                        new_mat=ExpData(wl,epsilon)
+                    case "BrendelBormann"
+                        f0 = material_data("f0")
+                        Gamma0 = material_data("gamma0")
+                        omega_p = material_data("omega_p")
+                        ff = material_data("f")
+                        gamma = material_data("gamma")
+                        omega = material_data("omega")
+                        sigma = material_data("sigma")
+                        new_mat = BrendelBormann(f0,Gamma0,omega_p,ff,gamma,omega,sigma)
+                        materials_final.append(new_mat)
+                    case _:
+                        print(model," not an existing model.")
+                        sys.exit()
+                else:
+                    print(mat,"Materiau inconnu")
+                    print(material_database)
+                    sys.exit()
                 #TODO : check the material exists, otherwise
-                print(mat.upper())
-                new_mat=eval('MaterialFactory(MaterialEnum.'+mat.upper()+')')
-                materials_final.append(new_mat)
-            # TODO : If it's a function, assume it's the permittivity, define a custom, dispersive, materials
 
         self.materials = materials_final
         self.layer_type = layer_type
