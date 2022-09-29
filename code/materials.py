@@ -4,7 +4,18 @@ from scipy.special import wofz
 import json
 from enum import Enum
 
-class Interpolation:
+class Material:
+
+    def __init__(self,permittivity):
+        self.permittivity = permittivity
+
+    def get_permittivity(self,wavelength):
+        return self.permittivity
+
+    def get_permeability(self,wavelength):
+        return 1.0
+
+class Interpolation(Material):
     """
     Class of materials defined by their permittivity measured for
     well defined values of the wavelength in vacuum. We make asin
@@ -25,7 +36,7 @@ class Interpolation:
     def get_permeability(self, wavelength):
         return 1.0
 
-class Simple_non_dispersive:
+class Simple_non_dispersive(Material):
 
     def __init__(self,permittivity):
         self.permittivity = permittivity
@@ -37,7 +48,7 @@ class Simple_non_dispersive:
         return 1.0
 
 
-class Magnetic_non_dispersive:
+class Magnetic_non_dispersive(Material):
 
     def __init__(self,permittivity,permeability):
 
@@ -51,7 +62,7 @@ class Magnetic_non_dispersive:
         return self.permeability
 
 
-class BBmodel:
+class BBmodel(Material):
     """
     Material described using a Brendel Bormann model for a metal.
     """
@@ -90,7 +101,7 @@ class BBmodel:
 
 
 
-class NonConductingMaterial:
+class NonConductingMaterial(Material):
     """
     Generic class to handle non-conducting material.
     """
@@ -120,79 +131,6 @@ class NonConductingMaterial:
     def get_permeability(self,**kwargs) -> float:
         return 1.0
 
-
-class BK7(NonConductingMaterial):
-    def __init__(self, material_data: dict) -> None:
-        super().__init__(material_data)
-
-
-class Water(NonConductingMaterial):
-    def __init__(self, material_data: dict) -> None:
-        super().__init__(material_data)
-
-
-class Air(NonConductingMaterial):
-    def __init__(self, material_data: dict) -> None:
-        super().__init__(material_data)
-
-    def get_permittivity(self, **kwargs) -> float:
-        """
-        Overides NonConductingMaterial mother class method
-        """
-        return 1.0
-
-
-class Glass(NonConductingMaterial):
-    def __init__(self, material_data: dict) -> None:
-        super().__init__(material_data)
-
-    def get_permittivity(self, **kwargs) -> float:
-        """
-        Overides NonConductingMaterial mother class method
-        """
-        wavelength = kwargs["wavelength"]
-        epsilon = 2.978645 + 0.008777808 / \
-                  (wavelength ** 2 * 1e-6 - 0.010609) + 84.06224 / (
-                          wavelength ** 2 * 1e-6 - 96)
-        return epsilon
-
-
-class SiA(NonConductingMaterial):
-    def __init__(self, material_data: dict) -> None:
-        super().__init__(material_data)
-
-
-class Silver(ConductingMaterial):
-    def __init__(self, material_data: dict) -> None:
-        super().__init__(material_data)
-
-
-class Aluminium(ConductingMaterial):
-    def __init__(self, material_data: dict) -> None:
-        super().__init__(material_data)
-
-
-class Gold(ConductingMaterial):
-    def __init__(self, material_data: dict) -> None:
-        super().__init__(material_data)
-
-
-class Nickel(ConductingMaterial):
-    def __init__(self, material_data: dict) -> None:
-        super().__init__(material_data)
-
-
-class Platinum(ConductingMaterial):
-    def __init__(self, material_data: dict) -> None:
-        super().__init__(material_data)
-
-
-class Copper(ConductingMaterial):
-    def __init__(self, material_data: dict) -> None:
-        super().__init__(material_data)
-
-
-# Enum of available materials
 
 
 class MaterialEnum(Enum):
@@ -229,14 +167,3 @@ def MaterialFactory(material: MaterialEnum):
         material_class = material.value["class"]
     # Return the appropriate class with the material data to be used
     return material_class
-
-
-if __name__ == '__main__':
-    # Get a material from the material Factory
-    material = MaterialFactory(MaterialEnum.GOLD)
-    custom = MaterialFactory(MaterialEnum.CUSTOM)(epsilon=1.5, mu=1)
-    # Get the material name
-    print(material.name)
-    print(material.epsilon)
-    # Get the permittivity at a specific lambda
-    print(material.get_permittivity_at_wavelength(150.))
