@@ -116,39 +116,7 @@ class NonConductingMaterial(Material):
     def get_permeability(self,**kwargs) -> float:
         return 1.0
 
-
-
-class MaterialEnum(Enum):
-    CUSTOM = {"name": "Custom", "class": CustomMaterial}
-    AIR = {"name": "Air", "class": Air}
-    BK_7 = {"name": "BK7", "class": BK7}
-    WATER = {"name": "Water", "class": Water}
-    GLASS = {"name": "Glass", "class": Glass}
-    SIA = {"name": "SiA", "class": SiA}
-    SILVER = {"name": "Silver", "class": Silver}
-    GOLD = {"name": "Gold", "class": Gold}
-    PLATINUM = {"name": "Platinum", "class": Platinum}
-    NICKEL = {"name": "Nickel", "class": Nickel}
-    COPPER = {"name": "Copper", "class": Copper}
-
-
-def MaterialFactory():
-    """
-    Factory class for the creation of materials
-    """
-    # Get the name of the material from Enum
-    material_name = material.value["name"]
-    if material_name != "Custom":
-        # Load the json file with material information
-        json_filepath = "./../data/material_data.json"
-        f = open(str(json_filepath))
-        material_database = json.load(f)
-        # Get the desired material given its name
-        material_data = material_database[material_name]
-        # Create the class with proper
-        material_class = material.value["class"](material_data)
-    # If the material is custom
-    else:
-        material_class = material.value["class"]
-    # Return the appropriate class with the material data to be used
-    return material_class
+def Existing_materials():
+    f=open("../data/material_data.json")
+    database = json.load(f)
+    print(database.values())

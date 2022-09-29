@@ -93,7 +93,7 @@ class Structure:
                         sys.exit()
                 else:
                     print(mat,"Materiau inconnu")
-                    print(material_database)
+                    print(database.values())
                     sys.exit()
                 #TODO : check the material exists, otherwise
 
