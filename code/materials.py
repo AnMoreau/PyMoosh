@@ -4,7 +4,7 @@ from scipy.special import wofz
 import json
 from enum import Enum
 
-class experimental_data:
+class Interpolation:
     """
     Class of materials defined by their permittivity measured for
     well defined values of the wavelength in vacuum. We make asin
@@ -25,7 +25,7 @@ class experimental_data:
     def get_permeability(self, wavelength):
         return 1.0
 
-class simple_non_dispersive:
+class Simple_non_dispersive:
 
     def __init__(self,permittivity):
         self.permittivity = permittivity
@@ -37,7 +37,7 @@ class simple_non_dispersive:
         return 1.0
 
 
-class magnetic_non_dispersive:
+class Magnetic_non_dispersive:
 
     def __init__(self,permittivity,permeability):
 
