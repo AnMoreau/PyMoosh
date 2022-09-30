@@ -49,9 +49,8 @@ class MagneticND(Material):
     """
 
     def __init__(self,permittivity,permeability):
-
         self.permittivity = permittivity
-        self.permeabilty  = permeability
+        self.permeability  = permeability
 
     def get_permeability(self,wavelength):
         return self.permeability
