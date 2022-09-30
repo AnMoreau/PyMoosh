@@ -95,6 +95,7 @@ class Structure:
                     print(mat,"Materiau inconnu")
                     print(database.values())
                     sys.exit()
+            if (isinstance)
                 #TODO : check the material exists, otherwise
 
         self.materials = materials_final
