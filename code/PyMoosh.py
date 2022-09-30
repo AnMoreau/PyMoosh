@@ -88,10 +88,10 @@ class Structure:
 #                    case "BrendelBormann"
                     elif model == "BrendelBormann":
                         f0 = material_data["f0"]
-                        Gamma0 = material_data["gamma0"]
+                        Gamma0 = material_data["Gamma0"]
                         omega_p = material_data["omega_p"]
                         ff = material_data["f"]
-                        gamma = material_data["gamma"]
+                        gamma = material_data["Gamma"]
                         omega = material_data["omega"]
                         sigma = material_data["sigma"]
                         new_mat = BrendelBormann(f0,Gamma0,omega_p,ff,gamma,omega,sigma)
