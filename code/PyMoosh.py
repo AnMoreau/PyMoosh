@@ -102,7 +102,7 @@ class Structure:
                         #sys.exit()
                 else:
                     print(mat,"Unknown material")
-                    print("Known materials:\n",database.values())
+                    print("Known materials:\n",existing_materials())
                     #sys.exit()
             else:
                 print("Whhaaaaat ? That has nothing to do here :",mat)

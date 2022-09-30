@@ -84,7 +84,11 @@ class BrendelBormann(Material):
         epsilon = 1 + chi_f + chi_b
         return epsilon
 
-def Existing_materials():
+def existing_materials():
     f=open("../data/material_data.json")
     database = json.load(f)
-    print(database.values())
+    for entree in database:
+        if "info" in database[entree]:
+            print(entree,"::",database[entree]["info"])
+        else :
+            print(entree)
