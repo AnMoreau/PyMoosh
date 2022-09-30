@@ -5,27 +5,25 @@ from math import *
 import sys
 import copy
 
-
 class Structure:
     """Each instance of Structure describes a multilayer completely.
     This includes the materials the multilayer is made of and the
     thickness of each layer.
 
     Args:
-        materials (list) : a list of materials
+        materials (list) : a list of material definition
         layer_type (list) : how the different materials are stacked
         thickness (list) : thickness of each layer in nm
 
     Materials can be defined in the list :materials:
     -by giving their permittivity as a real number for non dispersive materials
     -by giving a list of two floats. The first is the permittivity and the
-    second one the permeability.
-    -by giving its name for dispersive materials.
-    A name could be for instance 'Si'. The code will then use the function
-    'epsSi' to compute the permittivity of the material when this is needed.
-    You can define the function yourself the name you want afterwards.
+    second one the permeability. It is considered non dispersive.
+    -by giving its name for dispersive materials that are in the database.
+    -by giving a custom permittivity function, taking as an argument the
+    wavelength in nanometer.
 
-    .. warning: the working wavelength is given in nanometers.
+    .. warning: the working wavelength always is given in nanometers.
 
     Example: [1.,'Si','Au'] means we will use a material with a permittivity
     of 1. (air), silicon and gold.
@@ -57,49 +55,58 @@ class Structure:
         materials_final=list()
         print("List of materials:")
         for mat in materials:
-            if issubclass(mat,Material):
+            if issubclass(mat.__class__,Material):
                 materials_final.append(mat)
-            if isinstance(mat,float):
+            elif isinstance(mat,float):
                 new_mat = Material(mat)
                 materials_final.append(mat)
-                print("Simple, non dispersive:",mat)
-            if isinstance(mat,list):
+                print("Simple, non dispersive: epsilon=",mat)
+            elif isinstance(mat,list):
                 newmat = MagneticND(mat[0],mat[1])
                 materials_final.append(new_mat)
                 print("Magnetic, non dispersive: epsilon=", mat[0]," mu=",mat[1])
-            if isinstance(mat,str):
+            elif mat.__class__.__name__ == 'function':
+                newmat = CustomFunction(mat)
+                materials_final.append(new_mat)
+                print("Custom dispersive material. Epsilon=",mat.__name__,"(wavelength in nm)")
+            elif isinstance(mat,str):
                 f=open("../data/material_data.json")
                 database = json.load(f)
                 if mat in database:
+                    print("Database material:",mat)
                     material_data = database[mat]
-                    model = material_data("model")
-                    match model:
-                    case "ExpData":
-                        wl=material_data("wavelength_list")
-                        epsilon = np.array(material_data("permittivities"))
-                        if "permittivities_imag" in material_data
-                            epsilon = epsilon + 1j* np.array(material_data("permittivities_imag")
-                        new_mat=ExpData(wl,epsilon)
-                    case "BrendelBormann"
-                        f0 = material_data("f0")
-                        Gamma0 = material_data("gamma0")
-                        omega_p = material_data("omega_p")
-                        ff = material_data("f")
-                        gamma = material_data("gamma")
-                        omega = material_data("omega")
-                        sigma = material_data("sigma")
+                    model = material_data["model"]
+#                    match model:
+#                    case "ExpData":
+                    if model == "ExpData":
+                        wl=material_data["wavelength_list"]
+                        epsilon = np.array(material_data["permittivities"])
+                        if "permittivities_imag" in material_data:
+                            epsilon = epsilon + 1j*np.array(material_data["permittivities_imag"])
+                        new_mat= ExpData(wl,epsilon)
+                        materials_final.append(new_mat)
+#                    case "BrendelBormann"
+                    elif model == "BrendelBormann":
+                        f0 = material_data["f0"]
+                        Gamma0 = material_data["gamma0"]
+                        omega_p = material_data["omega_p"]
+                        ff = material_data["f"]
+                        gamma = material_data["gamma"]
+                        omega = material_data["omega"]
+                        sigma = material_data["sigma"]
                         new_mat = BrendelBormann(f0,Gamma0,omega_p,ff,gamma,omega,sigma)
                         materials_final.append(new_mat)
-                    case _:
+#                    case _:
+                    else:
                         print(model," not an existing model.")
-                        sys.exit()
+                        #sys.exit()
                 else:
-                    print(mat,"Materiau inconnu")
-                    print(database.values())
-                    sys.exit()
-            if (isinstance)
-                #TODO : check the material exists, otherwise
-
+                    print(mat,"Unknown material")
+                    print("Known materials:\n",database.values())
+                    #sys.exit()
+            else:
+                print("Whhaaaaat ? That has nothing to do here :",mat)
+                sys.exit( )
         self.materials = materials_final
         self.layer_type = layer_type
         self.thickness = thickness
