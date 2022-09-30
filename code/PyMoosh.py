@@ -76,7 +76,9 @@ class Structure:
                     match model:
                     case "ExpData":
                         wl=material_data("wavelength_list")
-                        epsilon = material_data("permittivities")
+                        epsilon = np.array(material_data("permittivities"))
+                        if "permittivities_imag" in material_data
+                            epsilon = epsilon + 1j* np.array(material_data("permittivities_imag")
                         new_mat=ExpData(wl,epsilon)
                     case "BrendelBormann"
                         f0 = material_data("f0")

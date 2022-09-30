@@ -2,7 +2,7 @@
 import numpy as np
 from scipy.special import wofz
 import json
-from enum import Enum
+#from enum import Enum
 
 class Material:
 
@@ -73,16 +73,14 @@ class BrendelBormann(Material):
 
     def get_permittivity(self, wavelength):
         w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wavelength
-        # Extract material properties
-        # Compute variables
-        a = np.sqrt(w * (w + 1j * gamma))
-        x = (a - omega) / (np.sqrt(2) * sigma)
-        y = (a + omega) / (np.sqrt(2) * sigma)
+        a = np.sqrt(w * (w + 1j * self.gamma))
+        x = (a - self.omega) / (np.sqrt(2) * self.sigma)
+        y = (a + self.omega) / (np.sqrt(2) * self.sigma)
         # Polarizability due to bound electrons
-        chi_b = np.sum(1j * np.sqrt(np.pi) * f * omega_p ** 2 /
-                       (2 * np.sqrt(2) * a * sigma) * (wofz(x) + wofz(y)))
+        chi_b = np.sum(1j * np.sqrt(np.pi) * f * self.omega_p ** 2 /
+                       (2 * np.sqrt(2) * a * self.sigma) * (wofz(x) + wofz(y)))
         # Equivalent polarizability linked to free electrons (Drude model)
-        chi_f = -omega_p ** 2 * f0 / (w * (w + 1j * gamma0))
+        chi_f = -self.omega_p ** 2 * self.f0 / (w * (w + 1j * self.gamma0))
         epsilon = 1 + chi_f + chi_b
         return epsilon
 
