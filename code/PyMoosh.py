@@ -59,7 +59,7 @@ class Structure:
                 materials_final.append(mat)
             elif isinstance(mat,float):
                 new_mat = Material(mat)
-                materials_final.append(mat)
+                materials_final.append(new_mat)
                 print("Simple, non dispersive: epsilon=",mat)
             elif isinstance(mat,list):
                 newmat = MagneticND(mat[0],mat[1])
@@ -79,7 +79,7 @@ class Structure:
 #                    match model:
 #                    case "ExpData":
                     if model == "ExpData":
-                        wl=material_data["wavelength_list"]
+                        wl=np.array(material_data["wavelength_list"])
                         epsilon = np.array(material_data["permittivities"])
                         if "permittivities_imag" in material_data:
                             epsilon = epsilon + 1j*np.array(material_data["permittivities_imag"])
@@ -96,6 +96,11 @@ class Structure:
                         sigma = material_data["sigma"]
                         new_mat = BrendelBormann(f0,Gamma0,omega_p,ff,gamma,omega,sigma)
                         materials_final.append(new_mat)
+#                    case "CustomFunction":
+                    elif model == "CustomFunction":
+                        permittivity = material_data["function"]
+                        new_mat = CustomFunction(authorized[permittivity])
+                        materials_final.append(new_mat)
 #                    case _:
                     else:
                         print(model," not an existing model.")
@@ -106,7 +111,7 @@ class Structure:
                     #sys.exit()
             else:
                 print("Whhaaaaat ? That has nothing to do here :",mat)
-                sys.exit( )
+#                sys.exit( )
         self.materials = materials_final
         self.layer_type = layer_type
         self.thickness = thickness
@@ -123,10 +128,11 @@ class Structure:
         mu = np.ones_like(self.layer_type, dtype=complex)
         epsilon = np.ones_like(self.layer_type, dtype=complex)
         # Loop over all materials
-        for k, material in enumerate(self.materials):
+        for k in range(len(self.materials)):
             # Populate epsilon and mu arrays from the material.
-            epsilon[k] = material.get_permittivity(wavelength=wavelength)
-            mu[k] = material.get_permeability(wavelength=wavelength)
+            material = self.materials[k]
+            epsilon[k] = material.get_permittivity(wavelength)
+            mu[k] = material.get_permeability(wavelength)
 
         return epsilon, mu
 
@@ -147,7 +153,7 @@ class Beam:
     def __init__(self, wavelength, incidence, polarization, horizontal_waist):
         self.wavelength = wavelength
         self.incidence = incidence
-        tmp = incidence * 180 / math.pi
+        tmp = incidence * 180 / np.pi
         print("Incidence in degrees:", tmp)
         self.polarization = polarization
         if (polarization == 0):

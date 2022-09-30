@@ -39,7 +39,7 @@ class ExpData(Material):
         self.permittivities  = np.array(permittivities, dtype = complex)
 
     def get_permittivity(self, wavelength):
-        return np.interp(wavelength, wavelength_list, permittivity_list)
+        return np.interp(wavelength, self.wavelength_list, self.permittivities)
 
 class MagneticND(Material):
 
@@ -92,3 +92,16 @@ def existing_materials():
             print(entree,"::",database[entree]["info"])
         else :
             print(entree)
+
+# Sometimes materials can be defined not by a well known model
+# like Cauchy or Sellmeier or Lorentz, but have specific formula.
+# That may be convenient.
+
+def permittivity_glass(wl):
+    #epsilon=2.978645+0.008777808/(wl**2*1e-6-0.010609)+84.06224/(wl**2*1e-6-96)
+    epsilon = (1.5130 - 3.169e-9*wl**2 + 3.962e3/wl**2)**2
+    return epsilon
+
+# Declare authorized functions in the database. Add the functions listed above.
+
+authorized = {"permittivity_glass":permittivity_glass}
