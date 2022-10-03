@@ -57,6 +57,7 @@ class Structure:
         for mat in materials:
             if issubclass(mat.__class__,Material):
                 materials_final.append(mat)
+                print("Object:",mat.__class__.__name__)
             elif isinstance(mat,float):
                 new_mat = Material(mat)
                 materials_final.append(new_mat)
