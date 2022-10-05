@@ -705,8 +705,7 @@ def Photo(struct,incidence,polarization,wl_min,wl_max,active_layers,number_point
         wavelength_list (numpy array): list of considered wavelengths
         spectrum: AM 1.5 solar Spectrum
         current_density: current by wavelength unit (mA/cm^2/nm)
-
-"""
+        """
 
     theta=incidence*np.pi/180
     wavelength_list=np.linspace(wl_min,wl_max,number_points)
@@ -729,11 +728,36 @@ def Photo(struct,incidence,polarization,wl_min,wl_max,active_layers,number_point
     return conversion_efficiency,total_current,total_current_max,wavelength_list,photon_density,total_absorbed
 
 def dispersion(alpha,struct,wavelength,polarization):
+    """ It would probably be better to compute the dispersion relation of a
+    multilayered structure, like the determinant of the inverse of the
+    scattering matrix. However, strangely enough, for a single interface, it
+    just does not work. Even though the coefficients of the scattering matrix
+    diverge the determinant does not, so that it does not work to find the
+    surface plasmon mode, force instance.
+
+    The present function actually computes the inverse of the modulus of the
+    reflection coefficient. Since a mode is a pole of the coefficient, here it
+    should be a zero of the resulting function. The determination of the square
+    root is modified, so that the modes are not hidden by any cut due to the
+    square root.
+
+    Args:
+        alpha (complex) : wavevector
+        struct (Structure) : the object describing the multilayer
+        wavelength : the wavelength in vacuum in nanometer
+        polarization : 0 for TE, 1 for TM.
+
+    Returns:
+        1/abs(r) : inverse of the modulus of the reflection coefficient.
+
+    """
 
     Epsilon, Mu = struct.polarizability(wavelength)
     thickness = copy.deepcopy(struct.thickness)
     # In order to ensure that the phase reference is at the beginning
-    # of the first layer.
+    # of the first layer. Totally necessary when you are looking for
+    # modes of the structure, this makes the poles of the reflection
+    # coefficient much more visible.
     thickness[0] = 0
     Type = struct.layer_type
     # The boundary conditions will change when the polarization changes.
@@ -788,6 +812,31 @@ def dispersion(alpha,struct,wavelength,polarization):
 #    return 1/r
 
 def Map(struct,wavelength,polarization,real_bounds,imag_bounds,n_real,n_imag):
+    """ Maps the function `dispersion` supposed to vanish when the dispersion
+    relation is satisfied.
+
+    Args:
+        struct (Structure): object Structure describing the multilayer
+        wavelength: wavelength in vacuum (in nm)
+        polarization: 0 for TE, 1 for TM
+        real_bounds: a list giving the bounds of the effective index
+                     real part [n_min,n_max], defining the zone to
+                     explore.
+        imag_bounds: a list giving the bounds of the effective index
+                     imaginary part.
+        n_real: number of points horizontally (real part)
+        n_imag: number of points vertically (imaginary part)
+
+    Returns:
+        X (1D numpy array): values of the real part of the effective index
+        Y (1D numpy array): values of the imaginary part of the effective index
+        T (2D numpy array): values of the dispersion function
+
+    In order to visualize the map, just use :
+        import matplotlib.pyplot as plt
+        plt.contourf(X,Y,np.sqrt(np.real(T)))
+        plt.show()
+    """
 
     k_0=2*np.pi/wavelength
     X=np.linspace(real_bounds[0],real_bounds[1],n_real)
@@ -800,9 +849,27 @@ def Map(struct,wavelength,polarization,real_bounds,imag_bounds,n_real,n_imag):
         for l in range(n_imag):
             T[k,l]=1/dispersion(M[k,l],struct,wavelength,polarization)
 
-    return X,Y,T,k_0
+    return X,Y,T
 
 def Guided_modes(struct,wavelength,polarization,neff_min,neff_max):
+
+    """ This function explores the complex plane, looking for zeros of the
+    dispersion relation. It does so by launching a steepest descent for a number
+    `initial_points` of points on the real axis between neff_min and neff_max.
+
+
+    Args:
+        struct (Structure): object describing the multilayer
+        wavelength (float): wavelength in nm
+        polarization: 0 for TE, 1 for TM
+        neff_min: minimum value of the effective index expected
+        neff_max: maximum value of the effective index expected
+
+    Returns:
+        modes (list, complex): complex effective index identified as
+                            solutions of the dispersion relation.
+
+    """
 
     tolerance = 1e-10
     initial_points = 20
@@ -851,6 +918,26 @@ def muller(starting_points,tol,step_max,struct,wl,pol):
     return x[2]/k_0
 
 def steepest(start,tol,step_max,struct,wl,pol):
+    """ Steepest descent to find a zero of the `dispersion`
+    function. The advantage of looking for a zero is that you
+    know when the algorithm can stop (when the value of the function
+    is smaller than `tol`).
+
+    Args:
+        start (complex): effective index where the descent starts
+        tol (real): when dispersion is smaller than tol, the
+                    descent stops.
+        step_max (integer): maximum number of steps allowed
+        struct (Structure): the object describing the multilayer
+        wl (float): wavelength in vacuum
+        pol: 0 for TE, 1 for TM
+
+    Returns:
+
+        (float) : last effective index reached at the end of the descent
+
+    """
+
 
     k_0 = 2 * np.pi / wl
     z=start*k_0
@@ -884,10 +971,10 @@ def steepest(start,tol,step_max,struct,wl,pol):
         else:
             current = value_new
             z = z_new
-            print("Step", step, z,current)
+    #        print("Step", step, z,current)
         step = step + 1
 
-    print("End of the loop")
+    #print("End of the loop")
     if step == step_max:
         print("Warning: maximum number of steps reached")
 
