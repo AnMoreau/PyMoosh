@@ -979,3 +979,8 @@ def steepest(start,tol,step_max,struct,wl,pol):
         print("Warning: maximum number of steps reached")
 
     return z/k_0
+
+def Profile(struct,n_eff,wavelength):
+
+    k_0 = 2 * np.pi / wavelength
+    alpha = n_eff * k_0
