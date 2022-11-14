@@ -58,7 +58,7 @@ class Structure:
             if issubclass(mat.__class__,Material):
                 materials_final.append(mat)
                 print("Object:",mat.__class__.__name__)
-            elif isinstance(mat,float):
+            elif isinstance(mat,float) or isinstance(mat,complex):
                 new_mat = Material(mat)
                 materials_final.append(new_mat)
                 print("Simple, non dispersive: epsilon=",mat)
