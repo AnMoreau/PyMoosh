@@ -50,31 +50,37 @@ class Structure:
     represented is asked.
     """
 
-    def __init__(self, materials, layer_type, thickness):
+    def __init__(self, materials, layer_type, thickness,verbose = True):
 
         materials_final=list()
-        print("List of materials:")
+        if verbose :
+            print("List of materials:")
         for mat in materials:
             if issubclass(mat.__class__,Material):
                 materials_final.append(mat)
-                print("Object:",mat.__class__.__name__)
+                if verbose :
+                    print("Object:",mat.__class__.__name__)
             elif isinstance(mat,float) or isinstance(mat,complex):
                 new_mat = Material(mat)
                 materials_final.append(new_mat)
-                print("Simple, non dispersive: epsilon=",mat)
+                if verbose :
+                    print("Simple, non dispersive: epsilon=",mat)
             elif isinstance(mat,list):
                 newmat = MagneticND(mat[0],mat[1])
                 materials_final.append(new_mat)
-                print("Magnetic, non dispersive: epsilon=", mat[0]," mu=",mat[1])
+                if verbose :
+                    print("Magnetic, non dispersive: epsilon=", mat[0]," mu=",mat[1])
             elif mat.__class__.__name__ == 'function':
                 newmat = CustomFunction(mat)
                 materials_final.append(new_mat)
-                print("Custom dispersive material. Epsilon=",mat.__name__,"(wavelength in nm)")
+                if verbose :
+                    print("Custom dispersive material. Epsilon=",mat.__name__,"(wavelength in nm)")
             elif isinstance(mat,str):
                 f=open("../data/material_data.json")
                 database = json.load(f)
                 if mat in database:
-                    print("Database material:",mat)
+                    if verbose :
+                        print("Database material:",mat)
                     material_data = database[mat]
                     model = material_data["model"]
 #                    match model:
