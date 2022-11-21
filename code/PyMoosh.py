@@ -204,7 +204,7 @@ class Window:
 
 def cascade(A, B):
     """
-    This function takes two 2x2 matrices A and B, that are assumed to be scattering matrices
+    This function takes two 2x2 matrixes A and B, that are assumed to be scattering matrixes
     and combines them assuming A is the "upper" one, and B the "lower" one, physically.
     The result is a 2x2 scattering matrix.
 
@@ -290,7 +290,7 @@ def coefficient(struct, wavelength, incidence, polarization):
             Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
     T = np.zeros(((2 * g, 2, 2)), dtype=complex)
 
-    # first S matrice
+    # first S matrix
     T[0] = [[0, 1], [1, 0]]
     for k in range(g - 1):
         # Layer scattering matrix
@@ -392,7 +392,7 @@ def absorption(struct, wavelength, incidence, polarization):
             Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
     T = np.zeros(((2 * g, 2, 2)), dtype=complex)
 
-    # first S matrice
+    # first S matrix
     T[0] = [[0, 1], [1, 0]]
     for k in range(g - 1):
         # Layer scattering matrix
@@ -413,18 +413,21 @@ def absorption(struct, wavelength, incidence, polarization):
     for k in range(len(T) - 2):
         A[k + 1] = cascade(A[k], T[k + 1])
         H[k + 1] = cascade(T[2 * g - 2 - k], H[k])
-    # Here are the intermediate coefficients, computed using the scattering
-    # matrices.
 
     I = np.zeros(((2 * g, 2, 2)), dtype=complex)
     for k in range(len(T) - 1):
-        I[k][0, 0] = A[k][1, 0] / (1 - A[k][1, 1] * H[len(T) - 2 - k][0, 0])
-        I[k][0, 1] = A[k][1, 1] * H[len(T) - 2 - k][0, 1] / (
-                1 - A[k][1, 1] * H[len(T) - 2 - k][0, 0])
-        I[k][1, 0] = A[k][1, 0] * H[len(T) - 2 - k][0, 0] / (
-                1 - A[k][1, 1] * H[len(T) - 2 - k][0, 0])
-        I[k][1, 1] = H[len(T) - 2 - k][0, 1] / (
-                1 - A[k][1, 1] * H[len(T) - 2 - k][0, 0])
+        I[k] = np.array(
+            [[A[k][1, 0], A[k][1, 1] * H[len(T) - k - 2][0, 1]],
+             [A[k][1, 0] * H[len(T) - k - 2][0, 0],
+              H[len(T) - k - 2][0, 1]]] / (
+                    1 - A[k][1, 1] * H[len(T) - k - 2][0, 0]))
+#        I[k][0, 0] = A[k][1, 0] / (1 - A[k][1, 1] * H[len(T) - 2 - k][0, 0])
+#        I[k][0, 1] = A[k][1, 1] * H[len(T) - 2 - k][0, 1] / (
+#                1 - A[k][1, 1] * H[len(T) - 2 - k][0, 0])
+#        I[k][1, 0] = A[k][1, 0] * H[len(T) - 2 - k][0, 0] / (
+#                1 - A[k][1, 1] * H[len(T) - 2 - k][0, 0])
+#        I[k][1, 1] = H[len(T) - 2 - k][0, 1] / (
+#                1 - A[k][1, 1] * H[len(T) - 2 - k][0, 0])
     I[2 * g - 1][0, 0] = I[2 * g - 2][0, 0] * np.exp(
         1j * gamma[g - 1] * thickness[g - 1])
     I[2 * g - 1][0, 1] = I[2 * g - 2][0, 1] * np.exp(
@@ -580,10 +583,16 @@ def field(struct, beam, window):
         h = 0
         t = 0
 
+
+
         E = np.zeros((int(np.sum(ny)), 1), dtype=complex)
         for k in range(g + 1):
             for m in range(int(ny[k])):
                 h = h + float(thickness[k]) / ny[k]
+                #The expression for the field used here is based on the assumption
+                # that the structure is illuminated from above only, with an Amplitude
+                # of 1 for the incident wave. If you want only the reflected
+                # field, take off the second term.
                 E[t, 0] = I[2 * k][0, 0] * np.exp(1j * gamma[k] * h) + \
                           I[2 * k + 1][1, 0] * np.exp(
                     1j * gamma[k] * (thickness[k] - h))
@@ -792,7 +801,7 @@ def dispersion(alpha,struct,wavelength,polarization):
 
     T = np.zeros(((2 * g, 2, 2)), dtype=complex)
 
-    # first S matrice
+    # first S matrix
     T[0] = [[0, 1], [1, 0]]
     for k in range(g - 1):
         # Layer scattering matrix
@@ -986,7 +995,100 @@ def steepest(start,tol,step_max,struct,wl,pol):
 
     return z/k_0
 
-def Profile(struct,n_eff,wavelength):
+def Profile(struct,n_eff,wavelength,polarization):
 
+    # Parameters that can be modified:
+    # 1 pixel every pixel_size nm
+    pixel_size = 3
+
+    # Wavevector in vacuum.
     k_0 = 2 * np.pi / wavelength
+    # Wavevector of the mode considered here.
     alpha = n_eff * k_0
+    # About the structure:
+    Epsilon, Mu = struct.polarizability(wavelength)
+    thickness = copy.deepcopy(struct.thickness)
+    Type = struct.layer_type
+    g = len(Type) - 1
+    # The boundary conditions will change when the polarization changes.
+    if polarization == 0:
+        f = Mu
+    else:
+        f = Epsilon
+    # Computation of the vertical wavevectors k_z
+    gamma = np.sqrt(
+        Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g+1) * alpha ** 2)
+    # Be cautious if the upper medium is a negative index one.
+    print("Gamma !",n_eff,alpha)
+    print(gamma)
+    #if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
+    #    gamma[0] = -gamma[0]
+    # Changing the determination of the square root to achieve perfect stability
+    if g > 2:
+        gamma[1:g - 2] = gamma[1:g - 2] * (
+                1 - 2 * (np.imag(gamma[1:g - 2]) < 0))
+
+    gamma[0] = gamma[0] * (
+                    1 - 2 * (np.angle(gamma[0])<-np.pi/5)  )
+    gamma[g] = gamma[g] * (
+                1 - 2 * (np.angle(gamma[g])<-np.pi/5)  )
+    # We compute all the scattering matrixes starting with the second layer
+    T = np.zeros((2 * g, 2, 2), dtype=complex)
+    T[0] = [[0, 1], [1, 0]]
+    for k in range(1,g):
+        t = np.exp(1j * gamma[k] * thickness[k])
+        T[2 * k -1 ] = np.array([[0, t], [t, 0]])
+        b1 = gamma[k] / f[Type[k]]
+        b2 = gamma[k + 1] / f[Type[k + 1]]
+        T[2 * k ] = np.array([[b1 - b2, 2 * b2], [2 * b1, b2 - b1]]) / (
+                    b1 + b2)
+    t = np.exp(1j * gamma[g] * thickness[g])
+    T[2 * g - 1] = np.array([[0, t], [t, 0]])
+
+    H = np.zeros((len(T) - 1, 2, 2), dtype=complex)
+    A = np.zeros((len(T) - 1, 2, 2), dtype=complex)
+    H[0] = T[2 * g - 1]
+    A[0] = T[0]
+
+    for k in range(len(T) - 2):
+        A[k + 1] = cascade(A[k], T[k + 1])
+        H[k + 1] = cascade(T[len(T) - k - 2], H[k])
+
+    I = np.zeros((len(T), 2, 2), dtype=complex)
+    for k in range(len(T) - 1):
+        I[k] = np.array(
+            [[A[k][1, 0], A[k][1, 1] * H[len(T) - k - 2][0, 1]],
+             [A[k][1, 0] * H[len(T) - k - 2][0, 0],
+              H[len(T) - k - 2][0, 1]]] / (
+                    1 - A[k][1, 1] * H[len(T) - k - 2][0, 0]))
+
+    # Coefficients, in each layer
+    Coeffs = np.zeros((g+1,2),dtype = complex)
+    Coeffs[0] = np.array([0,1.])
+    # Value of the first down propagating plane wave below
+    # the first interface, entering the scattering matrix
+    # for the rest of the structure. The amplitude of the
+    # incident wave is thus not 1.
+    b1 = gamma[0]/f[Type[0]]
+    b2 = gamma[1]/f[Type[1]]
+    tmp = (b1 - b2)/ (2 * b2)
+    for k in range(g):
+        Coeffs[k+1] =  tmp * np.array([I[2 * k][0, 0],I[2 * k + 1][1, 0]])
+
+    n_pixels = np.array(thickness) // pixel_size
+    n_total = np.sum(n_pixels)
+    E = np.zeros(n_total,dtype = complex)
+    h=0.
+    t=0
+
+    for k in range(g+1):
+        for m in range(n_pixels[k]):
+            h = h + pixel_size
+            E[t] = Coeffs[k,0] * np.exp(1j * gamma[k] * h) + \
+                   Coeffs[k,1] * np.exp(
+                   1j * gamma[k] * (thickness[k] - h))
+            t+=1
+        h=0
+
+    x = np.linspace(0,sum(thickness),len(E))
+    return x,E
