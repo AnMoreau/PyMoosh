@@ -927,7 +927,7 @@ def muller(starting_points,tol,step_max,struct,wl,pol):
         f[0]=f[1]
         f[1]=f[2]
         f[2]=dispersion(new_x,struct,wl,pol)
-        print("Nouvelles valeurs:",step,new_x/k_0,f[2])
+        print("New values:",step,new_x/k_0,f[2])
         step += 1
 
     return x[2]/k_0
@@ -1018,16 +1018,13 @@ def Profile(struct,n_eff,wavelength,polarization):
     # Computation of the vertical wavevectors k_z
     gamma = np.sqrt(
         Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g+1) * alpha ** 2)
-    # Be cautious if the upper medium is a negative index one.
-    print("Gamma !",n_eff,alpha)
-    print(gamma)
-    #if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
-    #    gamma[0] = -gamma[0]
     # Changing the determination of the square root to achieve perfect stability
     if g > 2:
         gamma[1:g - 2] = gamma[1:g - 2] * (
                 1 - 2 * (np.imag(gamma[1:g - 2]) < 0))
-
+    # Don't forget the square root has to change
+    # when the wavevector is complex (same as with
+    # dispersion and Map)
     gamma[0] = gamma[0] * (
                     1 - 2 * (np.angle(gamma[0])<-np.pi/5)  )
     gamma[g] = gamma[g] * (
