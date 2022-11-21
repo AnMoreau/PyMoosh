@@ -895,7 +895,7 @@ def Guided_modes(struct,wavelength,polarization,neff_min,neff_max):
 #        solution = optim.newton(dispersion,kx,args=(struct,wavelength,polarization),tol=tolerance,full_output = True)
 #        solution = optim.minimize(dispersion,kx,args=(struct,wavelength,polarization))
         solution = steepest(neff,tolerance,1000,struct,wavelength,polarization)
-        print(solution)
+#        print(solution)
         if (len(modes)==0):
             modes.append(solution)
         elif (min(abs(modes-solution))>1e-5*k_0):
