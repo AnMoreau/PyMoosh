@@ -1068,7 +1068,7 @@ def Profile(struct,n_eff,wavelength,polarization):
     # incident wave is thus not 1.
     b1 = gamma[0]/f[Type[0]]
     b2 = gamma[1]/f[Type[1]]
-    tmp = (b1 - b2)/ (2 * b2)
+    tmp = (b2 - b1)/ (2 * b2)
     for k in range(g):
         Coeffs[k+1] =  tmp * np.array([I[2 * k][0, 0],I[2 * k + 1][1, 0]])
 
