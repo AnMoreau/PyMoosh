@@ -132,8 +132,8 @@ class Structure:
         """
 
         # Create empty mu and epsilon arrays
-        mu = np.ones_like(self.layer_type, dtype=complex)
-        epsilon = np.ones_like(self.layer_type, dtype=complex)
+        mu = np.ones_like(self.materials, dtype=complex)
+        epsilon = np.ones_like(self.materials, dtype=complex)
         # Loop over all materials
         for k in range(len(self.materials)):
             # Populate epsilon and mu arrays from the material.
@@ -866,7 +866,7 @@ def Map(struct,wavelength,polarization,real_bounds,imag_bounds,n_real,n_imag):
 
     return X,Y,T
 
-def Guided_modes(struct,wavelength,polarization,neff_min,neff_max):
+def Guided_modes(struct,wavelength,polarization,neff_min,neff_max,initial_points = 40):
 
     """ This function explores the complex plane, looking for zeros of the
     dispersion relation. It does so by launching a steepest descent for a number
@@ -887,7 +887,7 @@ def Guided_modes(struct,wavelength,polarization,neff_min,neff_max):
     """
 
     tolerance = 1e-10
-    initial_points = 20
+#    initial_points = 40
     k_0=2*np.pi/wavelength
     neff_start = np.linspace(neff_min,neff_max,initial_points,dtype=complex)
     modes=[]
@@ -995,11 +995,8 @@ def steepest(start,tol,step_max,struct,wl,pol):
 
     return z/k_0
 
-def Profile(struct,n_eff,wavelength,polarization):
+def Profile(struct,n_eff,wavelength,polarization,pixel_size = 3):
 
-    # Parameters that can be modified:
-    # 1 pixel every pixel_size nm
-    pixel_size = 3
 
     # Wavevector in vacuum.
     k_0 = 2 * np.pi / wavelength
@@ -1072,14 +1069,15 @@ def Profile(struct,n_eff,wavelength,polarization):
     for k in range(g):
         Coeffs[k+1] =  tmp * np.array([I[2 * k][0, 0],I[2 * k + 1][1, 0]])
 
-    n_pixels = np.array(thickness) // pixel_size
-    n_total = np.sum(n_pixels)
+    n_pixels = np.floor(np.array(thickness) / pixel_size)
+    n_pixels.astype(int)
+    n_total = int(np.sum(n_pixels))
     E = np.zeros(n_total,dtype = complex)
     h=0.
     t=0
 
     for k in range(g+1):
-        for m in range(n_pixels[k]):
+        for m in range(int(n_pixels[k])):
             h = h + pixel_size
             E[t] = Coeffs[k,0] * np.exp(1j * gamma[k] * h) + \
                    Coeffs[k,1] * np.exp(
