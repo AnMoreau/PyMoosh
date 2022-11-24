@@ -76,10 +76,10 @@ class BrendelBormann(Material):
         x = (a - self.omega) / (np.sqrt(2) * self.sigma)
         y = (a + self.omega) / (np.sqrt(2) * self.sigma)
         # Polarizability due to bound electrons
-        chi_b = np.sum(1j * np.sqrt(np.pi) * f * self.omega_p ** 2 /
+        chi_b = np.sum(1j * np.sqrt(np.pi) * self.f * self.omega_p ** 2 /
                        (2 * np.sqrt(2) * a * self.sigma) * (wofz(x) + wofz(y)))
         # Equivalent polarizability linked to free electrons (Drude model)
-        chi_f = -self.omega_p ** 2 * self.f0 / (w * (w + 1j * self.gamma0))
+        chi_f = -self.omega_p ** 2 * self.f0 / (w * (w + 1j * self.Gamma0))
         epsilon = 1 + chi_f + chi_b
         return epsilon
 
