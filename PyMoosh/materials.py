@@ -84,8 +84,10 @@ class BrendelBormann(Material):
         return epsilon
 
 def existing_materials():
-    f=open("../data/material_data.json")
-    database = json.load(f)
+    import pkgutil
+    f = pkgutil.get_data(__name__, "data/material_data.json")
+    f_str = f.decode(encoding='utf8')
+    database = json.loads(f_str)
     for entree in database:
         if "info" in database[entree]:
             print(entree,"::",database[entree]["info"])

@@ -1,9 +1,10 @@
 import numpy as np
 import scipy.optimize as optim
-from materials import *
 from math import *
 import sys
 import copy
+
+from PyMoosh.materials import *
 
 class Structure:
     """Each instance of Structure describes a multilayer completely.
@@ -50,7 +51,7 @@ class Structure:
     represented is asked.
     """
 
-    def __init__(self, materials, layer_type, thickness,verbose = True):
+    def __init__(self, materials, layer_type, thickness, verbose=True):
 
         materials_final=list()
         if verbose :
@@ -76,8 +77,11 @@ class Structure:
                 if verbose :
                     print("Custom dispersive material. Epsilon=",mat.__name__,"(wavelength in nm)")
             elif isinstance(mat,str):
-                f=open("../data/material_data.json")
-                database = json.load(f)
+                # from file in shipped database
+                import pkgutil
+                f = pkgutil.get_data(__name__, "data/material_data.json")
+                f_str = f.decode(encoding='utf8')
+                database = json.loads(f_str)
                 if mat in database:
                     if verbose :
                         print("Database material:",mat)
@@ -114,7 +118,7 @@ class Structure:
                         #sys.exit()
                 else:
                     print(mat,"Unknown material")
-                    print("Known materials:\n",existing_materials())
+                    print("Known materials:\n", existing_materials())
                     #sys.exit()
             else:
                 print("Whhaaaaat ? That has nothing to do here :",mat)
@@ -1087,3 +1091,141 @@ def Profile(struct,n_eff,wavelength,polarization,pixel_size = 3):
 
     x = np.linspace(0,sum(thickness),len(E))
     return x,E
+
+def Green(struct,window,lam,source_interface):
+
+    """Computes the electric (TE polarization) or magnetic (TM) field inside
+    a multilayered structure illuminated by punctual source placed inside
+    the structure.
+
+    Args:
+        struct (Structure): description (materials,thicknesses)of the multilayer
+        window (Window): description of the simulation domain
+        lam (float): wavelength in vacuum
+        source_interface (int):
+    Returns:
+        En (np.array): a matrix with the complex amplitude of the field
+
+    Afterwards the matrix may be used to represent either the modulus or the
+    real part of the field.
+    """
+
+
+    # Computation of all the permittivities/permeabilities
+    Epsilon, Mu = struct.polarizability(lam)
+    thickness = np.array(struct.thickness)
+    pol = 0
+    d = window.width
+    C = window.C
+    ny = np.floor(thickness / window.py)
+    nx = window.nx
+    Type = struct.layer_type
+    print("Pixels vertically:", int(sum(ny)))
+
+    # Check it's ready for the Green function :
+    # Type of the layer is supposed to be the same
+    # on both sides of the Interface
+
+    if Type[source_interface-1]!= Type[source_interface]:
+        print("Error: there should be the same material on both sides " +
+              "of the interface where the source is located.")
+        return 0
+
+    # Number of modes retained for the description of the field
+    # so that the last mode has an amplitude < 1e-3 - you may want
+    # to change it if the structure present reflexion coefficients
+    # that are subject to very swift changes with the angle of incidence.
+
+    nmod = int(np.floor(0.83660 * d / w))
+
+    # ----------- Do not touch this part ---------------
+    l = lam / d
+    w = w / d
+    thickness = thickness / d
+
+    if pol == 0:
+        f = Mu
+    else:
+        f = Epsilon
+    # Wavevector in vacuum, no dimension
+    k0 = 2 * pi / l
+    # Initialization of the field component
+    En = np.zeros((int(sum(ny)), int(nx)))
+    # Total number of layers
+    # g=Type.size-1
+    g = len(struct.layer_type) - 1
+
+    # Scattering matrix corresponding to no interface.
+    T = np.zeros((2 * g + 2, 2, 2), dtype=complex)
+    T[0] = [[0, 1], [1, 0]]
+    for nm in np.arange(2 * nmod + 1):
+
+        alpha = 2 * pi * (nm - nmod)
+        gamma = np.sqrt(
+            Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g + 1) * alpha ** 2)
+
+        if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
+            gamma[0] = -gamma[0]
+
+        if g > 2:
+            gamma[1:g - 1] = gamma[1:g - 1] * (
+                    1 - 2 * (np.imag(gamma[1:g - 1]) < 0))
+        if np.real(Epsilon[Type[g]]) < 0 and np.real(
+                Mu[Type[g]]) < 0 and np.real(
+            np.sqrt(Epsilon[Type[g]] * k0 ** 2 - alpha ** 2)) != 0:
+            gamma[g] = -np.sqrt(
+                Epsilon[Type[g]] * Mu[Type[g]] * k0 ** 2 - alpha ** 2)
+        else:
+            gamma[g] = np.sqrt(
+                Epsilon[Type[g]] * Mu[Type[g]] * k0 ** 2 - alpha ** 2)
+
+        for k in range(g):
+            t = np.exp(1j * gamma[k] * thickness[k])
+            T[2 * k + 1] = np.array([[0, t], [t, 0]])
+            b1 = gamma[k] / f[Type[k]]
+            b2 = gamma[k + 1] / f[Type[k + 1]]
+            T[2 * k + 2] = np.array([[b1 - b2, 2 * b2], [2 * b1, b2 - b1]]) / (
+                    b1 + b2)
+        t = np.exp(1j * gamma[g] * thickness[g])
+        T[2 * g + 1] = np.array([[0, t], [t, 0]])
+
+        H_up = np.zeros((2*source_interface, 2, 2), dtype=complex)
+        A_up = np.zeros((2*source_interface, 2, 2), dtype=complex)
+
+        H_up[0] = T[0]
+        A_up[0] = T[0]
+
+        for k in range(2*source_interface-1):
+            A_up[k + 1] = cascade(A[k], T[k + 1])
+            H_up[k + 1] = cascade(T[2*source_interface-1-k], H[k])
+
+        I_up = np.zeros((len(T), 2, 2), dtype=complex)
+        for k in range(2*source_interface-1):
+            I_up[k] = np.array(
+                [[A[k][1, 0], A[k][1, 1] * H[len(T) - k - 2][0, 1]],
+                 [A[k][1, 0] * H[len(T) - k - 2][0, 0],
+                  H[len(T) - k - 2][0, 1]]] / (
+                        1 - A[k][1, 1] * H[len(T) - k - 2][0, 0]))
+
+        h = 0
+        t = 0
+
+
+        E = np.zeros((int(np.sum(ny)), 1), dtype=complex)
+
+        for k in range(g + 1):
+            for m in range(int(ny[k])):
+                h = h + float(thickness[k]) / ny[k]
+                #The expression for the field used here is based on the assumption
+                # that the structure is illuminated from above only, with an Amplitude
+                # of 1 for the incident wave. If you want only the reflected
+                # field, take off the second term.
+                E[t, 0] = I[2 * k][0, 0] * np.exp(1j * gamma[k] * h) + \
+                          I[2 * k + 1][1, 0] * np.exp(
+                    1j * gamma[k] * (thickness[k] - h))
+                t += 1
+            h = 0
+        E = E * np.exp(1j * alpha * np.arange(0, nx) / nx)
+        En = En + E
+
+    return En
