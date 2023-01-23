@@ -3,7 +3,8 @@
 .vscode
 .git
 exclude
-code/__pycache__
+*__pycache__
 notebooks/.ipynb_checkpoints
-code/*.egg-info
+*.egg-info
 dist
+build

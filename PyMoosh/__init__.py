@@ -16,15 +16,15 @@
 #along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-    PyMoosh - a scattering matrix formalism to solve Maxwell's equations 
-    in a multilayered structure. This makes PyMoosh unconditionally stable, 
-    allowing to explore even advanced properties of such multilayers, 
-    find poles and zeros of the scattering matrix (and thus guided modes), 
+    PyMoosh - a scattering matrix formalism to solve Maxwell's equations
+    in a multilayered structure. This makes PyMoosh unconditionally stable,
+    allowing to explore even advanced properties of such multilayers,
+    find poles and zeros of the scattering matrix (and thus guided modes),
     and many other things...
-    
+
 """
 __name__ = 'PyMoosh'
-__version__ = '2.1'
+__version__ = '2.2'
 __date__ = "01/20/2023"   # MM/DD/YYY
 __author__ = 'Antoine Moreau'
 
