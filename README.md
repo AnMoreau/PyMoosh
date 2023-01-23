@@ -27,13 +27,13 @@ If you use PyMoosh and if this is relevant, please cite the [paper associated wi
 
 ```
 @article{defrance2016moosh,
-  title={Moosh: A numerical swiss army knife for the optics of multilayers in octave/matlab},
-  author={Defrance, Josselin and Lema{\^\i}tre, Caroline and Ajib, Rabih and Benedicto, Jessica and Mallet, Emilien and Poll{\`e}s, R{\'e}mi and Plumey, Jean-Pierre and Mihailovic, Martine and Centeno, Emmanuel and Cirac{\`\i}, Cristian and others},
-  journal={Journal of Open Research Software},
-  volume={4},
-  number={1},
-  year={2016},
-  publisher={Ubiquity Press}
+title={Moosh: A numerical swiss army knife for the optics of multilayers in octave/matlab},
+author={Defrance, Josselin and Lema{\^\i}tre, Caroline and Ajib, Rabih and Benedicto, Jessica and Mallet, Emilien and Poll{\`e}s, R{\'e}mi and Plumey, Jean-Pierre and Mihailovic, Martine and Centeno, Emmanuel and Cirac{\`\i}, Cristian and others},
+journal={Journal of Open Research Software},
+volume={4},
+number={1},
+year={2016},
+publisher={Ubiquity Press}
 }
 ```
 

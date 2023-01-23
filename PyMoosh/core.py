@@ -1,9 +1,10 @@
 import numpy as np
 import scipy.optimize as optim
-from materials import *
 from math import *
 import sys
 import copy
+
+from PyMoosh.materials import *
 
 class Structure:
     """Each instance of Structure describes a multilayer completely.
@@ -50,7 +51,7 @@ class Structure:
     represented is asked.
     """
 
-    def __init__(self, materials, layer_type, thickness,verbose = True):
+    def __init__(self, materials, layer_type, thickness, verbose=True):
 
         materials_final=list()
         if verbose :
@@ -76,8 +77,11 @@ class Structure:
                 if verbose :
                     print("Custom dispersive material. Epsilon=",mat.__name__,"(wavelength in nm)")
             elif isinstance(mat,str):
-                f=open("../data/material_data.json")
-                database = json.load(f)
+                # from file in shipped database
+                import pkgutil
+                f = pkgutil.get_data(__name__, "data/material_data.json")
+                f_str = f.decode(encoding='utf8')
+                database = json.loads(f_str)
                 if mat in database:
                     if verbose :
                         print("Database material:",mat)
@@ -114,7 +118,7 @@ class Structure:
                         #sys.exit()
                 else:
                     print(mat,"Unknown material")
-                    print("Known materials:\n",existing_materials())
+                    print("Known materials:\n", existing_materials())
                     #sys.exit()
             else:
                 print("Whhaaaaat ? That has nothing to do here :",mat)
@@ -1122,9 +1126,9 @@ def Green(struct,window,lam,source_interface):
     # Type of the layer is supposed to be the same
     # on both sides of the Interface
 
-    if Type[source_interface-1]!= Type[source_interface]
-        print("Error: there should be the same material on both sides
-            of the interface where the source is located.")
+    if Type[source_interface-1]!= Type[source_interface]:
+        print("Error: there should be the same material on both sides " +
+              "of the interface where the source is located.")
         return 0
 
     # Number of modes retained for the description of the field
