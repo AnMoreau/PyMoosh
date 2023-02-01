@@ -66,6 +66,11 @@ class Structure:
                 materials_final.append(new_mat)
                 if verbose :
                     print("Simple, non dispersive: epsilon=",mat)
+            elif isinstance(mat,int):
+                new_mat = Material(float(mat))
+                materials_final.append(new_mat)
+                if verbose :
+                    print("Simple, non dispersive: epsilon=",mat)
             elif isinstance(mat,list):
                 newmat = MagneticND(mat[0],mat[1])
                 materials_final.append(new_mat)
@@ -225,6 +230,26 @@ def cascade(A, B):
     S[1, 1] = B[1, 1] + A[1, 1] * B[0, 1] * B[1, 0] * t
     return (S)
 
+
+
+def cascade_DirtoNeu(A, B):
+    """
+    This function takes two 2x2 matrixes A and B, that are assumed to be Dirichlet to Neumann
+    and combines them assuming A is the "upper" one, and B the "lower" one, physically.
+    The result is a 2x2 scattering matrix.
+
+    Args:
+        A (2x2 numpy array):
+        B (2x2 numpy array):
+
+    """
+    t = 1 / (A[1, 1] - B[0, 0])
+    S = np.zeros((2, 2), dtype=complex)
+    S[0, 0] = A[0, 0] - A[0, 1] * A[1, 0] * t
+    S[0, 1] = A[0, 1] * B[0, 1] * t
+    S[1, 0] = - B[1, 0] * A[1, 0] * t
+    S[1, 1] = B[1, 1] + B[1, 0] * B[0, 1]  * t
+    return (S)
 
 def coefficient(struct, wavelength, incidence, polarization):
     """
@@ -1229,3 +1254,316 @@ def Green(struct,window,lam,source_interface):
         En = En + E
 
     return En
+
+
+
+def abeles_coefficient(struct, wavelength, incidence, polarization):
+    """
+    This function computes the reflection and transmission coefficients
+    of the structure using the (true) Abeles matrix formalism.
+
+    Args:
+        struct (Structure): belongs to the Structure class
+        wavelength (float): wavelength of the incidence light (in nm)
+        incidence (float): incidence angle in radians
+        polarization (float): 0 for TE, 1 (or anything) for TM
+
+    returns:
+        r (complex): reflection coefficient, phase origin at first interface
+        t (complex): transmission coefficient
+        R (float): Reflectance (energy reflection)
+        T (float): Transmittance (energie transmission)
+
+
+    R and T are the energy coefficients (real quantities)
+
+    .. warning: The transmission coefficients have a meaning only if the lower medium
+    is lossless, or they have no true meaning.
+    """
+    # In order to get a phase that corresponds to the expected reflected coefficient,
+    # we make the height of the upper (lossless) medium vanish. It changes only the
+    # phase of the reflection coefficient.
+
+    # The medium may be dispersive. The permittivity and permability of each
+    # layer has to be computed each time.
+    Epsilon, Mu = struct.polarizability(wavelength)
+    thickness = copy.deepcopy(struct.thickness)
+    # In order to ensure that the phase reference is at the beginning
+    # of the first layer.
+    thickness[0] = 0
+    Type = struct.layer_type
+    # The boundary conditions will change when the polarization changes.
+    if polarization == 0:
+        f = Mu
+    else:
+        f = Epsilon
+    # Wavevector in vacuum.
+    k0 = 2 * np.pi / wavelength
+    # Number of layers
+    g = len(struct.layer_type)
+    # Wavevector k_x, horizontal
+    alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k0 * np.sin(incidence)
+    # Computation of the vertical wavevectors k_z
+    gamma = np.sqrt(
+        Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g) * alpha ** 2)
+    # Be cautious if the upper medium is a negative index one.
+    if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
+        gamma[0] = -gamma[0]
+
+    # Changing the determination of the square root to achieve perfect stability
+    if g > 2:
+        gamma[1:g - 2] = gamma[1:g - 2] * (
+                    1 - 2 * (np.imag(gamma[1:g - 2]) < 0))
+    # Outgoing wave condition for the last medium
+    if np.real(Epsilon[Type[g - 1]]) < 0 and np.real(
+            Mu[Type[g - 1]]) < 0 and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[
+        Type[g - 1]] * k0 ** 2 - alpha ** 2)) != 0:
+        gamma[g - 1] = -np.sqrt(
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
+    else:
+        gamma[g - 1] = np.sqrt(
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
+
+
+    T = np.zeros(((g-1, 2, 2)), dtype=complex)
+    for k in range(g-1):
+        # Layer scattering matrix
+        c = np.cos(gamma[k] * thickness[k])
+        s = np.sin(gamma[k] * thickness[k])
+
+        T[k] = [[c, -f[Type[k]]/gamma[k] * s],
+                [gamma[k]/f[Type[k]] * s, c]]
+    # Once the scattering matrixes have been prepared, now let us combine them
+
+    A = np.empty(T.shape, dtype=complex)
+    A[0] = T[0]
+    for i in range(1, T.shape[0]):
+        A[i] = T[i] @ A[i - 1]
+
+    a = A[-1][0, 0]
+    b = A[-1][0, 1]
+    c = A[-1][1, 0]
+    d = A[-1][1, 1]
+
+    amb = a - 1.j * gamma[0]/f[Type[0]] * b
+    apb = a + 1.j * gamma[0]/f[Type[0]] * b
+    cmd = c - 1.j * gamma[0]/f[Type[0]] * d
+    cpd = c + 1.j * gamma[0]/f[Type[0]] * d
+    # reflection coefficient of the whole structure
+
+    r = -(cmd + 1.j * gamma[-1]/f[Type[-1]] * amb)/(cpd + 1.j * gamma[-1]/f[Type[-1]] * apb)
+    # transmission coefficient of the whole structure
+    t = a * (r+1) + 1.j * gamma[0]/f[Type[0]] * b * (r-1)
+    # Energy reflexion coefficient;
+    R = np.real(abs(r) ** 2)
+    # Energy transmission coefficient;
+    T = np.real(
+        abs(t) ** 2 * gamma[g - 1] * f[Type[0]] / (gamma[0] * f[Type[g - 1]]))
+
+    return r, t, R, T
+
+
+def TMatrix_coefficient(struct, wavelength, incidence, polarization):
+    """
+    This function computes the reflection and transmission coefficients
+    of the structure using the Transfer matrix formalism.
+
+    Args:
+        struct (Structure): belongs to the Structure class
+        wavelength (float): wavelength of the incidence light (in nm)
+        incidence (float): incidence angle in radians
+        polarization (float): 0 for TE, 1 (or anything) for TM
+
+    returns:
+        r (complex): reflection coefficient, phase origin at first interface
+        t (complex): transmission coefficient
+        R (float): Reflectance (energy reflection)
+        T (float): Transmittance (energie transmission)
+
+
+    R and T are the energy coefficients (real quantities)
+
+    .. warning: The transmission coefficients have a meaning only if the lower medium
+    is lossless, or they have no true meaning.
+    """
+    # In order to get a phase that corresponds to the expected reflected coefficient,
+    # we make the height of the upper (lossless) medium vanish. It changes only the
+    # phase of the reflection coefficient.
+
+    # The medium may be dispersive. The permittivity and permability of each
+    # layer has to be computed each time.
+    Epsilon, Mu = struct.polarizability(wavelength)
+    thickness = copy.deepcopy(struct.thickness)
+    # In order to ensure that the phase reference is at the beginning
+    # of the first layer.
+    thickness[0] = 0
+    Type = struct.layer_type
+    # The boundary conditions will change when the polarization changes.
+    if polarization == 0:
+        f = Mu
+    else:
+        f = Epsilon
+    # Wavevector in vacuum.
+    k0 = 2 * np.pi / wavelength
+    # Number of layers
+    g = len(struct.layer_type)
+    # Wavevector k_x, horizontal
+    alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k0 * np.sin(incidence)
+    # Computation of the vertical wavevectors k_z
+    gamma = np.sqrt(
+        Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g) * alpha ** 2)
+    # Be cautious if the upper medium is a negative index one.
+    if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
+        gamma[0] = -gamma[0]
+
+    # Changing the determination of the square root to achieve perfect stability
+    if g > 2:
+        gamma[1:g - 2] = gamma[1:g - 2] * (
+                    1 - 2 * (np.imag(gamma[1:g - 2]) < 0))
+    # Outgoing wave condition for the last medium
+    if np.real(Epsilon[Type[g - 1]]) < 0 and np.real(
+            Mu[Type[g - 1]]) < 0 and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[
+        Type[g - 1]] * k0 ** 2 - alpha ** 2)) != 0:
+        gamma[g - 1] = -np.sqrt(
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
+    else:
+        gamma[g - 1] = np.sqrt(
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
+
+    T = np.zeros(((2*g-2, 2, 2)), dtype=complex)
+    for k in range(g-1):
+        sum = gamma[k]/f[Type[k]] + gamma[k+1]/f[Type[k+1]]
+        dif = gamma[k]/f[Type[k]] - gamma[k+1]/f[Type[k+1]]
+        # print("pop", gamma[k], gamma[k+1])
+        # print(sum, dif)
+        # Layer transfer matrix
+        T[2*k] = f[Type[k+1]]/(2*gamma[k+1]) * np.array([[sum, -dif],
+                                                          [-dif, sum]])
+
+        phase = 1.j* gamma[k+1] * thickness[k+1]
+        # Layer propagation matrix
+        T[2*k+1] = [[np.exp(-phase), 0],
+                    [0, np.exp(phase)]]
+    # Once the scattering matrixes have been prepared, now let us combine them
+
+    A = np.empty(T.shape, dtype=complex)
+    A[0] = T[0]
+    for i in range(1, T.shape[0]):
+        A[i] =  A[i - 1] @ T[i]
+    #print(T)
+    #print(A)
+    # reflection coefficient of the whole structure
+    r = -A[-1][1,0]/A[-1][0,0]
+    # transmission coefficient of the whole structure
+    t = A[-1][1,1] - (A[-1][1,0] * A[-1][0,1])/A[-1][0,0]
+    # Energy reflexion coefficient;
+    R = np.real(abs(r) ** 2)
+    # Energy transmission coefficient;
+    T = np.real(
+        abs(t) ** 2 * gamma[g - 1] * f[Type[0]] / (gamma[0] * f[Type[g - 1]]))
+
+    return r, t, R, T
+
+
+def DirToNeu_coefficient(struct, wavelength, incidence, polarization):
+    """
+    This function computes the reflection and transmission coefficients
+    of the structure using the Dirichlet to Neumann matrix formalism.
+
+    Args:
+        struct (Structure): belongs to the Structure class
+        wavelength (float): wavelength of the incidence light (in nm)
+        incidence (float): incidence angle in radians
+        polarization (float): 0 for TE, 1 (or anything) for TM
+
+    returns:
+        r (complex): reflection coefficient, phase origin at first interface
+        t (complex): transmission coefficient
+        R (float): Reflectance (energy reflection)
+        T (float): Transmittance (energie transmission)
+
+
+    R and T are the energy coefficients (real quantities)
+
+    .. warning: The transmission coefficients have a meaning only if the lower medium
+    is lossless, or they have no true meaning.
+    """
+    # In order to get a phase that corresponds to the expected reflected coefficient,
+    # we make the height of the upper (lossless) medium vanish. It changes only the
+    # phase of the reflection coefficient.
+
+    # The medium may be dispersive. The permittivity and permability of each
+    # layer has to be computed each time.
+    Epsilon, Mu = struct.polarizability(wavelength)
+    thickness = copy.deepcopy(struct.thickness)
+    # In order to ensure that the phase reference is at the beginning
+    # of the first layer.
+    thickness[0] = 0
+    Type = struct.layer_type
+    # The boundary conditions will change when the polarization changes.
+    if polarization == 0:
+        f = Mu
+    else:
+        f = Epsilon
+    # Wavevector in vacuum.
+    k0 = 2 * np.pi / wavelength
+    # Number of layers
+    g = len(struct.layer_type)
+    # Wavevector k_x, horizontal
+    alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k0 * np.sin(incidence)
+    # Computation of the vertical wavevectors k_z
+    gamma = np.sqrt(
+        Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g) * alpha ** 2)
+    # Be cautious if the upper medium is a negative index one.
+    if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
+        gamma[0] = -gamma[0]
+
+    # Changing the determination of the square root to achieve perfect stability
+    if g > 2:
+        gamma[1:g - 2] = gamma[1:g - 2] * (
+                    1 - 2 * (np.imag(gamma[1:g - 2]) < 0))
+    # Outgoing wave condition for the last medium
+    if np.real(Epsilon[Type[g - 1]]) < 0 and np.real(
+            Mu[Type[g - 1]]) < 0 and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[
+        Type[g - 1]] * k0 ** 2 - alpha ** 2)) != 0:
+        gamma[g - 1] = -np.sqrt(
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
+    else:
+        gamma[g - 1] = np.sqrt(
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
+
+
+    T = np.zeros(((g-2, 2, 2)), dtype=complex)
+    for k in range(1,g-1):
+        # Layer scattering matrix
+        t = np.tan(gamma[k] * thickness[k])
+        s = np.sin(gamma[k] * thickness[k])
+
+        T[k-1] = [[gamma[k] / (f[Type[k]] * t), -gamma[k] / (f[Type[k]] * s)],
+                [gamma[k] / (f[Type[k]] * s), -gamma[k] / (f[Type[k]] * t)]]
+    # Once the scattering matrixes have been prepared, now let us combine them
+
+    A = np.empty(T.shape, dtype=complex)
+    A[0] = T[0]
+    for j in range(1, T.shape[0]):
+        A[j] = cascade_DirtoNeu(A[j-1], T[j])
+
+    a = A[-1][0, 0]
+    b = A[-1][0, 1]
+    c = A[-1][1, 0]
+    d = A[-1][1, 1]
+
+    # reflection coefficient of the whole structure
+
+    gamma_eps = 1.j*gamma[0]/f[Type[0]]
+
+    r = ((a + gamma_eps)*(d + gamma_eps) - b*c)/((gamma_eps - a)*(d + gamma_eps) + b*c)
+    # transmission coefficient of the whole structure
+    t = - c * (r+1) / (d + gamma_eps)
+    # Energy reflexion coefficient;
+    R = np.real(abs(r) ** 2)
+    # Energy transmission coefficient;
+    T = np.real(
+        abs(t) ** 2 * gamma[g - 1] * f[Type[0]] / (gamma[0] * f[Type[g - 1]]))
+
+    return r, t, R, T
