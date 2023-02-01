@@ -45,6 +45,7 @@ Here is a list of contributors to PyMoosh (one way or another) so far:
 
 * Pauline Bennet (@Ellawin)
 * Peter Wiecha
+* Denis Langevin (@Milloupe)
 * Demetrio Macias
 * Anorld Capo-Chichi
 
