@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 
 #materials = [1.513**2, 1.455**2, 2.079**2, (1.9+4.8j)**2, 1.0003**2]
-materials = [4., 1.5**2, 2.]
-wav = 15.1
+materials = [4., 1.5**2, 2.+10.2j]
+wav = 20
 eps = 1e-10
 
 
