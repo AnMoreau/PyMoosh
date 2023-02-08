@@ -319,15 +319,16 @@ def absorption(struct, wavelength, incidence, polarization):
 
     # first S matrix
     T[0] = [[0, 1], [1, 0]]
+    gf = gamma / f[Type]
     for k in range(g - 1):
         # Layer scattering matrix
         t = np.exp((1j) * gamma[k] * thickness[k])
         T[2 * k + 1] = [[0, t], [t, 0]]
         # Interface scattering matrix
-        b1 = gamma[k] / f[Type[k]]
-        b2 = gamma[k + 1] / f[Type[k + 1]]
-        T[2 * k + 2] = np.array(
-            [[b1 - b2, 2 * b2], [2 * b1, b2 - b1]] / (b1 + b2))
+        b1 = gf[k]
+        b2 = gf[k + 1]
+        T[2 * k + 2] = np.array([[b1 - b2, 2 * b2],
+                                [2 * b1, b2 - b1]] / (b1 + b2))
     t = np.exp((1j) * gamma[g - 1] * thickness[g - 1])
     T[2 * g - 1] = [[0, t], [t, 0]]
     # Once the scattering matrixes have been prepared, now let us combine them
@@ -477,13 +478,14 @@ def field(struct, beam, window):
             gamma[g] = np.sqrt(
                 Epsilon[Type[g]] * Mu[Type[g]] * k0 ** 2 - alpha ** 2)
 
+        gf = gamma / f[Type]
         for k in range(g):
             t = np.exp(1j * gamma[k] * thickness[k])
             T[2 * k + 1] = np.array([[0, t], [t, 0]])
-            b1 = gamma[k] / f[Type[k]]
-            b2 = gamma[k + 1] / f[Type[k + 1]]
-            T[2 * k + 2] = np.array([[b1 - b2, 2 * b2], [2 * b1, b2 - b1]]) / (
-                    b1 + b2)
+            b1 = gf[k]
+            b2 = gf[k + 1]
+            T[2 * k + 2] = np.array([[b1 - b2, 2 * b2],
+                                    [2 * b1, b2 - b1]]) / (b1 + b2)
         t = np.exp(1j * gamma[g] * thickness[g])
         T[2 * g + 1] = np.array([[0, t], [t, 0]])
 
@@ -728,15 +730,16 @@ def dispersion(alpha,struct,wavelength,polarization):
 
     # first S matrix
     T[0] = [[0, 1], [1, 0]]
+    gf = gamma / f[Type]
     for k in range(g - 1):
         # Layer scattering matrix
         t = np.exp((1j) * gamma[k] * thickness[k])
         T[2 * k + 1] = [[0, t], [t, 0]]
         # Interface scattering matrix
-        b1 = gamma[k] / f[Type[k]]
-        b2 = gamma[k + 1] / f[Type[k + 1]]
-        T[2 * k + 2] = [[(b1 - b2) / (b1 + b2), 2 * b2 / (b1 + b2)],
-                        [2 * b1 / (b1 + b2), (b2 - b1) / (b1 + b2)]]
+        b1 = gf[k]
+        b2 = gf[k + 1]
+        T[2 * k + 2] = np.array([[b1 - b2, 2 * b2],
+                                 [2 * b1, b2 - b1]]) / (b1 + b2)
     t = np.exp((1j) * gamma[g - 1] * thickness[g - 1])
     T[2 * g - 1] = [[0, t], [t, 0]]
     # Once the scattering matrixes have been prepared, now let us combine them
@@ -954,13 +957,14 @@ def Profile(struct,n_eff,wavelength,polarization,pixel_size = 3):
     # We compute all the scattering matrixes starting with the second layer
     T = np.zeros((2 * g, 2, 2), dtype=complex)
     T[0] = [[0, 1], [1, 0]]
+    gf = gamma / f[Type]
     for k in range(1,g):
         t = np.exp(1j * gamma[k] * thickness[k])
         T[2 * k -1 ] = np.array([[0, t], [t, 0]])
-        b1 = gamma[k] / f[Type[k]]
-        b2 = gamma[k + 1] / f[Type[k + 1]]
-        T[2 * k ] = np.array([[b1 - b2, 2 * b2], [2 * b1, b2 - b1]]) / (
-                    b1 + b2)
+        b1 = gf[k]
+        b2 = gf[k + 1]
+        T[2 * k ] = np.array([[b1 - b2, 2 * b2],
+                              [2 * b1, b2 - b1]]) / (b1 + b2)
     t = np.exp(1j * gamma[g] * thickness[g])
     T[2 * g - 1] = np.array([[0, t], [t, 0]])
 
@@ -1100,13 +1104,14 @@ def Green(struct,window,lam,source_interface):
             gamma[g] = np.sqrt(
                 Epsilon[Type[g]] * Mu[Type[g]] * k0 ** 2 - alpha ** 2)
 
+        gf = gamma / f[Type]
         for k in range(g):
             t = np.exp(1j * gamma[k] * thickness[k])
             T[2 * k + 1] = np.array([[0, t], [t, 0]])
-            b1 = gamma[k] / f[Type[k]]
-            b2 = gamma[k + 1] / f[Type[k + 1]]
-            T[2 * k + 2] = np.array([[b1 - b2, 2 * b2], [2 * b1, b2 - b1]]) / (
-                    b1 + b2)
+            b1 = gf[k]
+            b2 = gf[k + 1]
+            T[2 * k + 2] = np.array([[b1 - b2, 2 * b2],
+                                     [2 * b1, b2 - b1]]) / (b1 + b2)
         t = np.exp(1j * gamma[g] * thickness[g])
         T[2 * g + 1] = np.array([[0, t], [t, 0]])
 
@@ -1231,15 +1236,16 @@ def coefficient_S(struct, wavelength, incidence, polarization):
 
     # first S matrix
     T[0] = [[0, 1], [1, 0]]
+    gf = gamma / f[Type]
     for k in range(g - 1):
         # Layer scattering matrix
         t = np.exp((1j) * gamma[k] * thickness[k])
         T[2 * k + 1] = [[0, t], [t, 0]]
         # Interface scattering matrix
-        b1 = gamma[k] / f[Type[k]]
-        b2 = gamma[k + 1] / f[Type[k + 1]]
-        T[2 * k + 2] = [[(b1 - b2) / (b1 + b2), 2 * b2 / (b1 + b2)],
-                        [2 * b1 / (b1 + b2), (b2 - b1) / (b1 + b2)]]
+        b1 = gf[k]
+        b2 = gf[k + 1]
+        T[2 * k + 2] = np.array([[b1 - b2, 2 * b2],
+                                 [2 * b1, b2 - b1]]) / (b1 + b2)
     t = np.exp((1j) * gamma[g - 1] * thickness[g - 1])
     T[2 * g - 1] = [[0, t], [t, 0]]
     # Once the scattering matrixes have been prepared, now let us combine them
@@ -1331,39 +1337,39 @@ def coefficient_A(struct, wavelength, incidence, polarization):
 
 
     T = np.zeros(((g-1, 2, 2)), dtype=complex)
+    c = np.cos(gamma * thickness)
+    s = np.sin(gamma * thickness)
+    gf = gamma/f[Type]
     for k in range(g-1):
         # Layer scattering matrix
-        c = np.cos(gamma[k] * thickness[k])
-        s = np.sin(gamma[k] * thickness[k])
 
-        T[k] = [[c, -f[Type[k]]/gamma[k] * s],
-                [gamma[k]/f[Type[k]] * s, c]]
+        T[k] = [[c[k], -s[k] / gf[k]],
+                [gf[k] * s[k], c[k]]]
     # Once the scattering matrixes have been prepared, now let us combine them
 
-    A = np.empty(T.shape, dtype=complex)
-    A[0] = T[0]
+    A = np.empty((2,2), dtype=complex)
+    A = T[0]
     for i in range(1, T.shape[0]):
-        A[i] = T[i] @ A[i - 1]
+        A = T[i] @ A
 
-    a = A[-1][0, 0]
-    b = A[-1][0, 1]
-    c = A[-1][1, 0]
-    d = A[-1][1, 1]
+    a = A[0, 0]
+    b = A[0, 1]
+    c = A[1, 0]
+    d = A[1, 1]
 
-    amb = a - 1.j * gamma[0]/f[Type[0]] * b
-    apb = a + 1.j * gamma[0]/f[Type[0]] * b
-    cmd = c - 1.j * gamma[0]/f[Type[0]] * d
-    cpd = c + 1.j * gamma[0]/f[Type[0]] * d
+    amb = a - 1.j * gf[0] * b
+    apb = a + 1.j * gf[0] * b
+    cmd = c - 1.j * gf[0] * d
+    cpd = c + 1.j * gf[0] * d
     # reflection coefficient of the whole structure
 
-    r = -(cmd + 1.j * gamma[-1]/f[Type[-1]] * amb)/(cpd + 1.j * gamma[-1]/f[Type[-1]] * apb)
+    r = -(cmd + 1.j * gf[-1] * amb)/(cpd + 1.j * gf[-1] * apb)
     # transmission coefficient of the whole structure
-    t = a * (r+1) + 1.j * gamma[0]/f[Type[0]] * b * (r-1)
+    t = a * (r+1) + 1.j * gf[0] * b * (r-1)
     # Energy reflexion coefficient;
     R = np.real(abs(r) ** 2)
     # Energy transmission coefficient;
-    T = np.real(
-        abs(t) ** 2 * gamma[g - 1] * f[Type[0]] / (gamma[0] * f[Type[g - 1]]))
+    T = np.real(abs(t) ** 2 * gf[g - 1] / gf[0])
 
     return r, t, R, T
 
@@ -1436,36 +1442,32 @@ def coefficient_T(struct, wavelength, incidence, polarization):
             Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
 
     T = np.zeros(((2*g-2, 2, 2)), dtype=complex)
+    gf = gamma/f[Type]
+    sum = (gf[1:] + gf[:-1]) / (2*gf[1:])
+    dif = (gf[1:] - gf[:-1]) / (2*gf[1:])
+    phases = np.exp(1.j* gamma[1:] * thickness[1:])
     for k in range(g-1):
-        sum = gamma[k]/f[Type[k]] + gamma[k+1]/f[Type[k+1]]
-        dif = gamma[k]/f[Type[k]] - gamma[k+1]/f[Type[k+1]]
-        # print("pop", gamma[k], gamma[k+1])
-        # print(sum, dif)
         # Layer transfer matrix
-        T[2*k] = f[Type[k+1]]/(2*gamma[k+1]) * np.array([[sum, -dif],
-                                                          [-dif, sum]])
+        T[2*k] = [[sum[k], dif[k]],
+                  [dif[k], sum[k]]]
 
-        phase = 1.j* gamma[k+1] * thickness[k+1]
         # Layer propagation matrix
-        T[2*k+1] = [[np.exp(-phase), 0],
-                    [0, np.exp(phase)]]
+        T[2*k+1] = [[1/phases[k], 0],
+                    [0, phases[k]]]
     # Once the scattering matrixes have been prepared, now let us combine them
 
-    A = np.empty(T.shape, dtype=complex)
-    A[0] = T[0]
+    A = np.empty((2,2), dtype=complex)
+    A = T[0]
     for i in range(1, T.shape[0]):
-        A[i] =  A[i - 1] @ T[i]
-    #print(T)
-    #print(A)
+        A =  A @ T[i]
     # reflection coefficient of the whole structure
-    r = -A[-1][1,0]/A[-1][0,0]
+    r = -A[1,0] / A[0,0]
     # transmission coefficient of the whole structure
-    t = A[-1][1,1] - (A[-1][1,0] * A[-1][0,1])/A[-1][0,0]
+    t = A[1,1] - (A[1,0] * A[0,1])/A[0,0]
     # Energy reflexion coefficient;
     R = np.real(abs(r) ** 2)
     # Energy transmission coefficient;
-    T = np.real(
-        abs(t) ** 2 * gamma[g - 1] * f[Type[0]] / (gamma[0] * f[Type[g - 1]]))
+    T = np.real(abs(t) ** 2 * gf[g - 1] / gf[0])
 
     return r, t, R, T
 
@@ -1539,13 +1541,13 @@ def coefficient_DN(struct, wavelength, incidence, polarization):
 
 
     T = np.zeros(((g-2, 2, 2)), dtype=complex)
+    gf = gamma/f[Type]
+    t = np.tan(gamma * thickness) / gf
+    s = np.sin(gamma * thickness) / gf
     for k in range(1,g-1):
         # Layer scattering matrix
-        t = np.tan(gamma[k] * thickness[k])
-        s = np.sin(gamma[k] * thickness[k])
-
-        T[k-1] = [[gamma[k] / (f[Type[k]] * t), -gamma[k] / (f[Type[k]] * s)],
-                [gamma[k] / (f[Type[k]] * s), -gamma[k] / (f[Type[k]] * t)]]
+        T[k-1] = np.array([[1 / t[k], -1 / s[k]],
+                           [1 / s[k], -1 / t[k]]])
     # Once the scattering matrixes have been prepared, now let us combine them
 
     A = np.empty(T.shape, dtype=complex)
@@ -1560,7 +1562,7 @@ def coefficient_DN(struct, wavelength, incidence, polarization):
 
     # reflection coefficient of the whole structure
 
-    gamma_eps = 1.j*gamma[0]/f[Type[0]]
+    gamma_eps = 1.j*gf[0]
 
     r = ((a + gamma_eps)*(d + gamma_eps) - b*c)/((gamma_eps - a)*(d + gamma_eps) + b*c)
     # transmission coefficient of the whole structure
@@ -1568,8 +1570,7 @@ def coefficient_DN(struct, wavelength, incidence, polarization):
     # Energy reflexion coefficient;
     R = np.real(abs(r) ** 2)
     # Energy transmission coefficient;
-    T = np.real(
-        abs(t) ** 2 * gamma[g - 1] * f[Type[0]] / (gamma[0] * f[Type[g - 1]]))
+    T = np.real(abs(t) ** 2 * gf[g - 1] / gf[0])
 
     return r, t, R, T
 
@@ -1647,16 +1648,14 @@ def coefficient_I(struct, wavelength, incidence, polarization):
     n = np.sqrt(Epsilon*Mu)
 
     n_s[0] = n[Type[0]] * np.cos(incidence)
-    for l in np.arange(1,g):
-        n_s[l] = np.sqrt(n[Type[l]]**2 - n[Type[0]]**2 * sin_theta[0]**2)
-        if (np.imag(n_s[l])>0):
-            # n = n-ik formalism
-            n_s[l] = -n_s[l]
-        #sin_theta[l] = n[Type[l-1]]/n[Type[l]] * sin_theta[l-1]
-    n_p = n[Type]**2/n_s
+    n_s[1:] = np.sqrt(n[Type[1:]]**2 - n[Type[0]]**2 * sin_theta[0]**2)
+    opp = np.imag(n_s) > 0
+    n_s = n_s - 2* n_s * (opp)
+
+    n_p = n[Type]**2 / n_s
     delta = 2*np.pi*thickness*n_s/wavelength
     #cos_theta = np.cos(np.arcsin(sin_theta))
-    temp = -np.tan(delta)
+    temp = -1.j*np.tan(delta)
     #print(sin_theta)
     #print(cos_theta)
     #print(temp)
@@ -1669,7 +1668,7 @@ def coefficient_I(struct, wavelength, incidence, polarization):
     Y = admittance[-1]
 
     for m in np.arange(g-2,-1,-1):
-        Y = (Y + 1.j*admittance[m]*temp[m])/(1 + 1.j*Y*temp[m]/admittance[m])
+        Y = (Y + admittance[m]*temp[m])/(1 + Y*temp[m]/admittance[m])
 
     r = (admittance[0]-Y) / (admittance[0]+Y)
     if (polarization == 1):
