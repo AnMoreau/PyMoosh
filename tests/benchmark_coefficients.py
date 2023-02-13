@@ -1,5 +1,5 @@
 import numpy as np
-import PyMoosh as PM
+from context import PM
 import matplotlib.pyplot as plt
 from time import time
 
@@ -13,7 +13,7 @@ wav = 40.2
 ep1 = wav/(4*mat1)
 ep2 = wav/(4*mat2)
 
-layers = np.arange(5, 131, 5)
+layers = np.arange(5, 181, 5)
 
 
 print("Normal incidence, Bragg Mirror")
@@ -166,6 +166,7 @@ axs[0,0].plot(layers, abs(rs_s_te-rs_t_te), label="T")
 axs[0,0].plot(layers, abs(rs_s_te-rs_i_te), label="Impedance")
 axs[0,0].set_title("Reflection error TE Normal incidence")
 axs[0,0].set_xlabel("Nb Layers")
+axs[0,0].set_ylim([-0.1,1.1])
 axs[0,0].legend()
 
 
@@ -175,6 +176,7 @@ axs[0,1].plot(layers, abs(rs_s_tm-rs_t_tm), label="T")
 axs[0,1].plot(layers, abs(rs_s_tm-rs_i_tm), label="Impedance")
 axs[0,1].set_title("Reflection error TM Normal incidence")
 axs[0,1].set_xlabel("Nb Layers")
+axs[0,1].set_ylim([-0.1,1.1])
 axs[0,1].legend()
 
 
@@ -183,6 +185,7 @@ axs[1,0].plot(layers, abs(ts_s_te-ts_dn_te), label="D2N")
 axs[1,0].plot(layers, abs(ts_s_te-ts_t_te), label="T")
 axs[1,0].set_title("Transmission error TE Normal incidence")
 axs[1,0].set_xlabel("Nb Layers")
+axs[1,0].set_ylim([-0.1,1.1])
 axs[1,0].legend()
 
 
@@ -191,8 +194,9 @@ axs[1,1].plot(layers, abs(ts_s_tm-ts_dn_tm), label="D2N")
 axs[1,1].plot(layers, abs(ts_s_tm-ts_t_tm), label="T")
 axs[1,1].set_title("Transmission error TM Normal incidence")
 axs[1,1].set_xlabel("Nb Layers")
+axs[1,1].set_ylim([-0.1,1.1])
 axs[1,1].legend()
-
+plt.tight_layout()
 plt.show()
 
 
@@ -347,6 +351,7 @@ axs[0,0].plot(layers, abs(rs_s_te-rs_t_te), label="T")
 axs[0,0].plot(layers, abs(rs_s_te-rs_i_te), label="Impedance")
 axs[0,0].set_title("Reflection error TE large incidence")
 axs[0,0].set_xlabel("Nb Layers")
+axs[0,0].set_ylim([-0.1,1.1])
 axs[0,0].legend()
 
 
@@ -356,6 +361,7 @@ axs[0,1].plot(layers, abs(rs_s_tm-rs_t_tm), label="T")
 axs[0,1].plot(layers, abs(rs_s_tm-rs_i_tm), label="Impedance")
 axs[0,1].set_title("Reflection error TM large incidence")
 axs[0,1].set_xlabel("Nb Layers")
+axs[0,1].set_ylim([-0.1,1.1])
 axs[0,1].legend()
 
 
@@ -364,6 +370,7 @@ axs[1,0].plot(layers, abs(ts_s_te-ts_dn_te), label="D2N")
 axs[1,0].plot(layers, abs(ts_s_te-ts_t_te), label="T")
 axs[1,0].set_title("Transmission error TE large incidence")
 axs[1,0].set_xlabel("Nb Layers")
+axs[1,0].set_ylim([-0.1,1.1])
 axs[1,0].legend()
 
 
@@ -372,9 +379,10 @@ axs[1,1].plot(layers, abs(ts_s_tm-ts_dn_tm), label="D2N")
 axs[1,1].plot(layers, abs(ts_s_tm-ts_t_tm), label="T")
 axs[1,1].set_title("Transmission error TM large incidence")
 axs[1,1].set_xlabel("Nb Layers")
+axs[1,1].set_ylim([-0.1,1.1])
 axs[1,1].legend()
 
-
+plt.tight_layout()
 plt.show()
 
 
@@ -529,6 +537,7 @@ axs[0,0].plot(layers, abs(rs_s_te-rs_t_te), label="T")
 axs[0,0].plot(layers, abs(rs_s_te-rs_i_te), label="Impedance")
 axs[0,0].set_title("Reflection error TE Intermediate incidence")
 axs[0,0].set_xlabel("Nb Layers")
+axs[0,0].set_ylim([-0.1,1.1])
 axs[0,0].legend()
 
 
@@ -538,6 +547,7 @@ axs[0,1].plot(layers, abs(rs_s_tm-rs_t_tm), label="T")
 axs[0,1].plot(layers, abs(rs_s_tm-rs_i_tm), label="Impedance")
 axs[0,1].set_title("Reflection error TM Intermediate incidence")
 axs[0,1].set_xlabel("Nb Layers")
+axs[0,1].set_ylim([-0.1,1.1])
 axs[0,1].legend()
 
 
@@ -546,6 +556,7 @@ axs[1,0].plot(layers, abs(ts_s_te-ts_dn_te), label="D2N")
 axs[1,0].plot(layers, abs(ts_s_te-ts_t_te), label="T")
 axs[1,0].set_title("Transmission error TE Intermediate incidence")
 axs[1,0].set_xlabel("Nb Layers")
+axs[1,0].set_ylim([-0.1,1.1])
 axs[1,0].legend()
 
 
@@ -554,10 +565,11 @@ axs[1,1].plot(layers, abs(ts_s_tm-ts_dn_tm), label="D2N")
 axs[1,1].plot(layers, abs(ts_s_tm-ts_t_tm), label="T")
 axs[1,1].set_title("Transmission error TM Intermediate incidence")
 axs[1,1].set_xlabel("Nb Layers")
+axs[1,1].set_ylim([-0.1,1.1])
 axs[1,1].legend()
 
 
-
+plt.tight_layout()
 plt.show()
 
 ## Frustrated total internal reflection
@@ -566,11 +578,11 @@ plt.show()
 print("Frustrated total internal reflection:")
 materials = [1, mat1**2, mat2**2]
 
-incidence = np.arcsin(1/mat1)-0.01
+incidence = np.arcsin(1/mat1)+0.3
 
 stack = [1, 0, 1]
 
-distances = wav * np.arange(0.01, 0.5, 0.01)
+distances = wav * np.arange(0.01, 7, 0.01)
 
 rs_s_te = []
 ts_s_te = []
@@ -707,39 +719,43 @@ rs_i_te = np.array(rs_i_te)
 rs_i_tm = np.array(rs_i_tm)
 
 fig, axs = plt.subplots(2, 2, sharex=True, figsize=(10,10))
-axs[0,0].plot(distances, abs(rs_s_te-rs_a_te), label="abeles")
-axs[0,0].plot(distances, abs(rs_s_te-rs_dn_te), label="D2N")
-axs[0,0].plot(distances, abs(rs_s_te-rs_t_te), label="T")
-axs[0,0].plot(distances, abs(rs_s_te-rs_i_te), label="Impedance")
+axs[0,0].plot(distances/wav, abs(rs_s_te-rs_a_te), label="abeles")
+axs[0,0].plot(distances/wav, abs(rs_s_te-rs_dn_te), label="D2N")
+axs[0,0].plot(distances/wav, abs(rs_s_te-rs_t_te), label="T")
+axs[0,0].plot(distances/wav, abs(rs_s_te-rs_i_te), label="Impedance")
 axs[0,0].set_title("Reflection error TE frustrated TIR")
 axs[0,0].set_xlabel("Distance")
+axs[0,0].set_ylim([-0.1,1.1])
 axs[0,0].legend()
 
 
-axs[0,1].plot(distances, abs(rs_s_tm-rs_a_tm), label="abeles")
-axs[0,1].plot(distances, abs(rs_s_tm-rs_dn_tm), label="D2N")
-axs[0,1].plot(distances, abs(rs_s_tm-rs_t_tm), label="T")
-axs[0,1].plot(distances, abs(rs_s_tm-rs_i_tm), label="Impedance")
+axs[0,1].plot(distances/wav, abs(rs_s_tm-rs_a_tm), label="abeles")
+axs[0,1].plot(distances/wav, abs(rs_s_tm-rs_dn_tm), label="D2N")
+axs[0,1].plot(distances/wav, abs(rs_s_tm-rs_t_tm), label="T")
+axs[0,1].plot(distances/wav, abs(rs_s_tm-rs_i_tm), label="Impedance")
 axs[0,1].set_title("Reflection error TM frustrated TIR")
 axs[0,1].set_xlabel("Distance")
+axs[0,1].set_ylim([-0.1,1.1])
 axs[0,1].legend()
 
 
-axs[1,0].plot(distances, abs(ts_s_te-ts_a_te), label="abeles")
-axs[1,0].plot(distances, abs(ts_s_te-ts_dn_te), label="D2N")
-axs[1,0].plot(distances, abs(ts_s_te-ts_t_te), label="T")
+axs[1,0].plot(distances/wav, abs(ts_s_te-ts_a_te), label="abeles")
+axs[1,0].plot(distances/wav, abs(ts_s_te-ts_dn_te), label="D2N")
+axs[1,0].plot(distances/wav, abs(ts_s_te-ts_t_te), label="T")
 axs[1,0].set_title("Transmission error TE frustrated TIR")
 axs[1,0].set_xlabel("Distance")
+axs[1,0].set_ylim([-0.1,1.1])
 axs[1,0].legend()
 
 
-axs[1,1].plot(distances, abs(ts_s_tm-ts_a_tm), label="abeles")
-axs[1,1].plot(distances, abs(ts_s_tm-ts_dn_tm), label="D2N")
-axs[1,1].plot(distances, abs(ts_s_tm-ts_t_tm), label="T")
+axs[1,1].plot(distances/wav, abs(ts_s_tm-ts_a_tm), label="abeles")
+axs[1,1].plot(distances/wav, abs(ts_s_tm-ts_dn_tm), label="D2N")
+axs[1,1].plot(distances/wav, abs(ts_s_tm-ts_t_tm), label="T")
 axs[1,1].set_title("Transmission error TM frustrated TIR")
 axs[1,1].set_xlabel("Distance")
+axs[1,1].set_ylim([-0.1,1.1])
 axs[1,1].legend()
 
 
-
+plt.tight_layout()
 plt.show()

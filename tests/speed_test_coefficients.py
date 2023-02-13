@@ -1,11 +1,18 @@
 import numpy as np
-import PyMoosh as PM
+from context import PM
 import matplotlib.pyplot as plt
 from time import time
 
 ## Computation times
 
 nb_iter = 500 #averaging
+layers = np.arange(5, 181, 5)
+
+wav = 3.5
+ep1 = 2
+ep2 = 3
+materials = [1, 1.5**2, 2**2]
+incidence = 15 * np.pi/180
 
 times_s_tm = np.zeros(len(layers), dtype=float)
 
