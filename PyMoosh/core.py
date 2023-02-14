@@ -132,6 +132,11 @@ class Structure:
         self.layer_type = layer_type
         self.thickness = thickness
 
+    def __str__(self):
+        materials = [str(self.materials[i]) for i in range(len(self.materials))]
+        s = f"materials: {materials}\nlayers: {self.layer_type}\nthicknesses: {self.thickness}"
+        return s
+
     def polarizability(self, wavelength):
         """ Computes the actual permittivity of each material considered in
         the structure. This method is called before each calculation.
@@ -2013,3 +2018,109 @@ def coefficient_with_grad_T(struct, wavelength, incidence, polarization, mode="v
             abs(t) ** 2 * gamma[g - 1] * f[Type[0]] / (gamma[0] * f[Type[g - 1]]))
 
         return r, t, R, T
+
+def diff_coefficient(struct, wavelength, incidence, polarization, method="S", pas=0.01):
+    """
+    This function computes the reflection and transmission coefficients derivative
+    of the structure using the Transfer matrix formalism.
+
+    Args:
+        struct (Structure): belongs to the Structure class
+        wavelength (float): wavelength of the incidence light (in nm)
+        incidence (float): incidence angle in radians
+        polarization (float): 0 for TE, 1 (or anything) for TM
+        method (string): T for T matrix, A for abeles matrix
+
+    returns:
+        dr (complex): deriv. of reflection coefficient, phase origin at first interface
+        dt (complex): deriv. of transmission coefficient
+        dR (float): deriv. of Reflectance (energy reflection)
+        dT (float): deriv. of Transmittance (energie transmission)
+
+
+    R and T are the energy coefficients (real quantities)
+
+    .. warning: The transmission coefficients have a meaning only if the lower medium
+    is lossless, or they have no true meaning.
+    """
+
+    nb_var = len(struct.thickness)-2 + len(struct.layer_type)-2
+    base_thickness = struct.thickness
+    base_mat = np.array(struct.materials)
+    base_lay = struct.layer_type
+
+    dr = np.zeros(nb_var, dtype=complex)
+    dt = np.zeros(nb_var, dtype=complex)
+    dR = np.zeros(nb_var, dtype=float)
+    dT = np.zeros(nb_var, dtype=float)
+
+    function = None
+
+    if (method == "T"):
+        function = coefficient_with_grad_T
+    elif (method =="A"):
+        function = coefficient_with_grad_A
+
+    if not function is None:
+        # Using one of the fast differentiation methods
+        r, t, R, T, A, B = function(struct, wavelength, incidence, polarization, mode="value")
+
+        for i in range(len(base_thickness) - 2):
+            thickness = base_thickness.copy()
+            thickness[i+1] += pas
+            struct = Structure(base_mat, base_lay, thickness, verbose=False)
+            r_pas, t_pas, R_pas, T_pas = function(struct, wavelength, incidence, polarization,
+                                                  mode="grad", i_change=i+1, saved_mat=[A,B])
+            dr[i] = (r_pas - r)/pas
+            dt[i] = (t_pas - t)/pas
+            dR[i] = (R_pas - R)/pas
+            dT[i] = (T_pas - T)/pas
+
+        for i in range(len(base_mat)-2):
+            mat = list(base_mat.copy())
+            layer_type = base_lay.copy()
+
+            mat.append(mat[base_lay[i+1]].permittivity+pas)
+            # Creating a new permittivity and referencing it
+            layer_type[i+1] = len(mat)-1
+
+            struct = Structure(mat, layer_type, base_thickness, verbose=False)
+            r_pas, t_pas, R_pas, T_pas = function(struct, wavelength, incidence, polarization,
+                                                  mode="grad", i_change=i+1, saved_mat=[A,B])
+            dr[i+len(base_thickness)-2] = (r_pas - r)/pas
+            dt[i+len(base_thickness)-2] = (t_pas - t)/pas
+            dR[i+len(base_thickness)-2] = (R_pas - R)/pas
+            dT[i+len(base_thickness)-2] = (T_pas - T)/pas
+
+        return dr, dt, dR, dT
+
+    # Not using the fast computation -> using S matrix formalism
+    function = coefficient_S
+    r, t, R, T, = function(struct, wavelength, incidence, polarization)
+
+    for i in range(len(base_thickness)-2):
+        thickness = base_thickness.copy()
+        thickness[i+1] += pas
+        struct = Structure(base_mat, base_lay, thickness, verbose=False)
+        r_pas, t_pas, R_pas, T_pas = function(struct, wavelength, incidence, polarization)
+        dr[i] = (r_pas - r)/pas
+        dt[i] = (t_pas - t)/pas
+        dR[i] = (R_pas - R)/pas
+        dT[i] = (T_pas - T)/pas
+
+    for i in range(len(base_mat)-2):
+        mat = list(base_mat.copy())
+        layer_type = base_lay.copy()
+
+        mat.append(mat[base_lay[i+1]].permittivity+pas)
+        # Creating a new permittivity and referencing it
+        layer_type[i+1] = len(mat)-1
+
+        struct = Structure(mat, layer_type, base_thickness, verbose=False)
+        r_pas, t_pas, R_pas, T_pas = function(struct, wavelength, incidence, polarization)
+        dr[i+len(base_thickness)-2] = (r_pas - r)/pas
+        dR[i+len(base_thickness)-2] = (R_pas - R)/pas
+        dt[i+len(base_thickness)-2] = (t_pas - t)/pas
+        dT[i+len(base_thickness)-2] = (T_pas - T)/pas
+
+    return dr, dt, dR, dT
