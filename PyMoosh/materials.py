@@ -9,6 +9,9 @@ class Material:
     def __init__(self,permittivity):
         self.permittivity = permittivity
 
+    def __str__(self):
+        return str(self.permittivity)
+
     def get_permittivity(self,wavelength):
         return self.permittivity
 
