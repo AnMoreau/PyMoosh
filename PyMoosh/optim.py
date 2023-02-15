@@ -48,14 +48,23 @@ def Differential_Evolution(f_cout,budget,X_min,X_max,population = 30):
     while evaluation<budget-population:
         for k in range(0,population):
             crossover=(np.random.random(n)<cr)
-            X=(omega[k]+f1*(omega[np.random.randint(population)]-omega[np.random.randint(population)])+f2*(best-omega[k]))*crossover+(1-crossover)*omega[k]
+            X=(\
+            # Current
+            omega[k]\
+            +f1*(omega[np.random.randint(population)]\
+            -omega[np.random.randint(population)])\
+            # To best
+            +f2*(best-omega[k]))
+            # And cross-over
+            *(1-crossover)+
+            crossover*omega[k]
+
             if np.prod((X>=X_min)*(X<=X_max)):
                 tmp=f_cout(X)
                 evaluation=evaluation+1
                 if (tmp<cost[k]) :
                     cost[k]=tmp
                     omega[k]=X
-
         generation=generation+1
         who=np.argmin(cost)
         best=omega[who]
