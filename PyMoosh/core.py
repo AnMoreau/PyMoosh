@@ -3,6 +3,7 @@ import scipy.optimize as optim
 from math import *
 import sys
 import copy
+import matplotlib.pyplot as plt
 
 from PyMoosh.materials import *
 
@@ -61,26 +62,26 @@ class Structure:
                 materials_final.append(mat)
                 if verbose :
                     print("Object:",mat.__class__.__name__)
-            elif isinstance(mat,float) or isinstance(mat,complex):
-                new_mat = Material(mat)
-                materials_final.append(new_mat)
-                if verbose :
-                    print("Simple, non dispersive: epsilon=",mat)
-            elif isinstance(mat,int):
-                new_mat = Material(float(mat))
-                materials_final.append(new_mat)
-                if verbose :
-                    print("Simple, non dispersive: epsilon=",mat)
-            elif isinstance(mat,list):
-                newmat = MagneticND(mat[0],mat[1])
-                materials_final.append(new_mat)
-                if verbose :
-                    print("Magnetic, non dispersive: epsilon=", mat[0]," mu=",mat[1])
             elif mat.__class__.__name__ == 'function':
                 newmat = CustomFunction(mat)
                 materials_final.append(new_mat)
                 if verbose :
                     print("Custom dispersive material. Epsilon=",mat.__name__,"(wavelength in nm)")
+            # no func / not iterable --> single value, convert to complex by default
+            elif not hasattr(mat, '__iter__'):
+                new_mat = Material(complex(mat))
+                materials_final.append(new_mat)
+                if verbose :
+                    print("Simple, non dispersive: epsilon=",mat)
+            # iterable: if list or similar --> magnetic
+            elif isinstance(mat,list) or isinstance(mat,tuple) or isinstance(mat,np.ndarray):
+                newmat = MagneticND(mat[0],mat[1])
+                materials_final.append(new_mat)
+                if verbose :
+                    print("Magnetic, non dispersive: epsilon=", mat[0]," mu=",mat[1])
+                if len(mat)>2:
+                    print(f'Warning: Magnetic material should have 2 values (epsilon / mu), but {len(mat)} were given.')
+            # iterable: string --> database material
             elif isinstance(mat,str):
                 # from file in shipped database
                 import pkgutil
@@ -88,8 +89,6 @@ class Structure:
                 f_str = f.decode(encoding='utf8')
                 database = json.loads(f_str)
                 if mat in database:
-                    if verbose :
-                        print("Database material:",mat)
                     material_data = database[mat]
                     model = material_data["model"]
 #                    match model:
@@ -99,7 +98,7 @@ class Structure:
                         epsilon = np.array(material_data["permittivities"])
                         if "permittivities_imag" in material_data:
                             epsilon = epsilon + 1j*np.array(material_data["permittivities_imag"])
-                        new_mat= ExpData(wl,epsilon)
+                        new_mat= ExpData(wl,epsilon, name=mat)
                         materials_final.append(new_mat)
 #                    case "BrendelBormann"
                     elif model == "BrendelBormann":
@@ -110,17 +109,20 @@ class Structure:
                         gamma = material_data["Gamma"]
                         omega = material_data["omega"]
                         sigma = material_data["sigma"]
-                        new_mat = BrendelBormann(f0,Gamma0,omega_p,ff,gamma,omega,sigma)
+                        new_mat = BrendelBormann(f0,Gamma0,omega_p,ff,gamma,omega,sigma, name=mat)
                         materials_final.append(new_mat)
 #                    case "CustomFunction":
                     elif model == "CustomFunction":
                         permittivity = material_data["function"]
-                        new_mat = CustomFunction(authorized[permittivity])
+                        new_mat = CustomFunction(authorized[permittivity], name=mat)
                         materials_final.append(new_mat)
 #                    case _:
                     else:
                         print(model," not an existing model.")
                         #sys.exit()
+
+                    if verbose :
+                        print("Database material:",new_mat)
                 else:
                     print(mat,"Unknown material")
                     print("Known materials:\n", existing_materials())
@@ -156,6 +158,73 @@ class Structure:
             mu[k] = material.get_permeability(wavelength)
 
         return epsilon, mu
+
+
+    def plot_stack(struct, wavelength=None, lim_eps_colors=[1.5, 4]):
+        """plot layerstack
+
+        evaluate materials at given wavelength for labels
+        """
+        if wavelength is None:
+            wavelength=500.0
+
+        _mats = []
+        _mats_names = []
+        _index_diff = []
+        for i, mat in enumerate(np.array(struct.materials)[struct.layer_type]):
+            if hasattr(mat, 'name') and len(mat.name)>0:
+                # Named materials
+                _mats_names.append(mat.name)
+                _index_diff.append(i)
+            # Simply using the permittivity at a given wavelength (default is 500 nm)
+            _mats.append(mat.get_permittivity(wavelength))
+        _index_diff = np.array(_index_diff)
+
+        _thick = struct.thickness
+
+        ## give sub- and superstrate a finite thickness
+        if _thick[0] == 0: _thick[0] = 50
+        if _thick[-1] == 0: _thick[-1] = 50
+
+        ## reverse order so that top layer is on top in plot
+        _thick = _thick[::-1]
+        _mats = _mats[::-1]
+
+        ## define colors for layers of different ref.indices
+        if any(isinstance(x, str) for x in _mats):
+            colors = ['.3'] + [f'C{i}'for i in range(len(_thick)-2)] + ['.3']
+        else:
+            cmap = plt.cm.jet
+            colors = ['.3'] + [cmap((n.real-lim_eps_colors[0])/lim_eps_colors[1])
+                                       for n in _mats[1:-1]] + ['.3']
+
+        for i, di in enumerate(_thick):
+            d0 = np.sum(_thick[:i])
+            n = _mats[i]
+
+            if type(n) is not str:
+                n = str(np.round(n, 2))
+
+            if i < len(_thick)-1:
+                plt.axhline(d0+di, color='k', lw=1)
+            plt.axhspan(d0, d0+di, color=colors[i], alpha=0.5)
+
+            if i not in _index_diff:
+                text = f'eps={n}'
+            else:
+                text = f'mat={_mats_names[np.where(_index_diff==i)[0][0]]}'
+
+            if len(_thick)-1 > i >= 1:
+                plt.text(0.05, d0+di/2, text, ha='left', va='center',fontsize=8)
+                plt.text(0.95, d0+di/2, f'd={int(np.round(di))}nm', ha='right', va='center',fontsize=8)
+            else:
+                plt.text(0.1, d0+di/2, text, ha='left', va='center',fontsize=8)
+        plt.title(f'permittivities at wavelength = {wavelength}nm')
+        plt.ylabel('D (nm)')
+        plt.xticks([])
+        plt.show()
+
+
 
 
 class Beam:
@@ -260,7 +329,7 @@ def absorption(struct, wavelength, incidence, polarization):
     """
     This function computes the percentage of the incoming energy
     that is absorbed in each layer when the structure is illuminated
-    by a plane wave.
+    by a plane wave.For now, uses the S matrix formalism
 
     Args:
         struct (Structure): belongs to the Structure class
@@ -280,121 +349,7 @@ def absorption(struct, wavelength, incidence, polarization):
     is lossless, or they have no true meaning.
 
     """
-    # The medium may be dispersive. The permittivity and permability of each
-    # layer has to be computed each time.
-    Epsilon, Mu = struct.polarizability(wavelength)
-
-    thickness = copy.deepcopy(struct.thickness)
-    # In order to ensure that the phase reference is at the beginning
-    # of the first layer.
-    thickness[0] = 0
-    Type = struct.layer_type
-    # The boundary conditions will change when the polarization changes.
-    if polarization == 0:
-        f = Mu
-    else:
-        f = Epsilon
-    # Wavevector in vacuum.
-    k0 = 2 * np.pi / wavelength
-    # Number of layers
-    g = len(struct.layer_type)
-    # Wavevector k_x, horizontal
-    alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k0 * np.sin(incidence)
-    # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(
-        Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g) * alpha ** 2)
-    # Be cautious if the upper medium is a negative index one.
-    if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
-        gamma[0] = -gamma[0]
-
-    # Changing the determination of the square root to achieve perfect stability
-    if g > 2:
-        gamma[1:g - 2] = gamma[1:g - 2] * (
-                1 - 2 * (np.imag(gamma[1:g - 2]) < 0))
-    # Outgoing wave condition for the last medium
-    if np.real(Epsilon[Type[g - 1]]) < 0 and np.real(
-            Mu[Type[g - 1]]) < 0 and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[
-        Type[g - 1]] * k0 ** 2 - alpha ** 2)) != 0:
-        gamma[g - 1] = -np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
-    else:
-        gamma[g - 1] = np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
-    T = np.zeros(((2 * g, 2, 2)), dtype=complex)
-
-    # first S matrix
-    T[0] = [[0, 1], [1, 0]]
-    gf = gamma / f[Type]
-    for k in range(g - 1):
-        # Layer scattering matrix
-        t = np.exp((1j) * gamma[k] * thickness[k])
-        T[2 * k + 1] = [[0, t], [t, 0]]
-        # Interface scattering matrix
-        b1 = gf[k]
-        b2 = gf[k + 1]
-        T[2 * k + 2] = np.array([[b1 - b2, 2 * b2],
-                                [2 * b1, b2 - b1]] / (b1 + b2))
-    t = np.exp((1j) * gamma[g - 1] * thickness[g - 1])
-    T[2 * g - 1] = [[0, t], [t, 0]]
-    # Once the scattering matrixes have been prepared, now let us combine them
-    H = np.zeros(((2 * g - 1, 2, 2)), dtype=complex)
-    A = np.zeros(((2 * g - 1, 2, 2)), dtype=complex)
-    H[0] = T[2 * g - 1]
-    A[0] = T[0]
-    for k in range(len(T) - 2):
-        A[k + 1] = cascade(A[k], T[k + 1])
-        H[k + 1] = cascade(T[2 * g - 2 - k], H[k])
-
-    I = np.zeros(((2 * g, 2, 2)), dtype=complex)
-    for k in range(len(T) - 1):
-        I[k] = np.array(
-            [[A[k][1, 0], A[k][1, 1] * H[len(T) - k - 2][0, 1]],
-             [A[k][1, 0] * H[len(T) - k - 2][0, 0],
-              H[len(T) - k - 2][0, 1]]] / (
-                    1 - A[k][1, 1] * H[len(T) - k - 2][0, 0]))
-#        I[k][0, 0] = A[k][1, 0] / (1 - A[k][1, 1] * H[len(T) - 2 - k][0, 0])
-#        I[k][0, 1] = A[k][1, 1] * H[len(T) - 2 - k][0, 1] / (
-#                1 - A[k][1, 1] * H[len(T) - 2 - k][0, 0])
-#        I[k][1, 0] = A[k][1, 0] * H[len(T) - 2 - k][0, 0] / (
-#                1 - A[k][1, 1] * H[len(T) - 2 - k][0, 0])
-#        I[k][1, 1] = H[len(T) - 2 - k][0, 1] / (
-#                1 - A[k][1, 1] * H[len(T) - 2 - k][0, 0])
-    I[2 * g - 1][0, 0] = I[2 * g - 2][0, 0] * np.exp(
-        1j * gamma[g - 1] * thickness[g - 1])
-    I[2 * g - 1][0, 1] = I[2 * g - 2][0, 1] * np.exp(
-        1j * gamma[g - 1] * thickness[g - 1])
-    I[2 * g - 1][1, 0] = 0
-    I[2 * g - 1][1, 1] = 0
-
-    w = 0
-    poynting = np.zeros(2 * g, dtype=complex)
-    if polarization == 0:  # TE
-        for k in range(2 * g):
-            poynting[k] = np.real((I[k][0, 0] + I[k][1, 0]) * np.conj(
-                (I[k][0, 0] - I[k][1, 0]) * gamma[w] / Mu[Type[w]])) * Mu[
-                              Type[0]] / (gamma[0])
-            w = w + 1 - np.mod(k + 1, 2)
-    else:  # TM
-        for k in range(2 * g):
-            poynting[k] = np.real((I[k][0, 0] - I[k][1, 0]) * np.conj(
-                (I[k][0, 0] + I[k][1, 0]) * gamma[w] / Epsilon[Type[w]]) *
-                                  Epsilon[Type[0]] / (gamma[0]))
-            w = w + 1 - np.mod(k + 1, 2)
-    # Absorption in each layer
-    tmp = abs(-np.diff(poynting))
-    # absorb=np.zeros(g,dtype=complex)
-    absorb = tmp[np.arange(0, 2 * g, 2)]
-    # reflection coefficient of the whole structure
-    r = A[len(A) - 1][0, 0]
-    # transmission coefficient of the whole structure
-    t = A[len(A) - 1][1, 0]
-    # Energy reflexion coefficient;
-    R = np.real(abs(r) ** 2)
-    # Energy transmission coefficient;
-    T = np.real(
-        abs(t) ** 2 * gamma[g - 1] * f[Type[0]] / (gamma[0] * f[Type[g - 1]]))
-
-    return absorb, r, t, R, T
+    return absorption_S(struct, wavelength, incidence, polarization)
 
 
 def field(struct, beam, window):
@@ -2124,3 +2079,282 @@ def diff_coefficient(struct, wavelength, incidence, polarization, method="S", pa
         dT[i+len(base_thickness)-2] = (T_pas - T)/pas
 
     return dr, dt, dR, dT
+
+
+
+def absorption_S(struct, wavelength, incidence, polarization):
+    """
+    This function computes the percentage of the incoming energy
+    that is absorbed in each layer when the structure is illuminated
+    by a plane wave.
+
+    Args:
+        struct (Structure): belongs to the Structure class
+        wavelength (float): wavelength of the incidence light (in nm)
+        incidence (float): incidence angle in radians
+        polarization (float): 0 for TE, 1 (or anything) for TM
+
+    returns:
+        absorb (numpy array): absorption in each layer
+        r (complex): reflection coefficient, phase origin at first interface
+        t (complex): transmission coefficient
+        R (float): Reflectance (energy reflection)
+        T (float): Transmittance (energie transmission)
+    R and T are the energy coefficients (real quantities)
+
+    .. warning: The transmission coefficients have a meaning only if the lower medium
+    is lossless, or they have no true meaning.
+
+    """
+    # The medium may be dispersive. The permittivity and permability of each
+    # layer has to be computed each time.
+    Epsilon, Mu = struct.polarizability(wavelength)
+
+    thickness = copy.deepcopy(struct.thickness)
+    # In order to ensure that the phase reference is at the beginning
+    # of the first layer.
+    thickness[0] = 0
+    Type = struct.layer_type
+    # The boundary conditions will change when the polarization changes.
+    if polarization == 0:
+        f = Mu
+    else:
+        f = Epsilon
+    # Wavevector in vacuum.
+    k0 = 2 * np.pi / wavelength
+    # Number of layers
+    g = len(struct.layer_type)
+    # Wavevector k_x, horizontal
+    alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k0 * np.sin(incidence)
+    # Computation of the vertical wavevectors k_z
+    gamma = np.sqrt(
+        Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g) * alpha ** 2)
+    # Be cautious if the upper medium is a negative index one.
+    if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
+        gamma[0] = -gamma[0]
+
+    # Changing the determination of the square root to achieve perfect stability
+    if g > 2:
+        gamma[1:g - 2] = gamma[1:g - 2] * (
+                1 - 2 * (np.imag(gamma[1:g - 2]) < 0))
+    # Outgoing wave condition for the last medium
+    if np.real(Epsilon[Type[g - 1]]) < 0 and np.real(
+            Mu[Type[g - 1]]) < 0 and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[
+        Type[g - 1]] * k0 ** 2 - alpha ** 2)) != 0:
+        gamma[g - 1] = -np.sqrt(
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
+    else:
+        gamma[g - 1] = np.sqrt(
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
+    T = np.zeros(((2 * g, 2, 2)), dtype=complex)
+
+    # first S matrix
+    T[0] = [[0, 1], [1, 0]]
+    gf = gamma / f[Type]
+    for k in range(g - 1):
+        # Layer scattering matrix
+        t = np.exp((1j) * gamma[k] * thickness[k])
+        T[2 * k + 1] = [[0, t], [t, 0]]
+        # Interface scattering matrix
+        b1 = gf[k]
+        b2 = gf[k + 1]
+        T[2 * k + 2] = np.array([[b1 - b2, 2 * b2],
+                                [2 * b1, b2 - b1]] / (b1 + b2))
+    t = np.exp((1j) * gamma[g - 1] * thickness[g - 1])
+    T[2 * g - 1] = [[0, t], [t, 0]]
+    # Once the scattering matrixes have been prepared, now let us combine them
+    H = np.zeros(((2 * g - 1, 2, 2)), dtype=complex)
+    A = np.zeros(((2 * g - 1, 2, 2)), dtype=complex)
+    H[0] = T[2 * g - 1]
+    A[0] = T[0]
+    for k in range(len(T) - 2):
+        A[k + 1] = cascade(A[k], T[k + 1])
+        H[k + 1] = cascade(T[2 * g - 2 - k], H[k])
+
+    I = np.zeros(((2 * g, 2, 2)), dtype=complex)
+    for k in range(len(T) - 1):
+        I[k] = np.array(
+            [[A[k][1, 0], A[k][1, 1] * H[len(T) - k - 2][0, 1]],
+             [A[k][1, 0] * H[len(T) - k - 2][0, 0],
+              H[len(T) - k - 2][0, 1]]] / (
+                    1 - A[k][1, 1] * H[len(T) - k - 2][0, 0]))
+#        I[k][0, 0] = A[k][1, 0] / (1 - A[k][1, 1] * H[len(T) - 2 - k][0, 0])
+#        I[k][0, 1] = A[k][1, 1] * H[len(T) - 2 - k][0, 1] / (
+#                1 - A[k][1, 1] * H[len(T) - 2 - k][0, 0])
+#        I[k][1, 0] = A[k][1, 0] * H[len(T) - 2 - k][0, 0] / (
+#                1 - A[k][1, 1] * H[len(T) - 2 - k][0, 0])
+#        I[k][1, 1] = H[len(T) - 2 - k][0, 1] / (
+#                1 - A[k][1, 1] * H[len(T) - 2 - k][0, 0])
+    I[2 * g - 1][0, 0] = I[2 * g - 2][0, 0] * np.exp(
+        1j * gamma[g - 1] * thickness[g - 1])
+    I[2 * g - 1][0, 1] = I[2 * g - 2][0, 1] * np.exp(
+        1j * gamma[g - 1] * thickness[g - 1])
+    I[2 * g - 1][1, 0] = 0
+    I[2 * g - 1][1, 1] = 0
+    print("I S:", I[:,:,0])
+    print("Ey=", I[1::2,0,0]+I[1::2,1,0])
+    print("dzEy=", -(I[1::2,0,0]-I[1::2,1,0])*1.j*gamma)
+
+    w = 0
+    poynting = np.zeros(2 * g, dtype=complex)
+    if polarization == 0:  # TE
+        for k in range(2 * g):
+            poynting[k] = np.real((I[k][0, 0] + I[k][1, 0]) * np.conj(
+                (I[k][0, 0] - I[k][1, 0]) * gamma[w] / Mu[Type[w]])) * Mu[
+                              Type[0]] / (gamma[0])
+            w = w + 1 - np.mod(k + 1, 2)
+    else:  # TM
+        for k in range(2 * g):
+            poynting[k] = np.real((I[k][0, 0] - I[k][1, 0]) * np.conj(
+                (I[k][0, 0] + I[k][1, 0]) * gamma[w] / Epsilon[Type[w]]) *
+                                  Epsilon[Type[0]] / (gamma[0]))
+            w = w + 1 - np.mod(k + 1, 2)
+    # Absorption in each layer
+    print("P S:", poynting)
+    tmp = abs(-np.diff(poynting))
+    # absorb=np.zeros(g,dtype=complex)
+    absorb = tmp[np.arange(0, 2 * g, 2)]
+    print("SSS:", tmp, absorb)
+    # reflection coefficient of the whole structure
+    r = A[len(A) - 1][0, 0]
+    # transmission coefficient of the whole structure
+    t = A[len(A) - 1][1, 0]
+    # Energy reflexion coefficient;
+    R = np.real(abs(r) ** 2)
+    # Energy transmission coefficient;
+    T = np.real(
+        abs(t) ** 2 * gamma[g - 1] * f[Type[0]] / (gamma[0] * f[Type[g - 1]]))
+
+    return absorb, r, t, R, T
+
+
+#def absorption_A(struct, wavelength, incidence, polarization):
+#    """
+#    This function computes the percentage of the incoming energy
+#    that is absorbed in each layer when the structure is illuminated
+#    by a plane wave.
+#
+#    Args:
+#        struct (Structure): belongs to the Structure class
+#        wavelength (float): wavelength of the incidence light (in nm)
+#        incidence (float): incidence angle in radians
+#        polarization (float): 0 for TE, 1 (or anything) for TM
+#
+#    returns:
+#        absorb (numpy array): absorption in each layer
+#        r (complex): reflection coefficient, phase origin at first interface
+#        t (complex): transmission coefficient
+#        R (float): Reflectance (energy reflection)
+#        T (float): Transmittance (energie transmission)
+#    R and T are the energy coefficients (real quantities)
+#
+#    .. warning: The transmission coefficients have a meaning only if the lower medium
+#    is lossless, or they have no true meaning.
+#
+#    """
+#    # In order to get a phase that corresponds to the expected reflected coefficient,
+#    # we make the height of the upper (lossless) medium vanish. It changes only the
+#    # phase of the reflection coefficient.
+#
+#    # The medium may be dispersive. The permittivity and permability of each
+#    # layer has to be computed each time.
+#    Epsilon, Mu = struct.polarizability(wavelength)
+#    thickness = copy.deepcopy(struct.thickness)
+#    # In order to ensure that the phase reference is at the beginning
+#    # of the first layer.
+#    thickness[0] = 0
+#    Type = struct.layer_type
+#    # The boundary conditions will change when the polarization changes.
+#    if polarization == 0:
+#        f = Mu
+#    else:
+#        f = Epsilon
+#    # Wavevector in vacuum.
+#    k0 = 2 * np.pi / wavelength
+#    # Number of layers
+#    g = len(struct.layer_type)
+#    # Wavevector k_x, horizontal
+#    alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k0 * np.sin(incidence)
+#    # Computation of the vertical wavevectors k_z
+#    gamma = np.sqrt(
+#        Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g) * alpha ** 2)
+#    # Be cautious if the upper medium is a negative index one.
+#    if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
+#        gamma[0] = -gamma[0]
+#
+#    # Changing the determination of the square root to achieve perfect stability
+#    if g > 2:
+#        gamma[1:g - 2] = gamma[1:g - 2] * (
+#                    1 - 2 * (np.imag(gamma[1:g - 2]) < 0))
+#    # Outgoing wave condition for the last medium
+#    if np.real(Epsilon[Type[g - 1]]) < 0 and np.real(
+#            Mu[Type[g - 1]]) < 0 and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[
+#        Type[g - 1]] * k0 ** 2 - alpha ** 2)) != 0:
+#        gamma[g - 1] = -np.sqrt(
+#            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
+#    else:
+#        gamma[g - 1] = np.sqrt(
+#            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
+#
+#    T = np.zeros(((g-1, 2, 2)), dtype=complex)
+#    c = np.cos(gamma * thickness)
+#    s = np.sin(gamma * thickness)
+#    gf = gamma/f[Type]
+#    for k in range(g-1):
+#        # Layer scattering matrix
+#
+#        T[k] = [[c[k], -s[k] / gf[k]],
+#                [gf[k] * s[k], c[k]]]
+#    # Once the scattering matrixes have been prepared, now let us combine them
+#
+#    A = np.empty((T.shape[0], 2,2), dtype=complex)
+#    A[0] = T[0]
+#    for i in range(1, T.shape[0]):
+#        A[i] = T[i] @ A[i-1]
+#
+#    a = A[-1][0, 0]
+#    b = A[-1][0, 1]
+#    c = A[-1][1, 0]
+#    d = A[-1][1, 1]
+#
+#    amb = a - 1.j * gf[0] * b
+#    apb = a + 1.j * gf[0] * b
+#    cmd = c - 1.j * gf[0] * d
+#    cpd = c + 1.j * gf[0] * d
+#    # reflection coefficient of the whole structure
+#
+#    r = -(cmd + 1.j * gf[-1] * amb)/(cpd + 1.j * gf[-1] * apb)
+#    # transmission coefficient of the whole structure
+#    t = a * (r+1) + 1.j * gf[0] * b * (r-1)
+#    # Energy reflexion coefficient;
+#    R = np.real(abs(r) ** 2)
+#    # Energy transmission coefficient;
+#    T = np.real(abs(t) ** 2 * gf[g - 1] / gf[0])
+#
+#    I = np.zeros(((A.shape[0]+1, 2)), dtype=complex)
+#    print("A:", A)
+#    for k in range(A.shape[0]):
+#        I[k] = np.array(
+#            [A[k][0, 0] * (r+1) + A[k][0, 1]*(1.j*gamma[0]*(r-1)),
+#             A[k][1, 0] * (r+1) + A[k][1, 1]*(1.j*gamma[0]*(r-1))])
+#             # Contains Ey and dzEy in layer k
+#    I[-1] = [t, -1.j*gamma[-1]*t]
+#    print("I A:", I)
+#    w = 0
+#    poynting = np.zeros(A.shape[0]+1, dtype=complex)
+#    print(gf)
+#    if polarization == 0:  # TE
+#        for k in range(A.shape[0]+1):
+#            poynting[k] = np.abs(I[k][0]*I[k][1]/(1.j * k0*2.99792458 ))
+#            # Warning: this expression of c only works in nm
+#    else:  # TM
+#        for k in range(A.shape[0]+1):
+#            poynting[k] = I[k][0]*I[k][1]/(1.j * k0*2.99792458 )
+#            # Warning: this expression of c only works in nm
+#    # Absorption in each layer
+#    print("P A:", poynting)
+#    absorb = np.concatenate(([0],abs(-np.diff(poynting))))
+#    # First layer is always supposed non absorbing
+#    print("AAA:", absorb)
+#
+#    return absorb, r, t, R, T
