@@ -6,10 +6,13 @@ import json
 
 class Material:
 
-    def __init__(self,permittivity):
+    def __init__(self,permittivity, name=""):
         self.permittivity = permittivity
+        self.name = name
 
     def __str__(self):
+        if (len(self.name) > 1):
+            return f"{self.name}, perm: {self.permittivity}"
         return str(self.permittivity)
 
     def get_permittivity(self,wavelength):
@@ -20,8 +23,14 @@ class Material:
 
 class CustomFunction(Material):
 
-    def __init__(self,permittivity_function):
+    def __init__(self,permittivity_function, name=""):
         self.permittivity_function = permittivity_function
+        self.name = name
+
+    def __str__(self):
+        if (len(self.name) > 1):
+            return f"{self.name}, model: custom function, see material_data.json"
+        return "Custom function for permittivity"
 
     def get_permittivity(self,wavelength):
         return self.permittivity_function(wavelength)
@@ -36,10 +45,16 @@ class ExpData(Material):
     - permittivities (potentially complex)
     """
 
-    def __init__(self, wavelength_list,permittivities):
+    def __init__(self, wavelength_list,permittivities, name=""):
 
-        self.wavelength_list = np.array(wavelength_list, dtype = float)
-        self.permittivities  = np.array(permittivities, dtype = complex)
+        self.wavelength_list = np.array(wavelength_list, dtype=float)
+        self.permittivities  = np.array(permittivities, dtype=complex)
+        self.name = name
+
+    def __str__(self):
+        if (len(self.name) > 1):
+            return f"{self.name}, model: Exp Data"
+        return "Experimental Data for database material"
 
     def get_permittivity(self, wavelength):
         return np.interp(wavelength, self.wavelength_list, self.permittivities)
@@ -64,7 +79,7 @@ class BrendelBormann(Material):
     Material described using a Brendel Bormann model for a metal.
     """
 
-    def __init__(self, f0,gamma0,omega_p,f,gamma,omega,sigma) -> None:
+    def __init__(self, f0,gamma0,omega_p,f,gamma,omega,sigma, name="") -> None:
         self.f0 = f0
         self.Gamma0 = gamma0
         self.omega_p = omega_p
@@ -72,6 +87,13 @@ class BrendelBormann(Material):
         self.gamma = np.array(gamma)
         self.omega = np.array(omega)
         self.sigma = np.array(sigma)
+        self.name = name
+
+
+    def __str__(self):
+        if (len(self.name) > 1):
+            return f"{self.name}, model: Brendel Bormann"
+        return "Brendel Bormann model for Database material"
 
     def get_permittivity(self, wavelength):
         w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wavelength
