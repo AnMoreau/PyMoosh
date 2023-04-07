@@ -4,6 +4,7 @@ from math import *
 import sys
 import copy
 import matplotlib.pyplot as plt
+import itertools
 
 from PyMoosh.materials import *
 
@@ -791,6 +792,149 @@ def Guided_modes(struct,wavelength,polarization,neff_min,neff_max,initial_points
 
     return modes
 
+def follow_guided_modes(struct, wavelength_list, polarization,
+                        neff_min, neff_max, format="n", initial_points=40, plot=True):
+
+    """ This function explores the complex plane, looking for zeros of the
+    dispersion relation. It does so by launching a steepest descent for a number
+    `initial_points` of points on the real axis between neff_min and neff_max.
+
+
+    Args:
+        struct (Structure): object describing the multilayer
+        wavelength_list (float): wavelengths in nm
+        polarization: 0 for TE, 1 for TM
+        neff_min: minimum value of the effective index expected
+        neff_max: maximum value of the effective index expected
+        format: index output format, n for effective index, wav for wavelength, k for wavevector
+
+    Returns:
+        modes (list of list, complex): complex effective indices identified as
+                            solutions of the dispersion relation for all wavelengths.
+
+    """
+
+    if not format in ["n", "k", "wav"]:
+        print("Unknown index format: accepted values or n, k and wav")
+
+    tolerance = 1e-10
+#    initial_points = 40
+    wavelength = wavelength_list[0]
+    k_0 = 2*np.pi/wavelength
+    neff_start = np.linspace(neff_min, neff_max, initial_points, dtype=complex)
+
+    # Finding the first modes, that we will then follow
+    first_modes = []
+    for neff in neff_start:
+        solution = steepest(neff, tolerance, 1000, struct, wavelength, polarization)
+#        print(solution)
+        if (len(first_modes) == 0):
+            first_modes.append(solution)
+        elif (min(abs(first_modes-solution))>1e-5*k_0):
+            first_modes.append(solution)
+    modes = [first_modes]
+
+    # Following these modes for all the wavelength range
+    for i in range(1, len(wavelength_list)):
+        wavelength = wavelength_list[i]
+        k_0 = 2*np.pi/wavelength
+        neff_start = np.array(modes[-1]).flatten()
+        new_modes = []
+        if (len(neff_start)>1):
+            for neff in neff_start:
+                solution = steepest(neff, tolerance, 1000, struct, wavelength, polarization)
+                if (len(new_modes) == 0):
+                    new_modes.append(solution)
+                elif (min(abs(new_modes-solution))>1e-5*k_0):
+                    new_modes.append(solution)
+        else:
+            neff = neff_start
+            solution = steepest(neff, tolerance, 1000, struct, wavelength, polarization)
+            if (len(new_modes) == 0):
+                new_modes.append(solution)
+            elif (min(abs(new_modes-solution))>1e-5*k_0):
+                new_modes.append(solution)
+
+        modes.append(np.array(new_modes).flatten())
+
+    if (format == "k"):
+        for i in range(len(modes)):
+            modes[i] = np.array(modes[i]) * 2*np.pi/wavelength_list[i]
+    elif (format == "wav"):
+        for i in range(len(modes)):
+            modes[i] = wavelength_list[i] / np.array(modes[i])
+
+    mode_filled = np.array(list(itertools.zip_longest(*modes, fillvalue=0)))
+    mode_filled = mode_filled.T
+
+    # The following bit links modes together, for ease of use
+    # However, it only follows the modes that exist at the smallest wavelength
+    follow_modes = []
+    nb_mode = np.shape(mode_filled)[1]
+    for shift in range(nb_mode // 2):
+        index = nb_mode // 2 + shift # starting with the middle mode because it's the usually the most stable one
+        mode = [mode_filled[0, index]]
+        i = 1
+        while (i < len(mode_filled) and index >= 0 and index < nb_mode):
+            res = np.abs(mode[-1] - mode_filled[i, index-1:index+2])
+            if (len(res) == 3):
+                a, b, c = res
+                if (a < b and a < c):
+                    index = index - 1
+                elif (c < a and c < b):
+                    index = index + 1
+                mode.append(mode_filled[i, index])
+            else:
+                break
+            i += 1
+        follow_modes.append(mode)
+
+        if shift > 0:
+            index = nb_mode // 2 - shift
+            mode = [mode_filled[0, index]]
+            i = 1
+            while (i < len(mode_filled) and index >= 0 and index < nb_mode):
+                res = np.abs(mode[-1] - mode_filled[i, index-1:index+2])
+                if (len(res) == 3):
+                    a, b, c = res
+                    if (a < b and a < c):
+                        index = index - 1
+                    elif (c < a and c < b):
+                        index = index + 1
+                    mode.append(mode_filled[i, index])
+                else:
+                    break
+                i += 1
+            follow_modes.append(mode)
+
+    follow_modes = np.array(list(itertools.zip_longest(*follow_modes, fillvalue=0)))
+    # Because we are following modes, we add 0 when the modes disappear
+
+    if (plot):
+        modes_no_zero = []
+        for i in range(np.shape(follow_modes)[1]):
+            j = 0
+            while(j < np.shape(follow_modes)[0] and follow_modes[j, i] != 0):
+                j += 1
+            modes_no_zero.append(follow_modes[:j-1, i])
+
+        for i in range(len(modes_no_zero)):
+            if (format == "n"):
+                plt.plot(wavelength_list[:len(modes_no_zero[i])], wavelength_list[:len(modes_no_zero[i])]/modes_no_zero[i])
+                plt.xlabel("Wavelength in vacuum (nm)")
+                plt.ylabel("Mode index (nm)")
+            elif (format == "wav"):
+                plt.plot(wavelength_list[:len(modes_no_zero[i])], modes_no_zero[i])
+                plt.xlabel("Wavelength in vacuum (nm)")
+                plt.ylabel("Mode index (nm)")
+            elif (format == "k"):
+                plt.plot(2*np.pi/wavelength_list[:len(modes_no_zero[i])], modes_no_zero[i])
+                plt.xlabel("Wavevector in vacuum (nm-1)")
+                plt.ylabel("Mode index (nm-1)")
+        plt.show()
+
+    return modes, follow_modes
+
 def muller(starting_points,tol,step_max,struct,wl,pol):
 
     k_0 = 2* np.pi / wl
@@ -843,7 +987,7 @@ def steepest(start,tol,step_max,struct,wl,pol):
 
 
     k_0 = 2 * np.pi / wl
-    z=start*k_0
+    z = start*k_0
     delta = abs(z) * 0.001
     dz= 0.01 * delta
     step = 0
@@ -863,8 +1007,10 @@ def steepest(start,tol,step_max,struct,wl,pol):
         if abs(grad)!=0 :
             z_new = z - delta * grad / abs(grad)
         else:
-            print("Time to get out of here ! Gradient is null")
-            step = step_max
+            # We have a finishing condition not linked to the gradient
+            # So if we meet a gradient of 0, we just divide the step by two
+            delta = delta/2.
+            z_new = z
 
         value_new = dispersion(z_new,struct,wl,pol)
         if (value_new > current):
@@ -2268,133 +2414,133 @@ def absorption_S(struct, wavelength, incidence, polarization, layers=[]):
     return absorb, r, t, R, T
 
 
-#def absorption_A(struct, wavelength, incidence, polarization):
-#    """
-#    This function computes the percentage of the incoming energy
-#    that is absorbed in each layer when the structure is illuminated
-#    by a plane wave.
-#
-#    Args:
-#        struct (Structure): belongs to the Structure class
-#        wavelength (float): wavelength of the incidence light (in nm)
-#        incidence (float): incidence angle in radians
-#        polarization (float): 0 for TE, 1 (or anything) for TM
-#
-#    returns:
-#        absorb (numpy array): absorption in each layer
-#        r (complex): reflection coefficient, phase origin at first interface
-#        t (complex): transmission coefficient
-#        R (float): Reflectance (energy reflection)
-#        T (float): Transmittance (energie transmission)
-#    R and T are the energy coefficients (real quantities)
-#
-#    .. warning: The transmission coefficients have a meaning only if the lower medium
-#    is lossless, or they have no true meaning.
-#
-#    """
-#    # In order to get a phase that corresponds to the expected reflected coefficient,
-#    # we make the height of the upper (lossless) medium vanish. It changes only the
-#    # phase of the reflection coefficient.
-#
-#    # The medium may be dispersive. The permittivity and permability of each
-#    # layer has to be computed each time.
-#    Epsilon, Mu = struct.polarizability(wavelength)
-#    thickness = copy.deepcopy(struct.thickness)
-#    # In order to ensure that the phase reference is at the beginning
-#    # of the first layer.
-#    thickness[0] = 0
-#    Type = struct.layer_type
-#    # The boundary conditions will change when the polarization changes.
-#    if polarization == 0:
-#        f = Mu
-#    else:
-#        f = Epsilon
-#    # Wavevector in vacuum.
-#    k0 = 2 * np.pi / wavelength
-#    # Number of layers
-#    g = len(struct.layer_type)
-#    # Wavevector k_x, horizontal
-#    alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k0 * np.sin(incidence)
-#    # Computation of the vertical wavevectors k_z
-#    gamma = np.sqrt(
-#        Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g) * alpha ** 2)
-#    # Be cautious if the upper medium is a negative index one.
-#    if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
-#        gamma[0] = -gamma[0]
-#
-#    # Changing the determination of the square root to achieve perfect stability
-#    if g > 2:
-#        gamma[1:g - 2] = gamma[1:g - 2] * (
-#                    1 - 2 * (np.imag(gamma[1:g - 2]) < 0))
-#    # Outgoing wave condition for the last medium
-#    if np.real(Epsilon[Type[g - 1]]) < 0 and np.real(
-#            Mu[Type[g - 1]]) < 0 and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[
-#        Type[g - 1]] * k0 ** 2 - alpha ** 2)) != 0:
-#        gamma[g - 1] = -np.sqrt(
-#            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
-#    else:
-#        gamma[g - 1] = np.sqrt(
-#            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
-#
-#    T = np.zeros(((g-1, 2, 2)), dtype=complex)
-#    c = np.cos(gamma * thickness)
-#    s = np.sin(gamma * thickness)
-#    gf = gamma/f[Type]
-#    for k in range(g-1):
-#        # Layer scattering matrix
-#
-#        T[k] = [[c[k], -s[k] / gf[k]],
-#                [gf[k] * s[k], c[k]]]
-#    # Once the scattering matrixes have been prepared, now let us combine them
-#
-#    A = np.empty((T.shape[0], 2,2), dtype=complex)
-#    A[0] = T[0]
-#    for i in range(1, T.shape[0]):
-#        A[i] = T[i] @ A[i-1]
-#
-#    a = A[-1][0, 0]
-#    b = A[-1][0, 1]
-#    c = A[-1][1, 0]
-#    d = A[-1][1, 1]
-#
-#    amb = a - 1.j * gf[0] * b
-#    apb = a + 1.j * gf[0] * b
-#    cmd = c - 1.j * gf[0] * d
-#    cpd = c + 1.j * gf[0] * d
-#    # reflection coefficient of the whole structure
-#
-#    r = -(cmd + 1.j * gf[-1] * amb)/(cpd + 1.j * gf[-1] * apb)
-#    # transmission coefficient of the whole structure
-#    t = a * (r+1) + 1.j * gf[0] * b * (r-1)
-#    # Energy reflexion coefficient;
-#    R = np.real(abs(r) ** 2)
-#    # Energy transmission coefficient;
-#    T = np.real(abs(t) ** 2 * gf[g - 1] / gf[0])
-#
-#    I = np.zeros(((A.shape[0]+1, 2)), dtype=complex)
-#    print("A:", A)
-#    for k in range(A.shape[0]):
-#        I[k] = np.array(
-#            [A[k][0, 0] * (r+1) + A[k][0, 1]*(1.j*gamma[0]*(r-1)),
-#             A[k][1, 0] * (r+1) + A[k][1, 1]*(1.j*gamma[0]*(r-1))])
-#             # Contains Ey and dzEy in layer k
-#    I[-1] = [t, -1.j*gamma[-1]*t]
-#    print("I A:", I)
-#    w = 0
-#    poynting = np.zeros(A.shape[0]+1, dtype=complex)
-#    print(gf)
-#    if polarization == 0:  # TE
-#        for k in range(A.shape[0]+1):
-#            poynting[k] = np.abs(I[k][0]*I[k][1]/(1.j * k0*2.99792458 ))
-#            # Warning: this expression of c only works in nm
-#    else:  # TM
-#        for k in range(A.shape[0]+1):
-#            poynting[k] = I[k][0]*I[k][1]/(1.j * k0*2.99792458 )
-#            # Warning: this expression of c only works in nm
-#    # Absorption in each layer
-#    print("P A:", poynting)
-#    absorb = np.concatenate(([0],abs(-np.diff(poynting))))
-#    # First layer is always supposed non absorbing
-#    print("AAA:", absorb)
-#
-#    return absorb, r, t, R, T
+def absorption_A(struct, wavelength, incidence, polarization):
+   """
+   This function computes the percentage of the incoming energy
+   that is absorbed in each layer when the structure is illuminated
+   by a plane wave.
+
+   Args:
+       struct (Structure): belongs to the Structure class
+       wavelength (float): wavelength of the incidence light (in nm)
+       incidence (float): incidence angle in radians
+       polarization (float): 0 for TE, 1 (or anything) for TM
+
+   returns:
+       absorb (numpy array): absorption in each layer
+       r (complex): reflection coefficient, phase origin at first interface
+       t (complex): transmission coefficient
+       R (float): Reflectance (energy reflection)
+       T (float): Transmittance (energie transmission)
+   R and T are the energy coefficients (real quantities)
+
+   .. warning: The transmission coefficients have a meaning only if the lower medium
+   is lossless, or they have no true meaning.
+
+   """
+   # In order to get a phase that corresponds to the expected reflected coefficient,
+   # we make the height of the upper (lossless) medium vanish. It changes only the
+   # phase of the reflection coefficient.
+
+   # The medium may be dispersive. The permittivity and permability of each
+   # layer has to be computed each time.
+   Epsilon, Mu = struct.polarizability(wavelength)
+   thickness = copy.deepcopy(struct.thickness)
+   # In order to ensure that the phase reference is at the beginning
+   # of the first layer.
+   thickness[0] = 0
+   Type = struct.layer_type
+   # The boundary conditions will change when the polarization changes.
+   if polarization == 0:
+       f = Mu
+   else:
+       f = Epsilon
+   # Wavevector in vacuum.
+   k0 = 2 * np.pi / wavelength
+   # Number of layers
+   g = len(struct.layer_type)
+   # Wavevector k_x, horizontal
+   alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k0 * np.sin(incidence)
+   # Computation of the vertical wavevectors k_z
+   gamma = np.sqrt(
+       Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g) * alpha ** 2)
+   # Be cautious if the upper medium is a negative index one.
+   if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
+       gamma[0] = -gamma[0]
+
+   # Changing the determination of the square root to achieve perfect stability
+   if g > 2:
+       gamma[1:g - 2] = gamma[1:g - 2] * (
+                   1 - 2 * (np.imag(gamma[1:g - 2]) < 0))
+   # Outgoing wave condition for the last medium
+   if np.real(Epsilon[Type[g - 1]]) < 0 and np.real(
+           Mu[Type[g - 1]]) < 0 and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[
+       Type[g - 1]] * k0 ** 2 - alpha ** 2)) != 0:
+       gamma[g - 1] = -np.sqrt(
+           Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
+   else:
+       gamma[g - 1] = np.sqrt(
+           Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
+
+   T = np.zeros(((g-1, 2, 2)), dtype=complex)
+   c = np.cos(gamma * thickness)
+   s = np.sin(gamma * thickness)
+   gf = gamma/f[Type]
+   for k in range(g-1):
+       # Layer scattering matrix
+
+       T[k] = [[c[k], -s[k] / gf[k]],
+               [gf[k] * s[k], c[k]]]
+   # Once the scattering matrixes have been prepared, now let us combine them
+
+   A = np.empty((T.shape[0], 2,2), dtype=complex)
+   A[0] = T[0]
+   for i in range(1, T.shape[0]):
+       A[i] = T[i] @ A[i-1]
+
+   a = A[-1][0, 0]
+   b = A[-1][0, 1]
+   c = A[-1][1, 0]
+   d = A[-1][1, 1]
+
+   amb = a - 1.j * gf[0] * b
+   apb = a + 1.j * gf[0] * b
+   cmd = c - 1.j * gf[0] * d
+   cpd = c + 1.j * gf[0] * d
+   # reflection coefficient of the whole structure
+
+   r = -(cmd + 1.j * gf[-1] * amb)/(cpd + 1.j * gf[-1] * apb)
+   # transmission coefficient of the whole structure
+   t = a * (r+1) + 1.j * gf[0] * b * (r-1)
+   # Energy reflexion coefficient;
+   R = np.real(abs(r) ** 2)
+   # Energy transmission coefficient;
+   T = np.real(abs(t) ** 2 * gf[g - 1] / gf[0])
+
+   I = np.zeros(((A.shape[0]+1, 2)), dtype=complex)
+   print("A:", A)
+   for k in range(A.shape[0]):
+       I[k] = np.array(
+           [A[k][0, 0] * (r+1) + A[k][0, 1]*(1.j*gamma[0]*(r-1)),
+            A[k][1, 0] * (r+1) + A[k][1, 1]*(1.j*gamma[0]*(r-1))])
+            # Contains Ey and dzEy in layer k
+   I[-1] = [t, -1.j*gamma[-1]*t]
+   print("I A:", I)
+   w = 0
+   poynting = np.zeros(A.shape[0]+1, dtype=complex)
+   print(gf)
+   if polarization == 0:  # TE
+       for k in range(A.shape[0]+1):
+           poynting[k] = np.abs(I[k][0]*I[k][1]/(1.j * k0*2.99792458 ))
+           # Warning: this expression of c only works in nm
+   else:  # TM
+       for k in range(A.shape[0]+1):
+           poynting[k] = I[k][0]*I[k][1]/(1.j * k0*2.99792458 )
+           # Warning: this expression of c only works in nm
+   # Absorption in each layer
+   print("P A:", poynting)
+   absorb = np.concatenate(([0],abs(-np.diff(poynting))))
+   # First layer is always supposed non absorbing
+   print("AAA:", absorb)
+
+   return absorb, r, t, R, T
