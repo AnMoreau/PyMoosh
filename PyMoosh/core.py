@@ -260,7 +260,7 @@ class Window:
 
     Args:
         width (float): width of the spatial domain (in nm)
-        beam_relative_position (float): relative position of the beam center
+        beam_relative_position (float): relative position of the source
         horizontal_pixel_size (float): size in nm of a pixel, horizontally
         vertical_pixel_size (float): size in nm of a pixel, vertically
 
@@ -1251,7 +1251,7 @@ def Profile(struct,n_eff,wavelength,polarization,pixel_size = 3):
 
 def Green(struct,window,lam,source_interface):
 
-    """Computes the electric (TE polarization) or magnetic (TM) field inside
+    """Computes the electric (TE polarization) field inside
     a multilayered structure illuminated by punctual source placed inside
     the structure.
 
@@ -1294,11 +1294,11 @@ def Green(struct,window,lam,source_interface):
     # to change it if the structure present reflexion coefficients
     # that are subject to very swift changes with the angle of incidence.
 
-    nmod = int(np.floor(0.83660 * d / w))
+    #nmod = int(np.floor(0.83660 * d / w))
+    nmod = 100
 
     # ----------- Do not touch this part ---------------
     l = lam / d
-    w = w / d
     thickness = thickness / d
 
     if pol == 0:
@@ -1384,31 +1384,39 @@ def Green(struct,window,lam,source_interface):
 
         for k in range(2*g+1-2*source_interface):
             A_d[k + 1] = cascade(A_d[k], T[k + 1])
-            H_d[k + 1] = cascade(T[2*g+1-k], H[k])
+            H_d[k + 1] = cascade(T[2*g+1-k], H_d[k])
 
         I_d = np.zeros((-2*source_interface+2*g+2, 2, 2), dtype=complex)
         for k in range(2*g+1-2*source_interface):
             I_d[k] = np.array(
-                [[A[k][1, 0], A[k][1, 1] * H[2*(g-source_interface)+1-k][0, 1]],
-                 [A[k][1, 0] * H[len(T) - k - 2][0, 0],
-                  H[2*(g-source_interface)+1-k][0, 1]]] / (
-                        1 - A[k][1, 1] * H[2*(g-source_interface)+1-k][0, 0]))
+                [[A_d[k][1, 0], A_d[k][1, 1] * H_d[2*(g-source_interface)+1-k][0, 1]],
+                 [A_d[k][1, 0] * H_d[2*(g-source_interface)+1-k][0, 0],
+                  H_d[2*(g-source_interface)+1-k][0, 1]]] / (
+                        1 - A_d[k][1, 1] * H_d[2*(g-source_interface)+1-k][0, 0]))
 
 # >>> Inside the layer containing the source <<<
 
-#r1 =
-#r2 =
-#ex=i*exp(i*alpha*Xs);
-#U1=-ex/(gamma(n1+1)*(r1-1)+gamma(n1+2)*(r2-1)*(1+r1)/(1+r2));
-#D2=-ex/(gamma(n1+1)*(r1-1)*(1+r2)/(1+r1)+gamma(n1+2)*(r2-1));
-
-
-# -----------------------------> Above the source
+        r_up = A_up[2*source_interface-1][1,1]
+        r_d  = H_d[2*g+1-2*source_interface][0,0]
+        ex=np.exp(1j*alpha*window.C); # Multiply by -omega µ_0
+        M = ex / (1 - r_up + (1 + r_up) * (1- r_d) / (1 + r_d)) \
+        / gamma[source_interface]
+        D = ex / (1 - r_d + (1-r_up)/(1-r_up)*(1+r_d)) \
+        / gamma[source_interface]
 
 # Starting with the intermediary matrices, compute the right coefficients
 
-# A_descent
-# A_ascent
+        Ampl = np.zeros(2*g+2, dtype=complex)
+        #Ampl[2*source_interface-1] = M
+        #Ampl[2*source_interface] = D
+
+        for k in range(source_interface):
+            Ampl[2*k] = I_up[2*k][1,1] * M
+            Ampl[2*k+1] = I_up[2*k+1][0,1] * M
+
+        for k in range(source_interface,g+1):
+            Ampl[2*k] = I_d[2*(k-source_interface)][1,0] * D
+            Ampl[2*k+1] = I_d[2*(k-source_interface)+1][0,0] * D
 
 # >>> Calculation of the fields <<<
 
@@ -1418,18 +1426,18 @@ def Green(struct,window,lam,source_interface):
 
         for k in range(g + 1):
             for m in range(int(ny[k])):
-                h = h + float(thickness[k]) / ny[k]
+                 h = h + float(thickness[k]) / ny[k]
 
-                E[t, 0] = I[2 * k][0, 0] * np.exp(1j * gamma[k] * h) + \
-                          I[2 * k + 1][1, 0] * np.exp(
-                    1j * gamma[k] * (thickness[k] - h))
-                t += 1
+                 E[t, 0] = Ampl[2 * k + 1] * np.exp(1j * gamma[k] * h) + \
+                           Ampl[2 * k] * np.exp( \
+                     1j * gamma[k] * (thickness[k] - h))
+                 t += 1
             h = 0
         E = E * np.exp(1j * alpha * np.arange(0, nx) / nx)
         En = En + E
 
     return En
-
+#    return r_up,r_d
 
 def coefficient(struct, wavelength, incidence, polarization):
     """
