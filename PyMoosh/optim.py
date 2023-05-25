@@ -47,24 +47,32 @@ def Differential_Evolution(f_cout,budget,X_min,X_max,population = 30):
     # Differential Evolution loop.
     while evaluation<budget-population:
         for k in range(0,population):
+            
+            # Choosing which parameters will be taken from the new individual
             crossover=(np.random.random(n)<cr)
-            X=(\
-            # Current
-            omega[k]\
-            +f1*(omega[np.random.randint(population)]\
-            -omega[np.random.randint(population)])\
-            # To best
-            +f2*(best-omega[k]))
-            # And cross-over
-            *(1-crossover)+
-            crossover*omega[k]
+            
+            # Choosing 2 random individuals
+            pop_1 = omega[np.random.randint(population)]
+            pop_2 = omega[np.random.randint(population)]
+            rand_step = pop_1 - pop_2
+            
+            best_step = best-omega[k]
+            
+            new_param = omega[k] + f1*rand_step + f2*best_step
+            
+            X = new_param*(1-crossover) + omega[k]*crossover
+            
 
             if np.prod((X>=X_min)*(X<=X_max)):
+                # If the individual is in the parameter domain, proceed
                 tmp=f_cout(X)
                 evaluation=evaluation+1
                 if (tmp<cost[k]) :
+                    # If the new individual is better than the parent,
+                    # we keep it
                     cost[k]=tmp
                     omega[k]=X
+                    
         generation=generation+1
         who=np.argmin(cost)
         best=omega[who]
