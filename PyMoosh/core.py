@@ -1421,11 +1421,6 @@ def Green(struct,window,lam,source_interface):
                  [A_d[k][1, 0] * H_d[2*(g-source_interface)+1-k][0, 0],
                   H_d[2*(g-source_interface)+1-k][0, 1]]] / (
                         1 - A_d[k][1, 1] * H_d[2*(g-source_interface)+1-k][0, 0]))
-            print(k,2*(g-source_interface)+1-k)
-
-        # print('//////////////////////////////////// Id ////////////////////////////')
-        # print(I_d)
-        # print('//////////////////////////////////// Id ////////////////////////////')
 
 # >>> Inside the layer containing the source <<<
 

@@ -24,10 +24,11 @@
 
 """
 __name__ = 'PyMoosh'
-__version__ = '2.3'
-__date__ = "02/15/2023"   # MM/DD/YYY
+__version__ = '2.5'
+__date__ = "05/25/2023"   # MM/DD/YYY
 __author__ = 'Antoine Moreau'
 
 
 ## make accessible everything from `core` directly from the PyMoosh base package
 from PyMoosh.core import *
+from PyMoosh.optim_algo import *
