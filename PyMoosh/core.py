@@ -294,7 +294,7 @@ class Window:
 
     Args:
         width (float): width of the spatial domain (in nm)
-        beam_relative_position (float): relative position of the beam center
+        beam_relative_position (float): relative position of the source
         horizontal_pixel_size (float): size in nm of a pixel, horizontally
         vertical_pixel_size (float): size in nm of a pixel, vertically
 
@@ -1136,35 +1136,6 @@ def follow_guided_modes(struct, wavelength_list, polarization,
 
     return modes, follow_modes
 
-def muller(starting_points,tol,step_max,struct,wl,pol):
-
-    k_0 = 2* np.pi / wl
-    x=np.array(starting_points) * k_0
-    f=np.array([dispersion(x[0],struct,wl,pol),dispersion(x[1],struct,wl,pol),dispersion(x[2],struct,wl,pol)])
-    step=0
-    print(x,"\n step :",step,"\n",f)
-
-    while (f[2]>tol) and (step<step_max):
-        #print(x,"\n step :",step,"\n valeur de f", f[2] )
-        q=(x[2]-x[1])/(x[1]-x[0])
-        A = q * f[2] - q*(1+ q) * f[1] + q * q * f[0]
-        B = (2*q+1) * f[2] - (1+q)**2 * f[1] + q*q * f[0]
-        C = (1+q) * f[2]
-        temp = np.sqrt(B*B-4*A*C)
-        D = max([abs(B+temp),abs(B-temp)])
-        new_x = x[2]-(x[2]-x[1]) * 2 * C / D
-        #new_x= x[2] - 2*C/D
-        x[0]=x[1]
-        x[1]=x[2]
-        x[2]=new_x
-        f[0]=f[1]
-        f[1]=f[2]
-        f[2]=dispersion(new_x,struct,wl,pol)
-        print("New values:",step,new_x/k_0,f[2])
-        step += 1
-
-    return x[2]/k_0
-
 def steepest(start,tol,step_max,struct,wl,pol):
     """ Steepest descent to find a zero of the `dispersion`
     function. The advantage of looking for a zero is that you
@@ -1328,7 +1299,7 @@ def profile(struct,n_eff,wavelength,polarization,pixel_size = 3):
 
 def green(struct,window,lam,source_interface):
 
-    """Computes the electric (TE polarization) or magnetic (TM) field inside
+    """Computes the electric (TE polarization) field inside
     a multilayered structure illuminated by punctual source placed inside
     the structure.
 
@@ -1336,7 +1307,8 @@ def green(struct,window,lam,source_interface):
         struct (Structure): description (materials,thicknesses)of the multilayer
         window (Window): description of the simulation domain
         lam (float): wavelength in vacuum
-        source_interface (int):
+        source_interface (int): # of the interface where the source is located.
+                                The medium should be the same on both sides.
     Returns:
         En (np.array): a matrix with the complex amplitude of the field
 
@@ -1372,11 +1344,11 @@ def green(struct,window,lam,source_interface):
     # to change it if the structure present reflexion coefficients
     # that are subject to very swift changes with the angle of incidence.
 
-    nmod = int(np.floor(0.83660 * d / w))
+    #nmod = int(np.floor(0.83660 * d / w))
+    nmod = 100
 
     # ----------- Do not touch this part ---------------
     l = lam / d
-    w = w / d
     thickness = thickness / d
 
     if pol == 0:
@@ -1395,7 +1367,7 @@ def green(struct,window,lam,source_interface):
     T = np.zeros((2 * g + 2, 2, 2), dtype=complex)
     T[0] = [[0, 1], [1, 0]]
     for nm in np.arange(2 * nmod + 1):
-
+        # horizontal wavevector
         alpha = 2 * pi * (nm - nmod)
         gamma = np.sqrt(
             Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g + 1) * alpha ** 2)
@@ -1426,47 +1398,139 @@ def green(struct,window,lam,source_interface):
         t = np.exp(1j * gamma[g] * thickness[g])
         T[2 * g + 1] = np.array([[0, t], [t, 0]])
 
+        Ampl = np.zeros((2 * g + 2, 2), dtype=complex)
+
+# -----------------------------> Above the source
+# calculation of the scattering matrices above the source (*_up)
         H_up = np.zeros((2*source_interface, 2, 2), dtype=complex)
         A_up = np.zeros((2*source_interface, 2, 2), dtype=complex)
 
-        H_up[0] = T[0]
-        A_up[0] = T[0]
+
+
+        # print("------------------  T ------------------------------")
+        # print(T)
+        # print("------------------  T ------------------------------")
+
+
+        # T[2*source_interface] should be a neutral matrix for cascading
+        # if the two media are the same on each side of the source.
+
+        H_up[0] = [[0, 1], [1, 0]]
+        A_up[0] = [[0, 1], [1, 0]]
 
         for k in range(2*source_interface-1):
-            A_up[k + 1] = cascade(A[k], T[k + 1])
-            H_up[k + 1] = cascade(T[2*source_interface-1-k], H[k])
+            A_up[k + 1] = cascade(A_up[k], T[k + 1])
+            H_up[k + 1] = cascade(T[2*source_interface-1-k], H_up[k])
 
-        I_up = np.zeros((len(T), 2, 2), dtype=complex)
+        # print("A_up")
+        # print(A_up)
+        # print("_________________________")
+        #
+        # print("H_up")
+        # print(H_up)
+        # print("_________________________")
+
+        I_up = np.zeros((2*source_interface, 2, 2), dtype=complex)
         for k in range(2*source_interface-1):
             I_up[k] = np.array(
-                [[A[k][1, 0], A[k][1, 1] * H[len(T) - k - 2][0, 1]],
-                 [A[k][1, 0] * H[len(T) - k - 2][0, 0],
-                  H[len(T) - k - 2][0, 1]]] / (
-                        1 - A[k][1, 1] * H[len(T) - k - 2][0, 0]))
+                [[A_up[k][1, 0], A_up[k][1, 1] * H_up[2*source_interface-1-k][0, 1]],
+                 [A_up[k][1, 0] * H_up[2*source_interface-1-k][0, 0],
+                  H_up[2*source_interface-1-k][0, 1]]] / (
+                        1 - A_up[k][1, 1] * H_up[2*source_interface-1-k][0, 0]))
+            print(k,2*source_interface-1-k)
+        print('//////////////////////////////////// I-up ////////////////////////////')
+        print(I_up)
+        print('//////////////////////////////////// I_up ////////////////////////////')
+
+# ----------------------------> Below the source
+# Calculation of the scattering matrices below the source (*_d)
+
+        H_d = np.zeros((-2*source_interface+2*g+2, 2, 2), dtype=complex)
+        A_d = np.zeros((-2*source_interface+2*g+2, 2, 2), dtype=complex)
+
+        H_d[0] = [[0, 1], [1, 0]]
+        A_d[0] = [[0, 1], [1, 0]]
+
+        for k in range(2*g+1-2*source_interface):
+            A_d[k + 1] = cascade(A_d[k], T[2*source_interface + k + 1])
+            H_d[k + 1] = cascade(T[2*g+1-k], H_d[k])
+
+        # print('+++++++++++++++++++ A_d +++++++++++++++++')
+        # print(A_d)
+        # print('+++++++++++++++++++ A_d +++++++++++++++++')
+        #
+        # print('+++++++++++++++++++ H_d +++++++++++++++++')
+        # print(H_d)
+        # print('+++++++++++++++++++ H_d +++++++++++++++++')
+
+
+        I_d = np.zeros((-2*source_interface+2*g+2, 2, 2), dtype=complex)
+        for k in range(2*g+1-2*source_interface):
+            I_d[k] = np.array(
+                [[A_d[k][1, 0], A_d[k][1, 1] * H_d[2*(g-source_interface)+1-k][0, 1]],
+                 [A_d[k][1, 0] * H_d[2*(g-source_interface)+1-k][0, 0],
+                  H_d[2*(g-source_interface)+1-k][0, 1]]] / (
+                        1 - A_d[k][1, 1] * H_d[2*(g-source_interface)+1-k][0, 0]))
+
+# >>> Inside the layer containing the source <<<
+
+        r_up = A_up[2*source_interface-1][1,1]
+        r_d  = H_d[2*g+1-2*source_interface][0,0]
+        ex=-1j*np.exp(1j*alpha*window.C); # Multiply by -omega µ_0
+        M = ex / (1 - r_up + (1 + r_up) * (1- r_d) / (1 + r_d)) \
+        / gamma[source_interface]
+        D = ex / (1 - r_d + (1-r_up)/(1 + r_up)*(1 + r_d)) \
+        / gamma[source_interface]
+
+# Starting with the intermediary matrices, compute the right coefficients
+
+        # print('//////////////////////////////////// I-up ////////////////////////////')
+        # print(I_up)
+        # print('//////////////////////////////////// I_up ////////////////////////////')
+
+
+        Ampl = np.zeros(2*g+2, dtype=complex)
+        # print("Amplitudes up")
+        for k in range(source_interface):
+            print(k,"Pff")
+            # Ampl[2*k] = I_up[2*k][1,1] * M
+            # Ampl[2*k+1] = I_up[2*k+1][0,1] * M
+            # Celui qui descend.
+            Ampl[2*k] = I_up[2*k][0,1] * M
+            # Celui qui monte.
+            Ampl[2*k+1] = I_up[2*k+1][1,1] * M
+            # print(k,Ampl[2*k]/M,Ampl[2*k+1]/M)
+
+        print("Amplitudes down")
+        for k in range(source_interface,g+1):
+            Ampl[2*k] = I_d[2*(k-source_interface)][0,0] * D
+            Ampl[2*k+1] = I_d[2*(k-source_interface)+1][1,0] * D
+            # print(Ampl[2*k]/D,Ampl[2*k+1]/D)
+
+        Ampl[2*source_interface-1] = M
+        Ampl[2*source_interface] = D
+
+
+# >>> Calculation of the fields <<<
 
         h = 0
         t = 0
-
-
         E = np.zeros((int(np.sum(ny)), 1), dtype=complex)
 
         for k in range(g + 1):
             for m in range(int(ny[k])):
-                h = h + float(thickness[k]) / ny[k]
-                #The expression for the field used here is based on the assumption
-                # that the structure is illuminated from above only, with an Amplitude
-                # of 1 for the incident wave. If you want only the reflected
-                # field, take off the second term.
-                E[t, 0] = I[2 * k][0, 0] * np.exp(1j * gamma[k] * h) + \
-                          I[2 * k + 1][1, 0] * np.exp(
-                    1j * gamma[k] * (thickness[k] - h))
-                t += 1
+                 h = h + float(thickness[k]) / ny[k]
+
+                 E[t, 0] = Ampl[2 * k] * np.exp(1j * gamma[k] * h) + \
+                           Ampl[2 * k + 1] * np.exp( \
+                     1j * gamma[k] * (thickness[k] - h))
+                 t += 1
             h = 0
         E = E * np.exp(1j * alpha * np.arange(0, nx) / nx)
         En = En + E
 
     return En
-
+#    return r_up,r_d
 
 def coefficient(struct, wavelength, incidence, polarization):
     """
