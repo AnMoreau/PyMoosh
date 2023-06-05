@@ -43,7 +43,7 @@ best_b, cost_b = PM.bfgs(bragg, budget, start)
 
 print(cost_b)
 
-best, convergence = PM.differential_Evolution(bragg, budget, X_min, X_max)
+best, convergence = PM.differential_evolution(bragg, budget, X_min, X_max)
 
 print(convergence[-1])
 
