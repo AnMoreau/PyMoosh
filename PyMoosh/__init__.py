@@ -31,3 +31,4 @@ __author__ = 'Antoine Moreau'
 
 ## make accessible everything from `core` directly from the PyMoosh base package
 from PyMoosh.core import *
+from PyMoosh.optim_algo import *

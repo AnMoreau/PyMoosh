@@ -5,8 +5,10 @@ import matplotlib.pyplot as plt
 
 #materials = [1.513**2, 1.455**2, 2.079**2, (1.9+4.8j)**2, 1.0003**2]
 materials = [4., 1.5**2, 2.+10.2j]
-wav = 20
-eps = 1e-10
+
+unit = "nm"
+wav = 500
+eps = 1e-100
 
 
 print("WARNING: the impedance formalism only computes r and R for the moment")
@@ -18,7 +20,9 @@ prob = False
 
 ## Case 1: single layer, TE
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1])
+structure = np.array([100])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2,0]
@@ -26,24 +30,24 @@ stack = [0,2,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r, t, R, T = PM.coefficient_S(chose,wav,incidence,0)
 
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose1,wav,incidence,0)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_t, t_t, R_t, T_t = PM.coefficient_T(chose1,wav,incidence,0)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,0)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_i, R_i = PM.coefficient_I(chose1,wav,incidence,0)
 
 if (abs(r-r_ab)> eps):
@@ -82,7 +86,9 @@ if nb_prob:
 
 ## Case 2: single layer, TM
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1])
+structure = np.array([100])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2,0]
@@ -90,24 +96,24 @@ stack = [0,2,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r, t, R, T = PM.coefficient_S(chose,wav,incidence,1)
 
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose1,wav,incidence,1)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_t, t_t, R_t, T_t = PM.coefficient_T(chose1,wav,incidence,1)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,1)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_i, R_i = PM.coefficient_I(chose1,wav,incidence,1)
 
 
@@ -147,7 +153,9 @@ if nb_prob:
 
 ## Case 3: two layers, TE
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1, 1.5])
+structure = np.array([100, 150])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2, 1,0]
@@ -155,23 +163,23 @@ stack = [0,2, 1,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r, t, R, T = PM.coefficient_S(chose,wav,incidence,0)
 
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose1,wav,incidence,0)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_t, t_t, R_t, T_t = PM.coefficient_T(chose1,wav,incidence,0)
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,0)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_i, R_i = PM.coefficient_I(chose1,wav,incidence,0)
 
 
@@ -211,7 +219,9 @@ if nb_prob:
 
 ## Case 4: two layers, TM
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1, 1.5])
+structure = np.array([100, 150])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2, 1,0]
@@ -219,24 +229,24 @@ stack = [0,2, 1,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r, t, R, T = PM.coefficient_S(chose,wav,incidence,1)
 
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose1,wav,incidence,1)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_t, t_t, R_t, T_t = PM.coefficient_T(chose1,wav,incidence,1)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,1)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_i, R_i = PM.coefficient_I(chose1,wav,incidence,1)
 
 
@@ -285,7 +295,9 @@ prob = False
 
 ## Case 1: single layer, TE
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1])
+structure = np.array([100])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2,0]
@@ -293,23 +305,23 @@ stack = [0,2,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r, t, R, T = PM.coefficient_S(chose,wav,incidence,0)
 
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose1,wav,incidence,0)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_t, t_t, R_t, T_t = PM.coefficient_T(chose1,wav,incidence,0)
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,0)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_i, R_i = PM.coefficient_I(chose1,wav,incidence,0)
 
 if (abs(r-r_ab)> eps):
@@ -348,7 +360,9 @@ if nb_prob:
 
 ## Case 2: single layer, TM
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1])
+structure = np.array([100])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2,0]
@@ -356,24 +370,24 @@ stack = [0,2,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r, t, R, T = PM.coefficient_S(chose,wav,incidence,1)
 
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose1,wav,incidence,1)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_t, t_t, R_t, T_t = PM.coefficient_T(chose1,wav,incidence,1)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,1)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_i, R_i = PM.coefficient_I(chose1,wav,incidence,1)
 
 if (abs(r-r_ab)> eps):
@@ -412,7 +426,9 @@ if nb_prob:
 
 ## Case 3: two layers, TE
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1, 1.5])
+structure = np.array([100, 150])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2, 1,0]
@@ -420,23 +436,23 @@ stack = [0,2, 1,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r, t, R, T = PM.coefficient_S(chose,wav,incidence,0)
 
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose1,wav,incidence,0)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_t, t_t, R_t, T_t = PM.coefficient_T(chose1,wav,incidence,0)
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,0)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_i, R_i = PM.coefficient_I(chose1,wav,incidence,0)
 
 if (abs(r-r_ab)> eps):
@@ -475,7 +491,9 @@ if nb_prob:
 
 ## Case 4: two layers, TM
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1, 1.5])
+structure = np.array([100, 150])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2, 1,0]
@@ -483,24 +501,24 @@ stack = [0,2, 1,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r, t, R, T = PM.coefficient_S(chose,wav,incidence,1)
 
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose1,wav,incidence,1)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_t, t_t, R_t, T_t = PM.coefficient_T(chose1,wav,incidence,1)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,1)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_i, R_i = PM.coefficient_I(chose1,wav,incidence,1)
 
 if (abs(r-r_ab)> eps):
@@ -548,7 +566,9 @@ prob = False
 
 ## Case 1: single layer, TE
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1])
+structure = np.array([100])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2,0]
@@ -556,24 +576,24 @@ stack = [0,2,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r, t, R, T = PM.coefficient_S(chose,wav,incidence,0)
 
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose1,wav,incidence,0)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_t, t_t, R_t, T_t = PM.coefficient_T(chose1,wav,incidence,0)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,0)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_i, R_i = PM.coefficient_I(chose1,wav,incidence,0)
 
 if (abs(r-r_ab)> eps):
@@ -612,7 +632,9 @@ if nb_prob:
 
 ## Case 2: single layer, TM
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1])
+structure = np.array([100])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2,0]
@@ -620,24 +642,24 @@ stack = [0,2,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r, t, R, T = PM.coefficient_S(chose,wav,incidence,1)
 
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose1,wav,incidence,1)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_t, t_t, R_t, T_t = PM.coefficient_T(chose1,wav,incidence,1)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,1)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_i, R_i = PM.coefficient_I(chose1,wav,incidence,1)
 
 if (abs(r-r_ab)> eps):
@@ -676,7 +698,9 @@ if nb_prob:
 
 ## Case 3: two layers, TE
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1, 1.5])
+structure = np.array([100, 150])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2, 1,0]
@@ -684,23 +708,23 @@ stack = [0,2, 1,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r, t, R, T = PM.coefficient_S(chose,wav,incidence,0)
 
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose1,wav,incidence,0)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_t, t_t, R_t, T_t = PM.coefficient_T(chose1,wav,incidence,0)
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,0)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_i, R_i = PM.coefficient_I(chose1,wav,incidence,0)
 
 if (abs(r-r_ab)> eps):
@@ -739,7 +763,9 @@ if nb_prob:
 
 ## Case 4: two layers, TM
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1, 1.5])
+structure = np.array([100, 150])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2, 1,0]
@@ -747,23 +773,23 @@ stack = [0,2, 1,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r, t, R, T = PM.coefficient_S(chose,wav,incidence,1)
 
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose1,wav,incidence,1)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_t, t_t, R_t, T_t = PM.coefficient_T(chose1,wav,incidence,1)
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,1)
 
 
-chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 r_i, R_i = PM.coefficient_I(chose1,wav,incidence,1)
 
 

@@ -5,18 +5,22 @@ import matplotlib.pyplot as plt
 
 #materials = [1.513**2, 1.455**2, 2.079**2, (1.9+4.8j)**2, 1.0003**2]
 materials = [4., 1.5**2+0.1j, 2.+0.2j]
-wav = 20
+
+unit="um"
+wav = 0.200
 eps = 1e-10
 
 
 print("Normal incidence:")
-incidence = 5*np.pi/180
+incidence = 0*np.pi/180
 nb_prob = 0
 prob = False
 
 ## Case 1: single layer, TE
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1])
+structure = np.array([100])
+if (unit == "um"):
+    structure = structure*1e-3
 lay = [0,1]
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
@@ -26,7 +30,7 @@ print("1 layer TE")
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 
 # print(a, R, T)
 # print()
@@ -63,7 +67,9 @@ if nb_prob:
 #
 # ## Case 2: single layer, TM
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1])
+structure = np.array([100])
+if (unit == "um"):
+    structure = structure*1e-3
 
 print("1 layer TM")
 # stack = [0]+[1,2]*nb_couches+[1,0]
@@ -72,7 +78,7 @@ stack = [0,2,0]
 #
 # epaisseurs = np.concatenate(([0],structure,[0]))
 #
-# chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+# chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 #
 a, r, t, R, T = PM.absorption_S(chose,wav,incidence,1)
 if (R+T+np.sum(a)!=1):
@@ -105,7 +111,9 @@ if nb_prob:
 
 ## Case 3: two layers, TE
 # structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1, 1.5])
+structure = np.array([100, 150])
+if (unit == "um"):
+    structure = structure*1e-3
 
 print("2 layers TE")
 
@@ -115,7 +123,7 @@ stack = [0,2, 1,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 
 a, r, t, R, T = PM.absorption_S(chose,wav,incidence,0)
 if (R+T+np.sum(a)!=1):
@@ -146,7 +154,9 @@ if nb_prob:
 #
 # ## Case 4: two layers, TM
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1, 1.5])
+structure = np.array([100, 150])
+if (unit == "um"):
+    structure = structure*1e-3
 
 print("2 layers TM")
 
@@ -156,7 +166,7 @@ stack = [0,2, 1,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 
 a, r, t, R, T = PM.absorption_S(chose,wav,incidence,1)
 if (R+T+np.sum(a)!=1):
@@ -198,7 +208,9 @@ prob = False
 
 ## Case 1: single layer, TE
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1])
+structure = np.array([100])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2,0]
@@ -206,7 +218,7 @@ stack = [0,2,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 
 a, r, t, R, T = PM.absorption_S(chose,wav,incidence,0)
 if (R+T+np.sum(a)!=1):
@@ -236,7 +248,9 @@ if nb_prob:
 #
 ## Case 2: single layer, TM
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1])
+structure = np.array([100])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2,0]
@@ -244,7 +258,7 @@ stack = [0,2,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 
 a, r, t, R, T = PM.absorption_S(chose,wav,incidence,1)
 if (R+T+np.sum(a)!=1):
@@ -274,7 +288,9 @@ if nb_prob:
 
 ## Case 3: two layers, TE
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1, 1.5])
+structure = np.array([100, 150])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2, 1,0]
@@ -282,7 +298,7 @@ stack = [0,2, 1,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 
 a, r, t, R, T = PM.absorption_S(chose,wav,incidence,0)
 if (R+T+np.sum(a)!=1):
@@ -312,7 +328,9 @@ if nb_prob:
 
 ## Case 4: two layers, TM
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1, 1.5])
+structure = np.array([100, 150])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2, 1,0]
@@ -320,7 +338,7 @@ stack = [0,2, 1,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 
 a, r, t, R, T = PM.absorption_S(chose,wav,incidence,1)
 if (R+T+np.sum(a)!=1):
@@ -359,7 +377,9 @@ prob = False
 
 ## Case 1: single layer, TE
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1])
+structure = np.array([100])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2,0]
@@ -367,7 +387,7 @@ stack = [0,2,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 
 a, r, t, R, T = PM.absorption_S(chose,wav,incidence,0)
 if (R+T+np.sum(a)!=1):
@@ -397,7 +417,9 @@ if nb_prob:
 
 ## Case 2: single layer, TM
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1])
+structure = np.array([100])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2,0]
@@ -405,7 +427,7 @@ stack = [0,2,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 
 a, r, t, R, T = PM.absorption_S(chose,wav,incidence,1)
 if (R+T+np.sum(a)!=1):
@@ -435,7 +457,9 @@ if nb_prob:
 
 ## Case 3: two layers, TE
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1, 1.5])
+structure = np.array([100, 150])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2, 1,0]
@@ -443,7 +467,7 @@ stack = [0,2, 1,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 
 a, r, t, R, T = PM.absorption_S(chose,wav,incidence,0)
 if (R+T+np.sum(a)!=1):
@@ -471,7 +495,9 @@ if nb_prob:
 
 ## Case 4: two layers, TM
 #structure = np.random.random(nb_couches*2+1)*w_mean
-structure = np.array([1, 1.5])
+structure = np.array([100, 150])
+if (unit == "um"):
+    structure = structure*1e-3
 
 # stack = [0]+[1,2]*nb_couches+[1,0]
 stack = [0,2, 1,0]
@@ -479,7 +505,7 @@ stack = [0,2, 1,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
 
 a, r, t, R, T = PM.absorption_S(chose,wav,incidence,1)
 if (R+T+np.sum(a)!=1):
