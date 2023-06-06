@@ -2,28 +2,24 @@
 
 ## About PyMoosh
 
-PyMoosh is the python version of Moosh, an Octave/Matlab code meant as a swiss knife for the study of multilayered structures from an optical point of view.
+PyMoosh is a swiss knife for the study of multilayered structures from an optical point of view, written in Python. 
 
-Not all the features of Moosh have yet been transferred into PyMoosh, but this work is in progress. Plus, given the really nice feedbacks I had recently on PyMoosh and the plans ahead, you can count on the fact that PyMoosh is high on my priority list.
+PyMoosh is now much more advanced than Moosh, the original octave/matlab program we used in the past. Importantly, the use of Moosh is illustrated by many Jupyter notebooks (collabs are coming) and even more are planned. PyMoosh can be used for teaching or research purposes. It is especially written to be stable and quick, for its use in an optimization framework for instance.
 
-I've recently discovered the Jupyter Notebooks, and I'll use them extensively to illustrate how Moosh works and how much physics/optics can be made with such a tool. I have really discovered over the years how far this may go, and I am pretty sure you will be surprised too. This is the kind of codes we use to do our research on an everyday basis.
 
 ## Installation
 
-You can type
+You can do something as simple as 
 
-``` pip install PyMoosh ```
-
-it should work !
+``` pip install pymoosh ```
 
 ## For specialists
 
-PyMoosh is based on a scattering matrix formalism to solve Maxwell's equations in a multilayered structure. This makes PyMoosh unconditionally stable, allowing to explore even advanced properties of such multilayers, find poles and zeros of the scattering matrix (and thus guided modes), and many other things...
-
+PyMoosh is based on a scattering matrix formalism to solve Maxwell's equations in a multilayered structure. This makes PyMoosh unconditionally stable, allowing to explore even advanced properties of such multilayers, find poles and zeros of the scattering matrix (and thus guided modes), and many other things... We have included all the known kind of formalism to solve Maxwell's equations in such structures (admittance formalism, Abeles matrices, transfer matrices...).
 
 ## References
 
-If you use PyMoosh and if this is relevant, please cite the [paper associated with Moosh](https://openresearchsoftware.metajnl.com/articles/10.5334/jors.100/)
+If you use PyMoosh and if this is relevant, please cite the [paper associated with Moosh](https://openresearchsoftware.metajnl.com/articles/10.5334/jors.100/). Another paper is on its way, hopefully...
 
 ```
 @article{defrance2016moosh,
@@ -49,4 +45,4 @@ Here is a list of contributors to PyMoosh (one way or another) so far:
 * Demetrio Macias
 * Anorld Capo-Chichi
 
-and the contributors to the original Moosh program should not be forgotten : Josselin Defrance, Rémi Pollès, Fabien Krayzel, Paul-Henri Tichit, Jessica Benedicto mainly. Special thanks to Gérard Granet and Jean-Pierre Plumey.
+and the contributors to the original Moosh program should not be forgotten : Josselin Defrance, Rémi Pollès, Fabien Krayzel, Paul-Henri Tichit, Jessica Benedicto mainly, but David R. Smith and Cristian Ciraci too ! Special thanks to Gérard Granet and Jean-Pierre Plumey.
