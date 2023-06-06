@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 green = PM.Structure([1,4+0.1j],[0,1,1,0],[2000,500,500,2000])
 wavelength = 800
-window = PM.Window(30*wavelength,0.5,3.,3.)
+window = PM.Window(30*wavelength,0.5,10.,10.)
 # Just to make sure...
 print(PM.__version__)
 
