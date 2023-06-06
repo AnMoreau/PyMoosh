@@ -1405,13 +1405,6 @@ def green(struct,window,lam,source_interface):
         H_up = np.zeros((2*source_interface, 2, 2), dtype=complex)
         A_up = np.zeros((2*source_interface, 2, 2), dtype=complex)
 
-
-
-        # print("------------------  T ------------------------------")
-        # print(T)
-        # print("------------------  T ------------------------------")
-
-
         # T[2*source_interface] should be a neutral matrix for cascading
         # if the two media are the same on each side of the source.
 
@@ -1422,14 +1415,6 @@ def green(struct,window,lam,source_interface):
             A_up[k + 1] = cascade(A_up[k], T[k + 1])
             H_up[k + 1] = cascade(T[2*source_interface-1-k], H_up[k])
 
-        # print("A_up")
-        # print(A_up)
-        # print("_________________________")
-        #
-        # print("H_up")
-        # print(H_up)
-        # print("_________________________")
-
         I_up = np.zeros((2*source_interface, 2, 2), dtype=complex)
         for k in range(2*source_interface-1):
             I_up[k] = np.array(
@@ -1437,10 +1422,6 @@ def green(struct,window,lam,source_interface):
                  [A_up[k][1, 0] * H_up[2*source_interface-1-k][0, 0],
                   H_up[2*source_interface-1-k][0, 1]]] / (
                         1 - A_up[k][1, 1] * H_up[2*source_interface-1-k][0, 0]))
-            print(k,2*source_interface-1-k)
-        print('//////////////////////////////////// I-up ////////////////////////////')
-        print(I_up)
-        print('//////////////////////////////////// I_up ////////////////////////////')
 
 # ----------------------------> Below the source
 # Calculation of the scattering matrices below the source (*_d)
@@ -1454,15 +1435,6 @@ def green(struct,window,lam,source_interface):
         for k in range(2*g+1-2*source_interface):
             A_d[k + 1] = cascade(A_d[k], T[2*source_interface + k + 1])
             H_d[k + 1] = cascade(T[2*g+1-k], H_d[k])
-
-        # print('+++++++++++++++++++ A_d +++++++++++++++++')
-        # print(A_d)
-        # print('+++++++++++++++++++ A_d +++++++++++++++++')
-        #
-        # print('+++++++++++++++++++ H_d +++++++++++++++++')
-        # print(H_d)
-        # print('+++++++++++++++++++ H_d +++++++++++++++++')
-
 
         I_d = np.zeros((-2*source_interface+2*g+2, 2, 2), dtype=complex)
         for k in range(2*g+1-2*source_interface):
@@ -1484,13 +1456,7 @@ def green(struct,window,lam,source_interface):
 
 # Starting with the intermediary matrices, compute the right coefficients
 
-        # print('//////////////////////////////////// I-up ////////////////////////////')
-        # print(I_up)
-        # print('//////////////////////////////////// I_up ////////////////////////////')
-
-
         Ampl = np.zeros(2*g+2, dtype=complex)
-        # print("Amplitudes up")
         for k in range(source_interface):
             print(k,"Pff")
             # Ampl[2*k] = I_up[2*k][1,1] * M
@@ -1499,13 +1465,10 @@ def green(struct,window,lam,source_interface):
             Ampl[2*k] = I_up[2*k][0,1] * M
             # Celui qui monte.
             Ampl[2*k+1] = I_up[2*k+1][1,1] * M
-            # print(k,Ampl[2*k]/M,Ampl[2*k+1]/M)
 
-        print("Amplitudes down")
         for k in range(source_interface,g+1):
             Ampl[2*k] = I_d[2*(k-source_interface)][0,0] * D
             Ampl[2*k+1] = I_d[2*(k-source_interface)+1][1,0] * D
-            # print(Ampl[2*k]/D,Ampl[2*k+1]/D)
 
         Ampl[2*source_interface-1] = M
         Ampl[2*source_interface] = D
@@ -2041,9 +2004,6 @@ def coefficient_I(struct, wavelength, incidence, polarization):
     delta = 2*np.pi*thickness*n_s/wavelength
     #cos_theta = np.cos(np.arcsin(sin_theta))
     temp = -1.j*np.tan(delta)
-    #print(sin_theta)
-    #print(cos_theta)
-    #print(temp)
 
     if polarization == 0:
         admittance = n_s
@@ -2325,9 +2285,6 @@ def coefficient_with_grad_T(struct, wavelength, incidence, polarization, mode="v
         for i in range(1, T.shape[0]+1):
             A[i] =  A[i - 1] @ T[i-1]
             B[i] = T[-i] @ B[i-1]
-        #print(T)
-        #print(A)
-        # reflection coefficient of the whole structure
         r = -A[-1][1,0]/A[-1][0,0]
         # transmission coefficient of the whole structure
         t = A[-1][1,1] - (A[-1][1,0] * A[-1][0,1])/A[-1][0,0]
@@ -2347,8 +2304,6 @@ def coefficient_with_grad_T(struct, wavelength, incidence, polarization, mode="v
 
             sum = gamma[i_change-1]/f[Type[i_change-1]] + gamma[i_change]/f[Type[i_change]]
             dif = gamma[i_change-1]/f[Type[i_change-1]] - gamma[i_change]/f[Type[i_change]]
-            # print("pop", gamma[k], gamma[k+1])
-            # print(sum, dif)
             # Layer transfer matrix
             T[0] = f[Type[i_change]]/(2*gamma[i_change]) * np.array([[sum, -dif],
                                                                      [-dif, sum]])
