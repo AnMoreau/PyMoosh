@@ -9,7 +9,7 @@ mat2 = 1
 
 
 unit = "um"
-wav = 0.600
+wav = .600
 
 ep1 =  wav/(4*mat1)
 ep2 =  wav/(4*mat2)
