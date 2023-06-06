@@ -13,16 +13,16 @@ def conv_to_nm(length, unit):
         in nm...
     """
     if (unit == "m"):
-        return length * 1e9
+        return np.array(length) * 1e9
     elif (unit == "um"):
-        return length * 1e3
+        return np.array(length) * 1e3
     elif (unit == "mm"):
-        return length * 1e6
+        return np.array(length) * 1e6
     elif (unit == "pm"):
-        return length * 1e-3
+        return np.array(length) * 1e-3
     elif (unit == "nm"):
     # Just in case we get here but didn't need to
-        return length
+        return np.array(length)
     else:
         print("Please provide lengths in m, mm or um")
 
@@ -191,7 +191,7 @@ class Structure:
         return epsilon, mu
 
 
-    def plot_stack(struct, wavelength=None, lim_eps_colors=[1.5, 4]):
+    def plot_stack(self, wavelength=None, lim_eps_colors=[1.5, 4]):
         """plot layerstack
 
         evaluate materials at given wavelength for labels
@@ -204,7 +204,7 @@ class Structure:
         _mats = []
         _mats_names = []
         _index_diff = []
-        for i, mat in enumerate(np.array(struct.materials)[struct.layer_type]):
+        for i, mat in enumerate(np.array(self.materials)[self.layer_type]):
             if hasattr(mat, 'name') and len(mat.name)>0:
                 # Named materials
                 _mats_names.append(mat.name)
@@ -213,7 +213,7 @@ class Structure:
             _mats.append(mat.get_permittivity(wavelength))
         _index_diff = np.array(_index_diff)
 
-        _thick = struct.thickness
+        _thick = self.thickness
 
         ## give sub- and superstrate a finite thickness
         if _thick[0] == 0: _thick[0] = 50
