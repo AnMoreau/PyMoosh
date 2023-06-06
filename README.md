@@ -6,6 +6,7 @@ PyMoosh is a swiss knife for the study of multilayered structures from an optica
 
 PyMoosh is now much more advanced than Moosh, the original octave/matlab program we used in the past. Importantly, the use of Moosh is illustrated by many Jupyter notebooks (collabs are coming) and even more are planned. PyMoosh can be used for teaching or research purposes. It is especially written to be stable and quick, for its use in an optimization framework for instance.
 
+![What Moosh (green) can do...](field.png)
 
 ## Installation
 
@@ -42,6 +43,7 @@ Here is a list of contributors to PyMoosh (one way or another) so far:
 * Pauline Bennet (@Ellawin)
 * Peter Wiecha
 * Denis Langevin (@Milloupe)
+* Olivier Teytaud (@teytaud)
 * Demetrio Macias
 * Anorld Capo-Chichi
 
