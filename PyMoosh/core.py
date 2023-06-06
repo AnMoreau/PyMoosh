@@ -1458,9 +1458,6 @@ def green(struct,window,lam,source_interface):
 
         Ampl = np.zeros(2*g+2, dtype=complex)
         for k in range(source_interface):
-            print(k,"Pff")
-            # Ampl[2*k] = I_up[2*k][1,1] * M
-            # Ampl[2*k+1] = I_up[2*k+1][0,1] * M
             # Celui qui descend.
             Ampl[2*k] = I_up[2*k][0,1] * M
             # Celui qui monte.

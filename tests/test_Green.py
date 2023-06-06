@@ -11,6 +11,6 @@ print(PM.__version__)
 source_interface = 2
 En = PM.green(green,window,wavelength,source_interface)
 #plt.imshow(abs(np.real(En)),cmap='jet',aspect='auto')
-A = abs(np.real(En))
-plt.imsave('champ.png',A,cmap = 'jet')
 #plt.colorbar()
+
+plt.imsave('champ.png',abs(np.real(En)),cmap = 'jet')
