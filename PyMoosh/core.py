@@ -1844,11 +1844,11 @@ def coefficient_T(struct, wavelength, incidence, polarization):
     # reflection coefficient of the whole structure
     r = -A[1,0] / A[0,0]
     # transmission coefficient of the whole structure
-    t = A[1,1] - (A[1,0] * A[0,1])/A[0,0]
+    t = (A[1,1] - (A[1,0] * A[0,1])/A[0,0]) * np.exp(-1j*gamma[-1]*thickness[-1])
     # Energy reflexion coefficient;
     R = np.real(abs(r) ** 2)
     # Energy transmission coefficient;
-    T = np.real(abs(t) ** 2 * gf[g - 1] / gf[0])
+    T = np.real(abs(t) ** 2 * gf[-1] / gf[0])
 
     return r, t, R, T
 
@@ -1887,8 +1887,8 @@ def coefficient_DN(struct, wavelength, incidence, polarization):
     Epsilon, Mu = struct.polarizability(wavelength)
     thickness = copy.deepcopy(struct.thickness)
     # In order to ensure that the phase reference is at the beginning
-    # of the first layer.
-    thickness[0] = 0
+    # of the first layer
+    thickness[0] = wavelength/100.
     Type = struct.layer_type
     # The boundary conditions will change when the polarization changes.
     if polarization == 0:
@@ -1923,13 +1923,13 @@ def coefficient_DN(struct, wavelength, incidence, polarization):
             Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
 
 
-    T = np.zeros(((g-2, 2, 2)), dtype=complex)
+    T = np.zeros(((g-1, 2, 2)), dtype=complex)
     gf = gamma/f[Type]
     t = np.tan(gamma * thickness) / gf
     s = np.sin(gamma * thickness) / gf
-    for k in range(1,g-1):
+    for k in range(g-1):
         # Layer scattering matrix
-        T[k-1] = np.array([[1 / t[k], -1 / s[k]],
+        T[k] = np.array([[1 / t[k], -1 / s[k]],
                            [1 / s[k], -1 / t[k]]])
     # Once the scattering matrixes have been prepared, now let us combine them
 
@@ -1945,17 +1945,21 @@ def coefficient_DN(struct, wavelength, incidence, polarization):
 
     # reflection coefficient of the whole structure
 
-    gamma_eps = 1.j*gf[0]
+    gamma_eps0 = 1.j*gf[0]
+    gamma_epsN = 1.j*gf[-1]
 
-    r = ((a + gamma_eps)*(d + gamma_eps) - b*c)/((gamma_eps - a)*(d + gamma_eps) + b*c)
+    r = ((a + gamma_eps0)*(d + gamma_epsN) - b*c)/((gamma_eps0 - a)*(d + gamma_epsN) + b*c)
+    r = r * np.exp(-2j*gamma[0]*thickness[0])
     # transmission coefficient of the whole structure
-    t = - c * (r+1) / (d + gamma_eps)
+    t = -2 * c * gamma_eps0 / ((gamma_eps0 - a)*(d + gamma_epsN) + b*c)
+    t = t * np.exp(-1.j*gamma[0]*thickness[0])
     # Energy reflexion coefficient;
     R = np.real(abs(r) ** 2)
     # Energy transmission coefficient;
     T = np.real(abs(t) ** 2 * gf[g - 1] / gf[0])
 
     return r, t, R, T
+
 
 def coefficient_I(struct, wavelength, incidence, polarization):
     #n,d,lam,theta0):
