@@ -9,8 +9,8 @@ angles = np.arange(0, 81, 10)
 unit = "nm"
 wav = 600
 
-mats1 = [1, 1.5, "Gold"]
-mats2 = [1., 2]
+mats1 = [1.1, 1.5, "Gold"]
+mats2 = [1.2, 2]
 eps1 = [1, 100, 200]
 eps2 = [2, 200, 400]
 for mat1, mat2, ep1, ep2 in iter.product(mats1, mats2, eps1, eps2):
@@ -62,57 +62,40 @@ for mat1, mat2, ep1, ep2 in iter.product(mats1, mats2, eps1, eps2):
             rs_s_te[ilay, iinc] = R
             ts_s_te[ilay, iinc] = T
 
-
-            multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
-            r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(multi_stack1,wav,incidence,0)
+            r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(multi_stack,wav,incidence,0)
             rs_a_te[ilay, iinc] = R_ab
             ts_a_te[ilay, iinc] = T_ab
 
-
-            multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
-            r_t, t_t, R_t, T_t = PM.coefficient_T(multi_stack1,wav,incidence,0)
+            r_t, t_t, R_t, T_t = PM.coefficient_T(multi_stack,wav,incidence,0)
             rs_t_te[ilay, iinc] = R_t
             ts_t_te[ilay, iinc] = T_t
 
-
-            multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
-            r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(multi_stack1,wav,incidence,0)
+            r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(multi_stack,wav,incidence,0)
             rs_dn_te[ilay, iinc] = R_dn
             ts_dn_te[ilay, iinc] = T_dn
 
-
-            multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
-            r_i, R_i = PM.coefficient_I(multi_stack1,wav,incidence,0)
+            r_i, R_i = PM.coefficient_I(multi_stack,wav,incidence,0)
             rs_i_te[ilay, iinc] = R_i
 
 
-            multi_stack = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
             r, t, R, T = PM.coefficient_S(multi_stack,wav,incidence,1)
             rs_s_tm[ilay, iinc] = R
             ts_s_tm[ilay, iinc] = T
 
 
-
-            multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
-            r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(multi_stack1,wav,incidence,1)
+            r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(multi_stack,wav,incidence,1)
             rs_a_tm[ilay, iinc] = R_ab
             ts_a_tm[ilay, iinc] = T_ab
 
-
-            multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
-            r_t, t_t, R_t, T_t = PM.coefficient_T(multi_stack1,wav,incidence,1)
+            r_t, t_t, R_t, T_t = PM.coefficient_T(multi_stack,wav,incidence,1)
             rs_t_tm[ilay, iinc] = R_t
             ts_t_tm[ilay, iinc] = T_t
 
-
-            multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
-            r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(multi_stack1,wav,incidence,1)
+            r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(multi_stack,wav,incidence,1)
             rs_dn_tm[ilay, iinc] = R_dn
             ts_dn_tm[ilay, iinc] = T_dn
 
-
-            multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
-            r_i, R_i = PM.coefficient_I(multi_stack1,wav,incidence,1)
+            r_i, R_i = PM.coefficient_I(multi_stack,wav,incidence,1)
             rs_i_tm[ilay, iinc] = R_i
 
 
@@ -171,40 +154,41 @@ for mat1, mat2, ep1, ep2 in iter.product(mats1, mats2, eps1, eps2):
     err_ts_dn_te = np.abs(ts_dn_te - ts_s_te)
     err_ts_dn_tm = np.abs(ts_dn_tm - ts_s_tm)
 
-    fig, ax = plt.subplots(3, 2, figsize=(10,10))
-    ax[0,0].pcolormesh(X, Y, err_ts_t_te.T, vmax=1)
-    ax[0,0].set_title("Abs error transmission TE T")
-    ax[0,0].set_xlabel("Nb Layers")
-    ax[0,0].set_ylabel("Inc. Angle")
+    if np.sum(err_ts_t_te + err_ts_t_tm + err_ts_a_te + err_ts_a_tm + err_ts_dn_te + err_ts_dn_tm)>0:
+        fig, ax = plt.subplots(3, 2, figsize=(10,10))
+        ax[0,0].pcolormesh(X, Y, err_ts_t_te.T, vmax=1)
+        ax[0,0].set_title("Abs error transmission TE T")
+        ax[0,0].set_xlabel("Nb Layers")
+        ax[0,0].set_ylabel("Inc. Angle")
 
-    ax[1,0].pcolormesh(X, Y, err_ts_a_te.T, vmax=1)
-    ax[1,0].set_title("Abs error transmission TE Ab")
-    ax[1,0].set_xlabel("Nb Layers")
-    ax[1,0].set_ylabel("Inc. Angle")
+        ax[1,0].pcolormesh(X, Y, err_ts_a_te.T, vmax=1)
+        ax[1,0].set_title("Abs error transmission TE Ab")
+        ax[1,0].set_xlabel("Nb Layers")
+        ax[1,0].set_ylabel("Inc. Angle")
 
-    ax[2,0].pcolormesh(X, Y, err_ts_dn_te.T, vmax=1)
-    ax[2,0].set_title("Abs error transmission TE D2N")
-    ax[2,0].set_xlabel("Nb Layers")
-    ax[2,0].set_ylabel("Inc. Angle")
+        ax[2,0].pcolormesh(X, Y, err_ts_dn_te.T, vmax=1)
+        ax[2,0].set_title("Abs error transmission TE D2N")
+        ax[2,0].set_xlabel("Nb Layers")
+        ax[2,0].set_ylabel("Inc. Angle")
 
-    ax[0,1].pcolormesh(X, Y, err_ts_t_tm.T, vmax=1)
-    ax[0,1].set_title("Abs error transmission TM T")
-    ax[0,1].set_xlabel("Nb Layers")
-    ax[0,1].set_ylabel("Inc. Angle")
+        ax[0,1].pcolormesh(X, Y, err_ts_t_tm.T, vmax=1)
+        ax[0,1].set_title("Abs error transmission TM T")
+        ax[0,1].set_xlabel("Nb Layers")
+        ax[0,1].set_ylabel("Inc. Angle")
 
-    ax[1,1].pcolormesh(X, Y, err_ts_a_tm.T, vmax=1)
-    ax[1,1].set_title("Abs error transmission TM Ab")
-    ax[1,1].set_xlabel("Nb Layers")
-    ax[1,1].set_ylabel("Inc. Angle")
+        ax[1,1].pcolormesh(X, Y, err_ts_a_tm.T, vmax=1)
+        ax[1,1].set_title("Abs error transmission TM Ab")
+        ax[1,1].set_xlabel("Nb Layers")
+        ax[1,1].set_ylabel("Inc. Angle")
 
-    ax[2,1].pcolormesh(X, Y, err_ts_dn_tm.T, vmax=1)
-    ax[2,1].set_title("Abs error transmission TM D2N")
-    ax[2,1].set_xlabel("Nb Layers")
-    ax[2,1].set_ylabel("Inc. Angle")
+        ax[2,1].pcolormesh(X, Y, err_ts_dn_tm.T, vmax=1)
+        ax[2,1].set_title("Abs error transmission TM D2N")
+        ax[2,1].set_xlabel("Nb Layers")
+        ax[2,1].set_ylabel("Inc. Angle")
 
-    plt.tight_layout()
-    plt.savefig(f"Tuto_article_figs/Error_Trans_plot_mat1_{mat1}_mat2_{mat2}_ep1_{ep1}_ep2_{ep2}.pdf")
-    plt.clf()
+        plt.tight_layout()
+        plt.savefig(f"Tuto_article_figs/Error_Trans_plot_mat1_{mat1}_mat2_{mat2}_ep1_{ep1}_ep2_{ep2}.png")
+        plt.close()
 
     err_rs_t_te = np.abs(rs_t_te - rs_s_te)
     err_rs_t_tm = np.abs(rs_t_tm - rs_s_tm)
@@ -215,38 +199,52 @@ for mat1, mat2, ep1, ep2 in iter.product(mats1, mats2, eps1, eps2):
     err_rs_dn_te = np.abs(rs_dn_te - rs_s_te)
     err_rs_dn_tm = np.abs(rs_dn_tm - rs_s_tm)
 
-    fig, ax = plt.subplots(3, 2, figsize=(10,10))
-    ax[0,0].pcolormesh(X, Y, err_rs_t_te.T, vmax=1)
-    ax[0,0].set_title("Abs error reflection TE T")
-    ax[0,0].set_xlabel("Nb Layers")
-    ax[0,0].set_ylabel("Inc. Angle")
+    err_rs_i_te = np.abs(rs_i_te - rs_s_te)
+    err_rs_i_tm = np.abs(rs_i_tm - rs_s_tm)
+    if np.sum(err_rs_t_te + err_rs_t_tm + err_rs_a_te + err_rs_a_tm + err_rs_dn_te + err_rs_dn_tm)>0:
 
-    ax[1,0].pcolormesh(X, Y, err_rs_a_te.T, vmax=1)
-    ax[1,0].set_title("Abs error reflection TE Ab")
-    ax[1,0].set_xlabel("Nb Layers")
-    ax[1,0].set_ylabel("Inc. Angle")
+        fig, ax = plt.subplots(4, 2, figsize=(10,10))
+        ax[0,0].pcolormesh(X, Y, err_rs_t_te.T, vmax=1)
+        ax[0,0].set_title("Abs error reflection TE T")
+        ax[0,0].set_xlabel("Nb Layers")
+        ax[0,0].set_ylabel("Inc. Angle")
 
-    ax[2,0].pcolormesh(X, Y, err_rs_dn_te.T, vmax=1)
-    ax[2,0].set_title("Abs error reflection TE D2N")
-    ax[2,0].set_xlabel("Nb Layers")
-    ax[2,0].set_ylabel("Inc. Angle")
+        ax[1,0].pcolormesh(X, Y, err_rs_a_te.T, vmax=1)
+        ax[1,0].set_title("Abs error reflection TE Ab")
+        ax[1,0].set_xlabel("Nb Layers")
+        ax[1,0].set_ylabel("Inc. Angle")
 
-    ax[0,1].pcolormesh(X, Y, err_rs_t_tm.T, vmax=1)
-    ax[0,1].set_title("Abs error reflection TM T")
-    ax[0,1].set_xlabel("Nb Layers")
-    ax[0,1].set_ylabel("Inc. Angle")
+        ax[2,0].pcolormesh(X, Y, err_rs_dn_te.T, vmax=1)
+        ax[2,0].set_title("Abs error reflection TE D2N")
+        ax[2,0].set_xlabel("Nb Layers")
+        ax[2,0].set_ylabel("Inc. Angle")
 
-    ax[1,1].pcolormesh(X, Y, err_rs_a_tm.T, vmax=1)
-    ax[1,1].set_title("Abs error reflection TM Ab")
-    ax[1,1].set_xlabel("Nb Layers")
-    ax[1,1].set_ylabel("Inc. Angle")
+        ax[3,0].pcolormesh(X, Y, err_rs_i_te.T, vmax=1)
+        ax[3,0].set_title("Abs error reflection TE Imp")
+        ax[3,0].set_xlabel("Nb Layers")
+        ax[3,0].set_ylabel("Inc. Angle")
 
-    ax[2,1].pcolormesh(X, Y, err_rs_dn_tm.T, vmax=1)
-    ax[2,1].set_title("Abs error reflection TM D2N")
-    ax[2,1].set_xlabel("Nb Layers")
-    ax[2,1].set_ylabel("Inc. Angle")
+        ax[0,1].pcolormesh(X, Y, err_rs_t_tm.T, vmax=1)
+        ax[0,1].set_title("Abs error reflection TM T")
+        ax[0,1].set_xlabel("Nb Layers")
+        ax[0,1].set_ylabel("Inc. Angle")
 
-    plt.tight_layout()
-    plt.savefig(f"Tuto_article_figs/Error_Refl_plot_mat1_{mat1}_mat2_{mat2}_ep1_{ep1}_ep2_{ep2}.pdf")
-    plt.clf()
+        ax[1,1].pcolormesh(X, Y, err_rs_a_tm.T, vmax=1)
+        ax[1,1].set_title("Abs error reflection TM Ab")
+        ax[1,1].set_xlabel("Nb Layers")
+        ax[1,1].set_ylabel("Inc. Angle")
+
+        ax[2,1].pcolormesh(X, Y, err_rs_dn_tm.T, vmax=1)
+        ax[2,1].set_title("Abs error reflection TM D2N")
+        ax[2,1].set_xlabel("Nb Layers")
+        ax[2,1].set_ylabel("Inc. Angle")
+
+        ax[3,1].pcolormesh(X, Y, err_rs_i_tm.T, vmax=1)
+        ax[3,1].set_title("Abs error reflection TM Imp")
+        ax[3,1].set_xlabel("Nb Layers")
+        ax[3,1].set_ylabel("Inc. Angle")
+
+        plt.tight_layout()
+        plt.savefig(f"Tuto_article_figs/Error_Refl_plot_mat1_{mat1}_mat2_{mat2}_ep1_{ep1}_ep2_{ep2}.png")
+        plt.close()
     #plt.show()

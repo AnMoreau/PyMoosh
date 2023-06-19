@@ -5,14 +5,14 @@ from time import time
 
 ## Bragg mirror with increasing number of layers
 mat1 = 1.5
-mat2 = 1
+mat2 = 1.2
 
 
-unit = "um"
-wav = .600
+unit = "nm"
+wav = 600
 
-ep1 =  wav/(4*mat1)
-ep2 =  wav/(4*mat2)
+ep1 =  100
+ep2 =  wav/(2*mat2)
 
 layers = np.arange(5, 181, 5)
 
@@ -52,8 +52,8 @@ ts_dn_tm = []
 for nb_couches in layers:
 
     ## Case 1: single layer, TE
-    #structure = np.random.random(nb_couches*2+1)*w_mean
-    structure = np.array([ep1, ep2]*nb_couches + [ep1])
+    #structure = np.random.rannp.random.random()*100(nnp.random.random()*200ouches*2+1)*w_mean
+    structure = np.array([np.random.random()*100, np.random.random()*200]*nb_couches + [ep1])
 
     stack = [0]+[1,2]*nb_couches+[1,0]
 
@@ -162,45 +162,45 @@ rs_i_tm = np.array(rs_i_tm)
 
 
 fig, axs = plt.subplots(2, 2, sharex=True, figsize=(10,10))
-axs[0,0].plot(layers, abs(rs_s_te-rs_a_te)/np.abs(rs_s_te), 'b-v', label="abeles", markersize=4)
-axs[0,0].plot(layers, abs(rs_s_te-rs_dn_te)/np.abs(rs_s_te), 'r-o', label="D2N", markersize=4)
-axs[0,0].plot(layers, abs(rs_s_te-rs_t_te)/np.abs(rs_s_te), 'g-^', label="T", markersize=4)
-axs[0,0].plot(layers, abs(rs_s_te-rs_i_te)/np.abs(rs_s_te), 'c-+', label="Impedance", markersize=4)
-axs[0,0].set_ylabel("Reflection relative error TE Normal incidence")
+axs[0,0].plot(layers, abs(rs_s_te-rs_a_te), 'b-v', label="abeles", markersize=4)
+axs[0,0].plot(layers, abs(rs_s_te-rs_dn_te), 'r-o', label="D2N", markersize=4)
+axs[0,0].plot(layers, abs(rs_s_te-rs_t_te), 'g-^', label="T", markersize=4)
+axs[0,0].plot(layers, abs(rs_s_te-rs_i_te), 'c-+', label="Impedance", markersize=4)
+axs[0,0].set_ylabel("Reflection absolute error TE Normal incidence")
 axs[0,0].set_xlabel("Nb Layers")
-#axs[0,0].set_ylim([0-.0001,.15])
+#axs[0,0].set_ylim([-.01701e-8])
 #axs[0,0].set_yscale("log")
 axs[0,0].legend()
 
 
-axs[0,1].plot(layers, abs(rs_s_tm-rs_a_tm)/np.abs(rs_s_tm), 'b-v', label="abeles", markersize=4)
-axs[0,1].plot(layers, abs(rs_s_tm-rs_dn_tm)/np.abs(rs_s_tm), 'r-o', label="D2N", markersize=4)
-axs[0,1].plot(layers, abs(rs_s_tm-rs_t_tm)/np.abs(rs_s_tm), 'g-^', label="T", markersize=4)
-axs[0,1].plot(layers, abs(rs_s_tm-rs_i_tm)/np.abs(rs_s_tm), 'c-+', label="Impedance", markersize=4)
-axs[0,1].set_ylabel("Reflection relative error TM Normal incidence")
+axs[0,1].plot(layers, abs(rs_s_tm-rs_a_tm), 'b-v', label="abeles", markersize=4)
+axs[0,1].plot(layers, abs(rs_s_tm-rs_dn_tm), 'r-o', label="D2N", markersize=4)
+axs[0,1].plot(layers, abs(rs_s_tm-rs_t_tm), 'g-^', label="T", markersize=4)
+axs[0,1].plot(layers, abs(rs_s_tm-rs_i_tm), 'c-+', label="Impedance", markersize=4)
+axs[0,1].set_ylabel("Reflection absolute error TM Normal incidence")
 axs[0,1].set_xlabel("Nb Layers")
-#axs[0,1].set_ylim([-0.001,.15])
+#axs[0,1].set_ylim([1e-17,.15])
 #axs[0,1].set_yscale("log")
 axs[0,1].legend()
 
 
-axs[1,0].plot(layers, abs(ts_s_te-ts_a_te)/np.abs(ts_s_te), 'b-v', label="abeles", markersize=4)
-axs[1,0].plot(layers, abs(ts_s_te-ts_dn_te)/np.abs(ts_s_te), 'r-o', label="D2N", markersize=4)
-axs[1,0].plot(layers, abs(ts_s_te-ts_t_te)/np.abs(ts_s_te), 'g-^', label="T", markersize=4)
-axs[1,0].set_ylabel("Transmission relative error TE Normal incidence")
+axs[1,0].plot(layers, abs(ts_s_te-ts_a_te), 'b-v', label="abeles", markersize=4)
+axs[1,0].plot(layers, abs(ts_s_te-ts_dn_te), 'r-o', label="D2N", markersize=4)
+axs[1,0].plot(layers, abs(ts_s_te-ts_t_te), 'g-^', label="T", markersize=4)
+axs[1,0].set_ylabel("Transmission absolute error TE Normal incidence")
 axs[1,0].set_xlabel("Nb Layers")
-axs[1,0].set_ylim([-0.001,.15])
-#axs[1,0].set_yscale("log")
+# axs[1,0].set_ylim([1e-17,.15])
+axs[1,0].set_yscale("log")
 axs[1,0].legend()
 
 
-axs[1,1].plot(layers, abs(ts_s_tm-ts_a_tm)/np.abs(ts_s_tm), 'b-v', label="abeles", markersize=4)
-axs[1,1].plot(layers, abs(ts_s_tm-ts_dn_tm)/np.abs(ts_s_tm), 'r-o', label="D2N", markersize=4)
-axs[1,1].plot(layers, abs(ts_s_tm-ts_t_tm)/np.abs(ts_s_tm), 'g-^', label="T", markersize=4)
-axs[1,1].set_ylabel("Transmission relative error TM Normal incidence")
+axs[1,1].plot(layers, abs(ts_s_tm-ts_a_tm), 'b-v', label="abeles", markersize=4)
+axs[1,1].plot(layers, abs(ts_s_tm-ts_dn_tm), 'r-o', label="D2N", markersize=4)
+axs[1,1].plot(layers, abs(ts_s_tm-ts_t_tm), 'g-^', label="T", markersize=4)
+axs[1,1].set_ylabel("Transmission absolute error TM Normal incidence")
 axs[1,1].set_xlabel("Nb Layers")
-axs[1,1].set_ylim([-0.001,.15])
-#axs[1,1].set_yscale("log")
+# axs[1,1].set_ylim([1e-17,.15])
+axs[1,1].set_yscale("log")
 axs[1,1].legend()
 plt.tight_layout()
 plt.show()
@@ -242,8 +242,8 @@ ts_dn_tm = []
 for nb_couches in layers:
 
     ## Case 1: single layer, TE
-    #structure = np.random.random(nb_couches*2+1)*w_mean
-    structure = np.array([ep1, ep2]*nb_couches + [ep1])
+    #structure = np.random.rannp.random.random()*100(nnp.random.random()*200ouches*2+1)*w_mean
+    structure = np.array([np.random.random()*100, np.random.random()*200]*nb_couches + [ep1])
 
     stack = [0]+[1,2]*nb_couches+[1,0]
 
@@ -352,44 +352,44 @@ rs_i_tm = np.array(rs_i_tm)
 
 
 fig, axs = plt.subplots(2, 2, sharex=True, figsize=(10,10))
-axs[0,0].plot(layers, abs(rs_s_te-rs_a_te)/np.abs(rs_s_te), 'b-v', label="abeles", markersize=4)
-axs[0,0].plot(layers, abs(rs_s_te-rs_dn_te)/np.abs(rs_s_te), 'r-o', label="D2N", markersize=4)
-axs[0,0].plot(layers, abs(rs_s_te-rs_t_te)/np.abs(rs_s_te), 'g-^', label="T", markersize=4)
-axs[0,0].plot(layers, abs(rs_s_te-rs_i_te)/np.abs(rs_s_te), 'c-+', label="Impedance", markersize=4)
-axs[0,0].set_ylabel("Reflection relative error TE Large incidence")
+axs[0,0].plot(layers, abs(rs_s_te-rs_a_te), 'b-v', label="abeles", markersize=4)
+axs[0,0].plot(layers, abs(rs_s_te-rs_dn_te), 'r-o', label="D2N", markersize=4)
+axs[0,0].plot(layers, abs(rs_s_te-rs_t_te), 'g-^', label="T", markersize=4)
+axs[0,0].plot(layers, abs(rs_s_te-rs_i_te), 'c-+', label="Impedance", markersize=4)
+axs[0,0].set_ylabel("Reflection absolute error TE Large incidence")
 axs[0,0].set_xlabel("Nb Layers")
-#axs[0,0].set_ylim([-0.001,.15])
+#axs[0,0].set_ylim([1e-17,.15])
 #axs[0,0].set_yscale("log")
 axs[0,0].legend()
 
 
-axs[0,1].plot(layers, abs(rs_s_tm-rs_a_tm)/np.abs(rs_s_tm), 'b-v', label="abeles", markersize=4)
-axs[0,1].plot(layers, abs(rs_s_tm-rs_dn_tm)/np.abs(rs_s_tm), 'r-o', label="D2N", markersize=4)
-axs[0,1].plot(layers, abs(rs_s_tm-rs_t_tm)/np.abs(rs_s_tm), 'g-^', label="T", markersize=4)
-axs[0,1].plot(layers, abs(rs_s_tm-rs_i_tm)/np.abs(rs_s_tm), 'c-+', label="Impedance", markersize=4)
-axs[0,1].set_ylabel("Reflection relative error TM Large incidence")
+axs[0,1].plot(layers, abs(rs_s_tm-rs_a_tm), 'b-v', label="abeles", markersize=4)
+axs[0,1].plot(layers, abs(rs_s_tm-rs_dn_tm), 'r-o', label="D2N", markersize=4)
+axs[0,1].plot(layers, abs(rs_s_tm-rs_t_tm), 'g-^', label="T", markersize=4)
+axs[0,1].plot(layers, abs(rs_s_tm-rs_i_tm), 'c-+', label="Impedance", markersize=4)
+axs[0,1].set_ylabel("Reflection absolute error TM Large incidence")
 axs[0,1].set_xlabel("Nb Layers")
-#axs[0,1].set_ylim([-0.001,.15])
+#axs[0,1].set_ylim([1e-17,.15])
 #axs[0,1].set_yscale("log")
 axs[0,1].legend()
 
 
-axs[1,0].plot(layers, abs(ts_s_te-ts_a_te)/np.abs(ts_s_te), 'b-v', label="abeles", markersize=4)
-axs[1,0].plot(layers, abs(ts_s_te-ts_dn_te)/np.abs(ts_s_te), 'r-o', label="D2N", markersize=4)
-axs[1,0].plot(layers, abs(ts_s_te-ts_t_te)/np.abs(ts_s_te), 'g-^', label="T", markersize=4)
-axs[1,0].set_ylabel("Transmission relative error TE Large incidence")
+axs[1,0].plot(layers, abs(ts_s_te-ts_a_te), 'b-v', label="abeles", markersize=4)
+axs[1,0].plot(layers, abs(ts_s_te-ts_dn_te), 'r-o', label="D2N", markersize=4)
+axs[1,0].plot(layers, abs(ts_s_te-ts_t_te), 'g-^', label="T", markersize=4)
+axs[1,0].set_ylabel("Transmission absolute error TE Large incidence")
 axs[1,0].set_xlabel("Nb Layers")
-#axs[1,0].set_ylim([-0.001,.15])
+#axs[1,0].set_ylim([1e-17,.15])
 #axs[1,0].set_yscale("log")
 axs[1,0].legend()
 
 
-axs[1,1].plot(layers, abs(ts_s_tm-ts_a_tm)/np.abs(ts_s_tm), 'b-v', label="abeles", markersize=4)
-axs[1,1].plot(layers, abs(ts_s_tm-ts_dn_tm)/np.abs(ts_s_tm), 'r-o', label="D2N", markersize=4)
-axs[1,1].plot(layers, abs(ts_s_tm-ts_t_tm)/np.abs(ts_s_tm), 'g-^', label="T", markersize=4)
-axs[1,1].set_ylabel("Transmission relative error TM Large incidence")
+axs[1,1].plot(layers, abs(ts_s_tm-ts_a_tm), 'b-v', label="abeles", markersize=4)
+axs[1,1].plot(layers, abs(ts_s_tm-ts_dn_tm), 'r-o', label="D2N", markersize=4)
+axs[1,1].plot(layers, abs(ts_s_tm-ts_t_tm), 'g-^', label="T", markersize=4)
+axs[1,1].set_ylabel("Transmission absolute error TM Large incidence")
 axs[1,1].set_xlabel("Nb Layers")
-#axs[1,1].set_ylim([-0.001,.15])
+#axs[1,1].set_ylim([1e-17,.15])
 #axs[1,1].set_yscale("log")
 axs[1,1].legend()
 plt.tight_layout()
@@ -432,8 +432,8 @@ ts_dn_tm = []
 for nb_couches in layers:
 
     ## Case 1: single layer, TE
-    #structure = np.random.random(nb_couches*2+1)*w_mean
-    structure = np.array([ep1, ep2]*nb_couches + [ep1])
+    #structure = np.random.rannp.random.random()*100(nnp.random.random()*200ouches*2+1)*w_mean
+    structure = np.array([np.random.random()*100, np.random.random()*200]*nb_couches + [ep1])
 
     stack = [0]+[1,2]*nb_couches+[1,0]
 
@@ -542,45 +542,45 @@ rs_i_tm = np.array(rs_i_tm)
 
 
 fig, axs = plt.subplots(2, 2, sharex=True, figsize=(10,10))
-axs[0,0].plot(layers, abs(rs_s_te-rs_a_te)/np.abs(rs_s_te), 'b-v', label="abeles", markersize=4)
-axs[0,0].plot(layers, abs(rs_s_te-rs_dn_te)/np.abs(rs_s_te), 'r-o', label="D2N", markersize=4)
-axs[0,0].plot(layers, abs(rs_s_te-rs_t_te)/np.abs(rs_s_te), 'g-^', label="T", markersize=4)
-axs[0,0].plot(layers, abs(rs_s_te-rs_i_te)/np.abs(rs_s_te), 'c-+', label="Impedance", markersize=4)
-axs[0,0].set_ylabel("Reflection relative error TE Intermediate incidence")
+axs[0,0].plot(layers, abs(rs_s_te-rs_a_te), 'b-v', label="abeles", markersize=4)
+axs[0,0].plot(layers, abs(rs_s_te-rs_dn_te), 'r-o', label="D2N", markersize=4)
+axs[0,0].plot(layers, abs(rs_s_te-rs_t_te), 'g-^', label="T", markersize=4)
+axs[0,0].plot(layers, abs(rs_s_te-rs_i_te), 'c-+', label="Impedance", markersize=4)
+axs[0,0].set_ylabel("Reflection absolute error TE Intermediate incidence")
 axs[0,0].set_xlabel("Nb Layers")
-#axs[0,0].set_ylim([-0.001,.15])
+#axs[0,0].set_ylim([1e-17,.15])
 #axs[0,0].set_yscale("log")
 axs[0,0].legend()
 
 
-axs[0,1].plot(layers, abs(rs_s_tm-rs_a_tm)/np.abs(rs_s_tm), 'b-v', label="abeles", markersize=4)
-axs[0,1].plot(layers, abs(rs_s_tm-rs_dn_tm)/np.abs(rs_s_tm), 'r-o', label="D2N", markersize=4)
-axs[0,1].plot(layers, abs(rs_s_tm-rs_t_tm)/np.abs(rs_s_tm), 'g-^', label="T", markersize=4)
-axs[0,1].plot(layers, abs(rs_s_tm-rs_i_tm)/np.abs(rs_s_tm), 'c-+', label="Impedance", markersize=4)
-axs[0,1].set_ylabel("Reflection relative error TM Intermediate incidence")
+axs[0,1].plot(layers, abs(rs_s_tm-rs_a_tm), 'b-v', label="abeles", markersize=4)
+axs[0,1].plot(layers, abs(rs_s_tm-rs_dn_tm), 'r-o', label="D2N", markersize=4)
+axs[0,1].plot(layers, abs(rs_s_tm-rs_t_tm), 'g-^', label="T", markersize=4)
+axs[0,1].plot(layers, abs(rs_s_tm-rs_i_tm), 'c-+', label="Impedance", markersize=4)
+axs[0,1].set_ylabel("Reflection absolute error TM Intermediate incidence")
 axs[0,1].set_xlabel("Nb Layers")
-#axs[0,1].set_ylim([-0.001,.15])
+#axs[0,1].set_ylim([1e-17,.15])
 #axs[0,1].set_yscale("log")
 axs[0,1].legend()
 
 
-axs[1,0].plot(layers, abs(ts_s_te-ts_a_te)/np.abs(ts_s_te), 'b-v', label="abeles", markersize=4)
-axs[1,0].plot(layers, abs(ts_s_te-ts_dn_te)/np.abs(ts_s_te), 'r-o', label="D2N", markersize=4)
-axs[1,0].plot(layers, abs(ts_s_te-ts_t_te)/np.abs(ts_s_te), 'g-^', label="T", markersize=4)
-axs[1,0].set_ylabel("Transmission relative error TE Intermediate incidence")
+axs[1,0].plot(layers, abs(ts_s_te-ts_a_te), 'b-v', label="abeles", markersize=4)
+axs[1,0].plot(layers, abs(ts_s_te-ts_dn_te), 'r-o', label="D2N", markersize=4)
+axs[1,0].plot(layers, abs(ts_s_te-ts_t_te), 'g-^', label="T", markersize=4)
+axs[1,0].set_ylabel("Transmission absolute error TE Intermediate incidence")
 axs[1,0].set_xlabel("Nb Layers")
-axs[1,0].set_ylim([-0.001,.15])
-#axs[1,0].set_yscale("log")
+# axs[1,0].set_ylim([1e-17,.15])
+axs[1,0].set_yscale("log")
 axs[1,0].legend()
 
 
-axs[1,1].plot(layers, abs(ts_s_tm-ts_a_tm)/np.abs(ts_s_tm), 'b-v', label="abeles", markersize=4)
-axs[1,1].plot(layers, abs(ts_s_tm-ts_dn_tm)/np.abs(ts_s_tm), 'r-o', label="D2N", markersize=4)
-axs[1,1].plot(layers, abs(ts_s_tm-ts_t_tm)/np.abs(ts_s_tm), 'g-^', label="T", markersize=4)
-axs[1,1].set_ylabel("Transmission relative error TM Intermediate incidence")
+axs[1,1].plot(layers, abs(ts_s_tm-ts_a_tm), 'b-v', label="abeles", markersize=4)
+axs[1,1].plot(layers, abs(ts_s_tm-ts_dn_tm), 'r-o', label="D2N", markersize=4)
+axs[1,1].plot(layers, abs(ts_s_tm-ts_t_tm), 'g-^', label="T", markersize=4)
+axs[1,1].set_ylabel("Transmission absolute error TM Intermediate incidence")
 axs[1,1].set_xlabel("Nb Layers")
-axs[1,1].set_ylim([-0.001,.15])
-#axs[1,1].set_yscale("log")
+# axs[1,1].set_ylim([1e-17,.15])
+axs[1,1].set_yscale("log")
 axs[1,1].legend()
 plt.tight_layout()
 plt.show()
@@ -595,7 +595,7 @@ incidence = np.arcsin(1/mat1)+0.3
 
 stack = [1, 0, 1]
 
-distances = wav * np.arange(0.01, 7, 0.05)
+distances = wav * np.arange(0.01, 10, 0.1)
 if (unit == "um"):
     distances = distances*1e-3
 
@@ -735,45 +735,45 @@ rs_i_tm = np.array(rs_i_tm)
 
 
 fig, axs = plt.subplots(2, 2, sharex=True, figsize=(10,10))
-axs[0,0].plot(distances, abs(rs_s_te-rs_a_te)/np.abs(rs_s_te), 'b-v', label="abeles", markersize=4)
-axs[0,0].plot(distances, abs(rs_s_te-rs_dn_te)/np.abs(rs_s_te), 'r-o', label="D2N", markersize=4)
-axs[0,0].plot(distances, abs(rs_s_te-rs_t_te)/np.abs(rs_s_te), 'g-^', label="T", markersize=4)
-axs[0,0].plot(distances, abs(rs_s_te-rs_i_te)/np.abs(rs_s_te), 'c-+', label="Impedance", markersize=4)
-axs[0,0].set_ylabel("Reflection relative error TE TIR")
+axs[0,0].plot(distances, abs(rs_s_te-rs_a_te), 'b-v', label="abeles", markersize=4)
+axs[0,0].plot(distances, abs(rs_s_te-rs_dn_te), 'r-o', label="D2N", markersize=4)
+axs[0,0].plot(distances, abs(rs_s_te-rs_t_te), 'g-^', label="T", markersize=4)
+axs[0,0].plot(distances, abs(rs_s_te-rs_i_te), 'c-+', label="Impedance", markersize=4)
+axs[0,0].set_ylabel("Reflection absolute error TE TIR")
 axs[0,0].set_xlabel("Distance (nm)")
-#axs[0,0].set_ylim([-0.001,.15])
+#axs[0,0].set_ylim([1e-17,.15])
 #axs[0,0].set_yscale("log")
 axs[0,0].legend()
 
 
-axs[0,1].plot(distances, abs(rs_s_tm-rs_a_tm)/np.abs(rs_s_tm), 'b-v', label="abeles", markersize=4)
-axs[0,1].plot(distances, abs(rs_s_tm-rs_dn_tm)/np.abs(rs_s_tm), 'r-o', label="D2N", markersize=4)
-axs[0,1].plot(distances, abs(rs_s_tm-rs_t_tm)/np.abs(rs_s_tm), 'g-^', label="T", markersize=4)
-axs[0,1].plot(distances, abs(rs_s_tm-rs_i_tm)/np.abs(rs_s_tm), 'c-+', label="Impedance", markersize=4)
-axs[0,1].set_ylabel("Reflection relative error TM TIR")
+axs[0,1].plot(distances, abs(rs_s_tm-rs_a_tm), 'b-v', label="abeles", markersize=4)
+axs[0,1].plot(distances, abs(rs_s_tm-rs_dn_tm), 'r-o', label="D2N", markersize=4)
+axs[0,1].plot(distances, abs(rs_s_tm-rs_t_tm), 'g-^', label="T", markersize=4)
+axs[0,1].plot(distances, abs(rs_s_tm-rs_i_tm), 'c-+', label="Impedance", markersize=4)
+axs[0,1].set_ylabel("Reflection absolute error TM TIR")
 axs[0,1].set_xlabel("Distance (nm)")
-#axs[0,1].set_ylim([-0.001,.15])
+#axs[0,1].set_ylim([1e-17,.15])
 #axs[0,1].set_yscale("log")
 axs[0,1].legend()
 
 
-axs[1,0].plot(distances, abs(ts_s_te-ts_a_te)/np.abs(ts_s_te), 'b-v', label="abeles", markersize=4)
-axs[1,0].plot(distances, abs(ts_s_te-ts_dn_te)/np.abs(ts_s_te), 'r-o', label="D2N", markersize=4)
-axs[1,0].plot(distances, abs(ts_s_te-ts_t_te)/np.abs(ts_s_te), 'g-^', label="T", markersize=4)
-axs[1,0].set_ylabel("Transmission relative error TE TIR")
+axs[1,0].plot(distances, abs(ts_s_te-ts_a_te), 'b-v', label="abeles", markersize=4)
+axs[1,0].plot(distances, abs(ts_s_te-ts_dn_te), 'r-o', label="D2N", markersize=4)
+axs[1,0].plot(distances, abs(ts_s_te-ts_t_te), 'g-^', label="T", markersize=4)
+axs[1,0].set_ylabel("Transmission absolute error TE TIR")
 axs[1,0].set_xlabel("Distance (nm)")
-axs[1,0].set_ylim([-0.001,.15])
-#axs[1,0].set_yscale("log")
+#axs[1,0].set_ylim([1e-17,.15])
+axs[1,0].set_yscale("log")
 axs[1,0].legend()
 
 
-axs[1,1].plot(distances, abs(ts_s_tm-ts_a_tm)/np.abs(ts_s_tm), 'b-v', label="abeles", markersize=4)
-axs[1,1].plot(distances, abs(ts_s_tm-ts_dn_tm)/np.abs(ts_s_tm), 'r-o', label="D2N", markersize=4)
-axs[1,1].plot(distances, abs(ts_s_tm-ts_t_tm)/np.abs(ts_s_tm), 'g-^', label="T", markersize=4)
-axs[1,1].set_ylabel("Transmission relative error TM TIR")
+axs[1,1].plot(distances, abs(ts_s_tm-ts_a_tm), 'b-v', label="abeles", markersize=4)
+axs[1,1].plot(distances, abs(ts_s_tm-ts_dn_tm), 'r-o', label="D2N", markersize=4)
+axs[1,1].plot(distances, abs(ts_s_tm-ts_t_tm), 'g-^', label="T", markersize=4)
+axs[1,1].set_ylabel("Transmission absolute error TM TIR")
 axs[1,1].set_xlabel("Distance (nm)")
-axs[1,1].set_ylim([-0.001,.15])
-#axs[1,1].set_yscale("log")
+#axs[1,1].set_ylim([1e-17,.15])
+axs[1,1].set_yscale("log")
 axs[1,1].legend()
 plt.tight_layout()
 plt.show()
@@ -928,25 +928,25 @@ rs_i_tm = np.array(rs_i_tm)
 
 
 fig, axs = plt.subplots(1, 2, sharex=True, figsize=(10,10))
-axs[0].plot(distances, abs(rs_s_te-rs_a_te)/np.abs(rs_s_te), 'b-v', label="abeles", markersize=4)
-axs[0].plot(distances, abs(rs_s_te-rs_dn_te)/np.abs(rs_s_te), 'r-o', label="D2N", markersize=4)
-axs[0].plot(distances, abs(rs_s_te-rs_t_te)/np.abs(rs_s_te), 'g-^', label="T", markersize=4)
-axs[0].plot(distances, abs(rs_s_te-rs_i_te)/np.abs(rs_s_te), 'c-+', label="Impedance", markersize=4)
-axs[0].set_ylabel("Reflection relative error TE prism")
+axs[0].plot(distances, abs(rs_s_te-rs_a_te), 'b-v', label="abeles", markersize=4)
+axs[0].plot(distances, abs(rs_s_te-rs_dn_te), 'r-o', label="D2N", markersize=4)
+axs[0].plot(distances, abs(rs_s_te-rs_t_te), 'g-^', label="T", markersize=4)
+axs[0].plot(distances, abs(rs_s_te-rs_i_te), 'c-+', label="Impedance", markersize=4)
+axs[0].set_ylabel("Reflection absolute error TE prism")
 axs[0].set_xlabel("Distance (nm)")
-axs[0].set_ylim([-0.001,.25])
-#axs[0].set_yscale("log")
+# axs[0].set_ylim([1e-17,.25])
+## axs[0].set_yscale("log")
 axs[0].legend()
 
 
-axs[1].plot(distances, abs(rs_s_tm-rs_a_tm)/np.abs(rs_s_tm), 'b-v', label="abeles", markersize=4)
-axs[1].plot(distances, abs(rs_s_tm-rs_dn_tm)/np.abs(rs_s_tm), 'r-o', label="D2N", markersize=4)
-axs[1].plot(distances, abs(rs_s_tm-rs_t_tm)/np.abs(rs_s_tm), 'g-^', label="T", markersize=4)
-axs[1].plot(distances, abs(rs_s_tm-rs_i_tm)/np.abs(rs_s_tm), 'c-+', label="Impedance", markersize=4)
-axs[1].set_ylabel("Reflection relative error TM prism")
+axs[1].plot(distances, abs(rs_s_tm-rs_a_tm), 'b-v', label="abeles", markersize=4)
+axs[1].plot(distances, abs(rs_s_tm-rs_dn_tm), 'r-o', label="D2N", markersize=4)
+axs[1].plot(distances, abs(rs_s_tm-rs_t_tm), 'g-^', label="T", markersize=4)
+axs[1].plot(distances, abs(rs_s_tm-rs_i_tm), 'c-+', label="Impedance", markersize=4)
+axs[1].set_ylabel("Reflection absolute error TM prism")
 axs[1].set_xlabel("Distance (nm)")
-axs[1].set_ylim([-0.001,.25])
-#axs[1].set_yscale("log")
+# axs[1].set_ylim([1e-17,.25])
+## axs[1].set_yscale("log")
 axs[1].legend()
 
 plt.tight_layout()
