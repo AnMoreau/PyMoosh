@@ -11,11 +11,12 @@ mat2 = 1.2
 unit = "nm"
 wav = 600
 
-ep1 =  100
-ep2 =  wav/(2*mat2)
+ep1 =  110
+ep2 =  wav/(4*mat2)
 
 layers = np.arange(5, 181, 5)
 
+l_structure = [np.array([ep1, ep2]*nb_couches + [ep1]) for nb_couches in layers]
 
 print("Normal incidence, Bragg Mirror")
 incidence = 0
@@ -49,12 +50,13 @@ rs_i_tm = []
 rs_dn_tm = []
 ts_dn_tm = []
 
-for nb_couches in layers:
+for i_c, nb_couches in enumerate(layers):
+    
 
     ## Case 1: single layer, TE
     #structure = np.random.rannp.random.random()*100(nnp.random.random()*200ouches*2+1)*w_mean
-    structure = np.array([np.random.random()*100, np.random.random()*200]*nb_couches + [ep1])
-
+    # structure = np.array([np.random.random()*100, np.random.random()*200]*nb_couches + [ep1])
+    structure = l_structure[i_c]
     stack = [0]+[1,2]*nb_couches+[1,0]
 
 
@@ -239,11 +241,12 @@ rs_i_tm = []
 rs_dn_tm = []
 ts_dn_tm = []
 
-for nb_couches in layers:
+for i_c, nb_couches in enumerate(layers):
 
     ## Case 1: single layer, TE
     #structure = np.random.rannp.random.random()*100(nnp.random.random()*200ouches*2+1)*w_mean
-    structure = np.array([np.random.random()*100, np.random.random()*200]*nb_couches + [ep1])
+    # structure = np.array([np.random.random()*100, np.random.random()*200]*nb_couches + [ep1])
+    structure = l_structure[i_c]
 
     stack = [0]+[1,2]*nb_couches+[1,0]
 
@@ -429,11 +432,12 @@ rs_i_tm = []
 rs_dn_tm = []
 ts_dn_tm = []
 
-for nb_couches in layers:
+for i_c, nb_couches in enumerate(layers):
 
     ## Case 1: single layer, TE
     #structure = np.random.rannp.random.random()*100(nnp.random.random()*200ouches*2+1)*w_mean
-    structure = np.array([np.random.random()*100, np.random.random()*200]*nb_couches + [ep1])
+    # structure = np.array([np.random.random()*100, np.random.random()*200]*nb_couches + [ep1])
+    structure = l_structure[i_c]
 
     stack = [0]+[1,2]*nb_couches+[1,0]
 
@@ -788,6 +792,7 @@ incidence = np.arcsin(1/mat1)+0.3
 
 stack = [1, 2, 0]
 
+# distances = np.concatenate((np.arange(1, 101, 2), np.arange(100,10000,500)))
 distances = np.arange(1, 101, 2)
 if (unit == "um"):
     distances = distances*1e-3
