@@ -12,7 +12,7 @@ unit = "nm"
 wav = 600
 
 ep1 =  110
-ep2 =  wav/(4*mat2)
+ep2 =  wav/(2*mat2)
 
 layers = np.arange(5, 181, 5)
 
@@ -60,7 +60,7 @@ for i_c, nb_couches in enumerate(layers):
     stack = [0]+[1,2]*nb_couches+[1,0]
 
 
-    epaisseurs = np.concatenate(([0],structure,[0]))
+    epaisseurs = np.concatenate(([0],structure,[2]))
     multi_stack = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
     r, t, R, T = PM.coefficient_S(multi_stack,wav,incidence,0)
