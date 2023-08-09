@@ -252,6 +252,7 @@ class Structure:
         plt.title(f'permittivities at wavelength = {wavelength}nm')
         plt.ylabel('D (nm)')
         plt.xticks([])
+        plt.gca().invert_yaxis()
         plt.show()
 
 
