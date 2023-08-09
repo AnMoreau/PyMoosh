@@ -24,8 +24,8 @@
 
 """
 __name__ = 'PyMoosh'
-__version__ = '3.0'
-__date__ = "06/06/2023"   # MM/DD/YYY
+__version__ = '3.1'
+__date__ = "09/08/2023"   # MM/DD/YYY
 __author__ = 'Antoine Moreau'
 
 
