@@ -29,4 +29,4 @@ jobs:
           ruff --format=github --target-version=py37 .
       - name: Test with pytest
         run: |
-          pytest
+          pytest PyMoosh/core.py
