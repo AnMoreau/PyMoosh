@@ -1,5 +1,4 @@
 import PyMoosh as pm
-import nevergrad as ng
 import numpy as np
 import matplotlib.pyplot as plt
 
