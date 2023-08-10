@@ -28,6 +28,11 @@ def test_pymoosh():
   
   budget = 200
   nb_layers = 7
+  opti_wave = 600
+  mat1 = 1.4
+  mat2 = 1.8
+  min_th = 0 # We don't want negative thicknesses.
+  max_th = opti_wave/(2*mat1) # A thickness of lambda/2n + t has the same behaviour as a thickness t
 
   X_min = np.array([min_th]*nb_layers)
   X_max = np.array([max_th]*nb_layers)
