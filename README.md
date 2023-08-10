@@ -46,5 +46,6 @@ Here is a list of contributors to PyMoosh (one way or another) so far:
 * Olivier Teytaud (@teytaud)
 * Demetrio Macias
 * Anorld Capo-Chichi
+* Pierre Chevalier
 
 and the contributors to the original Moosh program should not be forgotten : Josselin Defrance, Rémi Pollès, Fabien Krayzel, Paul-Henri Tichit, Jessica Benedicto mainly, but David R. Smith and Cristian Ciraci too ! Special thanks to Gérard Granet and Jean-Pierre Plumey.
