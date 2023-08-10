@@ -28,6 +28,7 @@ def test_pymoosh():
   
   budget = 200
   nb_layers = 12
+  dim = nb_layers
   opti_wave = 600
   mat1 = 1.4
   mat2 = 1.8
