@@ -233,20 +233,25 @@ class Structure:
             n = _mats[i]
 
             if type(n) is not str:
+                if abs(np.imag(n)) < 1e-7:
+                    n = np.real(n)
                 n = str(np.round(n, 2))
 
             if i < len(_thick)-1:
                 plt.axhline(d0+di, color='k', lw=1)
             plt.axhspan(d0, d0+di, color=colors[i], alpha=0.5)
-
+            
+            spacing = ""
+            if len(_thick) > 12:
+                spacing = " " * np.random.randint(50)
             if i not in _index_diff:
-                text = f'eps={n}'
+                text = f'{spacing}eps={n}'
             else:
-                text = f'mat={_mats_names[np.where(_index_diff==i)[0][0]]}'
+                text = f'{spacing}mat={_mats_names[np.where(_index_diff==i)[0][0]]}'
 
             if len(_thick)-1 > i >= 1:
                 plt.text(0.05, d0+di/2, text, ha='left', va='center',fontsize=8)
-                plt.text(0.95, d0+di/2, f'd={int(np.round(di))}nm', ha='right', va='center',fontsize=8)
+                plt.text(0.95, d0+di/2, f'd={int(np.round(di))}nm{spacing}', ha='right', va='center',fontsize=8)
             else:
                 plt.text(0.1, d0+di/2, text, ha='left', va='center',fontsize=8)
         plt.title(f'permittivities at wavelength = {wavelength}nm')
