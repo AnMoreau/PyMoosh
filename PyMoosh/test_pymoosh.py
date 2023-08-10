@@ -27,7 +27,7 @@ def test_pymoosh():
     return cost
   
   budget = 200
-  nb_layers = 7
+  nb_layers = 12
   opti_wave = 600
   mat1 = 1.4
   mat2 = 1.8
