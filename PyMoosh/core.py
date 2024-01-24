@@ -92,77 +92,13 @@ class Structure:
                 materials_final.append(mat)
                 if verbose :
                     print("Object:",mat.__class__.__name__)
-            elif mat.__class__.__name__ == 'function':
-                newmat = CustomFunction(mat)
+            else :
+                new_mat = Material(mat, verbose=verbose)
                 materials_final.append(new_mat)
-                if verbose :
-                    print("Custom dispersive material. Epsilon=",mat.__name__,"(wavelength in nm)")
-            # no func / not iterable --> single value, convert to complex by default
-            elif not hasattr(mat, '__iter__'):
-                new_mat = Material(complex(mat))
-                materials_final.append(new_mat)
-                if verbose :
-                    print("Simple, non dispersive: epsilon=",mat)
-            # iterable: if list or similar --> magnetic
-            elif isinstance(mat,list) or isinstance(mat,tuple) or isinstance(mat,np.ndarray):
-                newmat = MagneticND(mat[0],mat[1])
-                materials_final.append(new_mat)
-                if verbose :
-                    print("Magnetic, non dispersive: epsilon=", mat[0]," mu=",mat[1])
-                if len(mat)>2:
-                    print(f'Warning: Magnetic material should have 2 values (epsilon / mu), but {len(mat)} were given.')
-            # iterable: string --> database material
-            elif isinstance(mat,str):
-                # from file in shipped database
-                import pkgutil
-                f = pkgutil.get_data(__name__, "data/material_data.json")
-                f_str = f.decode(encoding='utf8')
-                database = json.loads(f_str)
-                if mat in database:
-                    material_data = database[mat]
-                    model = material_data["model"]
-#                    match model:
-#                    case "ExpData":
-                    if model == "ExpData":
-                        wl=np.array(material_data["wavelength_list"])
-                        epsilon = np.array(material_data["permittivities"])
-                        if "permittivities_imag" in material_data:
-                            epsilon = epsilon + 1j*np.array(material_data["permittivities_imag"])
-                        new_mat= ExpData(wl,epsilon, name=mat)
-                        materials_final.append(new_mat)
-#                    case "BrendelBormann"
-                    elif model == "BrendelBormann":
-                        f0 = material_data["f0"]
-                        Gamma0 = material_data["Gamma0"]
-                        omega_p = material_data["omega_p"]
-                        ff = material_data["f"]
-                        gamma = material_data["Gamma"]
-                        omega = material_data["omega"]
-                        sigma = material_data["sigma"]
-                        new_mat = BrendelBormann(f0,Gamma0,omega_p,ff,gamma,omega,sigma, name=mat)
-                        materials_final.append(new_mat)
-#                    case "CustomFunction":
-                    elif model == "CustomFunction":
-                        permittivity = material_data["function"]
-                        new_mat = CustomFunction(authorized[permittivity], name=mat)
-                        materials_final.append(new_mat)
-#                    case _:
-                    else:
-                        print(model," not an existing model.")
-                        #sys.exit()
-
-                    if verbose :
-                        print("Database material:",new_mat)
-                else:
-                    print(mat,"Unknown material")
-                    print("Known materials:\n", existing_materials())
-                    #sys.exit()
-            else:
-                print("Whhaaaaat ? That has nothing to do here :",mat)
-#                sys.exit( )
         self.materials = materials_final
         self.layer_type = layer_type
         self.thickness = thickness
+
 
     def __str__(self):
         materials = [str(self.materials[i]) for i in range(len(self.materials))]
@@ -240,7 +176,7 @@ class Structure:
             if i < len(_thick)-1:
                 plt.axhline(d0+di, color='k', lw=1)
             plt.axhspan(d0, d0+di, color=colors[i], alpha=0.5)
-            
+
             spacing = ""
             if len(_thick) > 12:
                 spacing = " " * np.random.randint(50)

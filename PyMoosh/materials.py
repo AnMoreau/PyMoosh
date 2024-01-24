@@ -6,107 +6,118 @@ import json
 
 class Material:
 
-    def __init__(self,permittivity, name=""):
-        self.permittivity = permittivity
-        self.name = name
+    """
+        Types:
+            - simple_perm
+            - magnetic
+            - ExpData
+            - CustomFunction
+            - BrendelBormann
+    """
+
+    def __init__(self, mat, verbose=False):
+        if mat.__class__.__name__ == 'function':
+            self.type = "CustomFunction"
+            self.permittivity_function = mat
+            self.name = "CustomFunction: "+mat.__name__
+            if verbose :
+                print("Custom dispersive material. Epsilon=",mat.__name__,"(wavelength in nm)")
+        elif not hasattr(mat, '__iter__'):
+        # no func / not iterable --> single value, convert to complex by default
+            self.type = "simple_perm"
+            self.name = "SimplePermittivity:"+str(mat)
+            self.permittivity = complex(mat)
+            if verbose :
+                print("Simple, non dispersive: epsilon=",self.permittivity)
+        elif isinstance(mat,list) or isinstance(mat,tuple) or isinstance(mat,np.ndarray):
+        # iterable: if list or similar --> magnetic
+            self.type = "magnetic"
+            self.permittivity = mat[0]
+            self.permeability = mat[1]
+            self.name = "MagneticPermittivity:"+str(mat[0])+"Permability:"+str(mat[1])
+            if verbose :
+                print("Magnetic, non dispersive: epsilon=", mat[0]," mu=",mat[1])
+            if len(mat)>2:
+                print(f'Warning: Magnetic material should have 2 values (epsilon / mu), but {len(mat)} were given.')
+        elif isinstance(mat,str):
+        # iterable: string --> database material
+        # from file in shipped database
+            import pkgutil
+            f = pkgutil.get_data(__name__, "data/material_data.json")
+            f_str = f.decode(encoding='utf8')
+            database = json.loads(f_str)
+            if mat in database:
+                material_data = database[mat]
+                model = material_data["model"]
+                if model == "ExpData":
+                    self.type = "ExpData"
+                    self.name = "ExpData: "+ str(mat)
+
+                    wl=np.array(material_data["wavelength_list"])
+                    epsilon = np.array(material_data["permittivities"])
+                    if "permittivities_imag" in material_data:
+                        epsilon = epsilon + 1j*np.array(material_data["permittivities_imag"])
+
+                    self.wavelength_list = np.array(wl, dtype=float)
+                    self.permittivities  = np.array(epsilon, dtype=complex)
+
+                elif model == "BrendelBormann":
+                    self.type = "BrendelBormann"
+                    self.name = "BrendelBormann model: " + str(mat)
+                    self.f0 = material_data["f0"]
+                    self.Gamma0 = material_data["Gamma0"]
+                    self.omega_p = material_data["omega_p"]
+                    self.f = np.array(material_data["f"])
+                    self.gamma = np.array(material_data["Gamma"])
+                    self.omega = np.array(material_data["omega"])
+                    self.sigma = np.array(material_data["sigma"])
+
+                elif model == "CustomFunction":
+                    self.type = "CustomDatabaseFunction"
+                    self.name = "CustomDatabaseFunction: " + str(mat)
+                    permittivity = material_data["function"]
+                    self.permittivity_function = authorized[permittivity]
+
+                else:
+                    print(model," not an existing model (yet).")
+                    #sys.exit()
+
+                if verbose :
+                    print("Database material:",self.name)
+            else:
+                print(mat,"Unknown material (for the moment)")
+                print("Known materials:\n", existing_materials())
+                # sys.exit()
 
     def __str__(self):
-        if (len(self.name) > 1):
-            return f"{self.name}, perm: {self.permittivity}"
-        return str(self.permittivity)
+        return self.name
 
     def get_permittivity(self,wavelength):
-        return self.permittivity
+        if self.type == "simple_perm":
+            return self.permittivity
+        elif self.type == "magnetic":
+            return self.permittivity
+        elif self.type == "ExpData":
+            return np.interp(wavelength, self.wavelength_list, self.permittivities)
+        elif self.type == "CustomFunction":
+            return self.permittivity_function(wavelength)
+        elif self.type == "BrendelBormann":
+            w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wavelength
+            a = np.sqrt(w * (w + 1j * self.gamma))
+            x = (a - self.omega) / (np.sqrt(2) * self.sigma)
+            y = (a + self.omega) / (np.sqrt(2) * self.sigma)
+            # Polarizability due to bound electrons
+            chi_b = np.sum(1j * np.sqrt(np.pi) * self.f * self.omega_p ** 2 /
+                        (2 * np.sqrt(2) * a * self.sigma) * (wofz(x) + wofz(y)))
+            # Equivalent polarizability linked to free electrons (Drude model)
+            chi_f = -self.omega_p ** 2 * self.f0 / (w * (w + 1j * self.Gamma0))
+            epsilon = 1 + chi_f + chi_b
+            return epsilon
 
     def get_permeability(self,wavelength):
+        if self.type == "magnetic":
+            return self.permeability
         return 1.0
-
-class CustomFunction(Material):
-
-    def __init__(self,permittivity_function, name=""):
-        self.permittivity_function = permittivity_function
-        self.name = name
-
-    def __str__(self):
-        if (len(self.name) > 1):
-            return f"{self.name}, model: custom function, see material_data.json"
-        return "Custom function for permittivity"
-
-    def get_permittivity(self,wavelength):
-        return self.permittivity_function(wavelength)
-
-class ExpData(Material):
-    """
-    Class of materials defined by their permittivity measured for
-    well defined values of the wavelength in vacuum. We make asin
-    interpolation to get the most accurate value of the permittivity.
-    Two lists are thus expected:
-    - wavelength_list
-    - permittivities (potentially complex)
-    """
-
-    def __init__(self, wavelength_list,permittivities, name=""):
-
-        self.wavelength_list = np.array(wavelength_list, dtype=float)
-        self.permittivities  = np.array(permittivities, dtype=complex)
-        self.name = name
-
-    def __str__(self):
-        if (len(self.name) > 1):
-            return f"{self.name}, model: Exp Data"
-        return "Experimental Data for database material"
-
-    def get_permittivity(self, wavelength):
-        return np.interp(wavelength, self.wavelength_list, self.permittivities)
-
-class MagneticND(Material):
-
-    """
-    Magnetic, non-dispersive material, characterized by a permittivity
-    and a permeabilty that do not depend on the wavelength.
-    """
-
-    def __init__(self,permittivity,permeability):
-        self.permittivity = permittivity
-        self.permeability  = permeability
-
-    def get_permeability(self,wavelength):
-        return self.permeability
-
-
-class BrendelBormann(Material):
-    """
-    Material described using a Brendel Bormann model for a metal.
-    """
-
-    def __init__(self, f0,gamma0,omega_p,f,gamma,omega,sigma, name="") -> None:
-        self.f0 = f0
-        self.Gamma0 = gamma0
-        self.omega_p = omega_p
-        self.f = np.array(f)
-        self.gamma = np.array(gamma)
-        self.omega = np.array(omega)
-        self.sigma = np.array(sigma)
-        self.name = name
-
-
-    def __str__(self):
-        if (len(self.name) > 1):
-            return f"{self.name}, model: Brendel Bormann"
-        return "Brendel Bormann model for Database material"
-
-    def get_permittivity(self, wavelength):
-        w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wavelength
-        a = np.sqrt(w * (w + 1j * self.gamma))
-        x = (a - self.omega) / (np.sqrt(2) * self.sigma)
-        y = (a + self.omega) / (np.sqrt(2) * self.sigma)
-        # Polarizability due to bound electrons
-        chi_b = np.sum(1j * np.sqrt(np.pi) * self.f * self.omega_p ** 2 /
-                       (2 * np.sqrt(2) * a * self.sigma) * (wofz(x) + wofz(y)))
-        # Equivalent polarizability linked to free electrons (Drude model)
-        chi_f = -self.omega_p ** 2 * self.f0 / (w * (w + 1j * self.Gamma0))
-        epsilon = 1 + chi_f + chi_b
-        return epsilon
 
 def existing_materials():
     import pkgutil
