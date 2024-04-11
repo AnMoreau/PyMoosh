@@ -73,8 +73,8 @@ class Material:
                     self.sigma = np.array(material_data["sigma"])
 
                 elif model == "CustomFunction":
-                    self.type = "CustomDatabaseFunction"
-                    self.name = "CustomDatabaseFunction: " + str(mat)
+                    self.type = "CustomFunction"
+                    self.name = "CustomFunction: " + str(mat)
                     permittivity = material_data["function"]
                     self.permittivity_function = authorized[permittivity]
 
