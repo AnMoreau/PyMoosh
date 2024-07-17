@@ -1,10 +1,12 @@
 import numpy as np
+from numpy import linalg as la_np
 import scipy.optimize as optim
 from math import *
 import sys
 import copy
 import matplotlib.pyplot as plt
 import itertools
+import re
 
 from PyMoosh.materials import *
 
@@ -24,7 +26,57 @@ def conv_to_nm(length, unit):
     # Just in case we get here but didn't need to
         return np.array(length)
     else:
-        print("Please provide lengths in m, mm or um")
+        print("Please provide lengths in m, mm, um, pm or nm")
+
+
+def rotate_permittivity(eps, angle_rad, axis='z'): #AV#Aded
+    """
+    This function calculates the rotated permittivity tensor of eps around the given axis about the required angle 
+
+    Args :
+    eps : permittivity tensor: a 3x3 Numpy array
+    angle_rad : rotation angle (in radians) around the rotation axis ``axis``
+    axis : rotation axis as a one-dimensional Numpy array of length 3 or a string  'x', 'y' or 'z'
+    return : rotated permittivity tensor: a 3x3 Numpy array
+    """
+    from numpy import linalg as la_np
+
+    # Retrieve the rotation axis
+    # vec_u = unit vector
+    x_u = np.array([1, 0, 0])
+    y_u = np.array([0, 1, 0])
+    z_u = np.array([0, 0, 1])
+    if isinstance(axis, str):
+        if axis == 'x':
+            axis = x_u
+        elif axis == 'y':
+            axis = y_u
+        elif axis == 'z':
+            axis = z_u
+        else:
+            raise Exception('Invalid rotation axis.')
+    if la_np.norm(axis) == 0: #if axis has zero norm then necessarily: axis=[0,0,0]
+        raise Exception('Invalid axis. Axis can not be (0, 0, 0).')
+    if np.array(axis).shape != x_u.shape :
+        raise Exception('axis as to be a one-dimensional Numpy array of lenght 3')
+
+    # Rotation matrix
+    # theta_rad = theta_rad % (2 * np.pi)
+    axis = axis / la_np.norm(axis) # axis normalisation 
+    ux = axis[0]
+    uy = axis[1]
+    uz = axis[2]
+    costheta = np.cos(angle_rad)
+    sintheta = np.sin(angle_rad)
+    R = np.array([[costheta + (ux ** 2) * (1 - costheta), ux * uy * (1 - costheta) - uz * sintheta,
+                        ux * uz * (1 - costheta) + uy * sintheta],
+                        [uy * ux * (1 - costheta) + uz * sintheta, costheta + (uy ** 2) * (1 - costheta),
+                        uy * uz * (1 - costheta) - ux * sintheta],
+                        [uz * ux * (1 - costheta) - uy * sintheta, uz * uy * (1 - costheta) + ux * sintheta,
+                        costheta + (uz ** 2) * (1 - costheta)]])
+    # Rotate permittivity tensor
+    eps_rot = la_np.multi_dot((R, eps, R.transpose()))
+    return eps_rot
 
 
 class Structure:
@@ -73,7 +125,7 @@ class Structure:
     represented is asked.
     """
 
-    def __init__(self, materials, layer_type, thickness, verbose=True, unit="nm", si_units=False):
+    def __init__(self, materials, layer_type, thickness, ani_rot_angle=None, ani_rot_axis=None, verbose=True, unit="nm", si_units=False):
 
         if (unit != "nm"):
             thickness = conv_to_nm(thickness, unit)
@@ -84,12 +136,19 @@ class Structure:
 
         self.unit = unit
 
+        self.Anisotropic = False
+        self.NonLocal = False
+
         materials_final=list()
         if verbose :
             print("List of materials:")
         for mat in materials:
             if issubclass(mat.__class__,Material):
                 materials_final.append(mat)
+                if mat.type == "Anisotropic":
+                    self.Anisotropic = True
+                elif mat.specialType == "NonLocal":
+                    self.NonLocal = True
                 if verbose :
                     print("Object:",mat.__class__.__name__)
             else :
@@ -98,6 +157,39 @@ class Structure:
         self.materials = materials_final
         self.layer_type = layer_type
         self.thickness = thickness
+
+
+        if self.Anisotropic:
+            if ani_rot_angle == None:   # Setting all the angles to 0 if nothing has been specified by the user.
+                self.ani_rot_angle = [0]*np.size(layer_type)
+        
+            else :
+                self.ani_rot_angle = ani_rot_angle  # ani_rot_angle is a list of angle in radian (float or int). One for each layer, setting isotropic layers to the default angle = 0
+
+            for ang in self.ani_rot_angle: # Checking format.
+                if not(isinstance(ang, float) or isinstance(ang, int)):
+                    raise Exception("angle have to be a float or a int")
+            
+
+            if ani_rot_axis == None: # Setting all the axis to 'z' if nothing has been specified by the user.
+                self.ani_rot_axis = ['z']*np.size(layer_type)
+            else :
+                self.ani_rot_axis = ani_rot_axis# ani_rot-axis is a list of axis reprensented as a row array of length 3 
+                                                #or as the string ``'x'``, ``'y'`` or ``'z'``. One for each layer in the stack, setting isotropic layers to the default axis 'z'
+
+            for ax in self.ani_rot_axis: # Checking format.
+                if not(isinstance(ax, str)) and np.shape(ax) != np.shape([0,0,0]) :
+                    raise Exception("axis have to be a string ``'x'``, ``'y'`` or ``'z'` or a row array of length 3")
+
+            # Checking if the first and last layers are isotrop (Superstrate and Substrate are halfspaces respectively 
+            #representing the medium of the incoming and outgoing light of the multi-layer stack)
+            if materials_final[layer_type[0]].type == "Anisotropic" or materials_final[layer_type[-1]].type == "Anisotropic": 
+                raise Exception("Superstrate's and Substrate's material have to be isotropic !")
+        
+        if self.NonLocal:
+            if materials_final[layer_type[0]].specialType == "NonLocal" or materials_final[layer_type[-1]].specialType == "NonLocal": 
+                raise Exception("Superstrate's and Substrate's material have to be local !")
+
 
 
     def __str__(self):
@@ -127,7 +219,73 @@ class Structure:
         return epsilon, mu
 
 
-    def plot_stack(self, wavelength=None, lim_eps_colors=[1.5, 4]):
+    def polarizability_opti_wavelength(self, wavelength): #numpy friendly
+        """ ** Only used for coefficient_S_opti_wavelength **
+        Computes the actual permittivity and permeability of each material considered in
+        the structure. This method is called before each calculation.
+
+        Args:
+            wavelength (numpy array): the working wavelength (in nanometers)
+        """
+
+
+        # Create empty mu and epsilon arrays
+        mu = np.ones((wavelength.size, len(self.materials)), dtype=np.clongdouble)
+        epsilon = np.ones((wavelength.size, len(self.materials)), dtype=np.clongdouble)
+        # Loop over all materials
+        for k in range(len(self.materials)):
+            # Populate epsilon and mu arrays from the material.
+            material = self.materials[k]
+            material_get_permittivity = material.get_permittivity(wavelength)
+            material_get_permeability = material.get_permeability(wavelength)
+            try:
+                material_get_permittivity.shape = (len(wavelength),)
+                material_get_permeability.shape = (len(wavelength),)
+            except:
+                pass
+
+            epsilon[:,k] = material_get_permittivity
+            mu[:,k] = material_get_permeability 
+
+        return epsilon, mu
+
+
+    def permittivity_tensor_list(self, wavelenght):#AV_Added#
+        """ Return the permittivity tensor of each material considered in the structure as a row array of 3*3 array. Both isotropic and anisotropic materials are supported.
+    
+         Args:
+         wavelength (float): the working wavelength (in nanometers)
+        """
+        eps_tens_list = list()
+        Id_3 = np.eye(3 , 3)
+        for i in self.layer_type:
+            mat_lay_i = self.materials[i]
+            if mat_lay_i.specialType != "ANI":
+                eps_tens_list.append(mat_lay_i.get_permittivity(wavelenght)*Id_3)
+            else :
+                eps_tens_list.append(mat_lay_i.get_permittivity_ani(wavelenght)*Id_3)
+            
+        return eps_tens_list
+    
+
+    def rotate_permittivity_tensor_list(self, eps_tens_list, ani_rot_angle, ani_rot_axis):#AV_Added#
+        """ Return the list of rotated permittivities tensors from permittivity_tensor_list. Each tensor is rotated about the corresponding angles and axis in the list ani_rot_angle and ani_rot_axis.
+    
+         Args:
+         eps_tens_list : row array of 3*3 array
+         ani_rot_angle : list of int or float 
+         ani_rot_axis : list of row array of length 3 or string 'x', 'y' or 'z'
+        """
+        i=0
+        new_eps_tens_list = copy.deepcopy(eps_tens_list)
+        for eps in new_eps_tens_list:
+            eps_R = rotate_permittivity(eps, ani_rot_angle[i],ani_rot_axis[i])
+            new_eps_tens_list[i] = eps_R
+            i=i+1
+        return new_eps_tens_list    
+
+
+    def plot_stack(self, wavelength=None, lim_eps_colors=[1.5, 4], precision=3):
         """plot layerstack
 
         evaluate materials at given wavelength for labels
@@ -179,11 +337,14 @@ class Structure:
 
             spacing = ""
             if len(_thick) > 12:
-                spacing = " " * np.random.randint(50)
+                spacing = " " #* np.random.randint(50)
             if i not in _index_diff:
                 text = f'{spacing}eps={n}'
             else:
-                text = f'{spacing}mat={_mats_names[np.where(_index_diff==i)[0][0]]}'
+                #text = f'{spacing}mat={_mats_names[np.where(_index_diff==i)[0][0]]}'
+                n =  _mats_names[np.where(_index_diff==i)[0][0]]
+                n = [float(s) for s in re.findall(r"-?\d+\.?\d*", n)][0]
+                text = f'{spacing}mat={np.round(n, precision)}'
 
             if len(_thick)-1 > i >= 1:
                 plt.text(0.05, d0+di/2, text, ha='left', va='center',fontsize=8)
@@ -274,12 +435,61 @@ def cascade(A, B):
     The result is a 2x2 scattering matrix.
 
     Args:
-        A (2x2 numpy array):
-        B (2x2 numpy array):
+        A (2x2, 3x3, 4x4 numpy array):
+        B (2x2, 3x3, 4x4 numpy array):
+
+    """
+    # If the interface or the layer is non-local, the matrix won't be size 2x2 so return the non-local cascade.
+    if np.shape(A) == (3,3) or (4,4) or np.shape(B) ==  (3,3) or (4,4) :
+        return cascade_nl(A,B)
+    t = 1 / (1 - B[0, 0] * A[1, 1])
+    S = np.zeros((2, 2), dtype=complex)
+    S[0, 0] = A[0, 0] + A[0, 1] * B[0, 0] * A[1, 0] * t
+    S[0, 1] = A[0, 1] * B[0, 1] * t
+    S[1, 0] = B[1, 0] * A[1, 0] * t
+    S[1, 1] = B[1, 1] + A[1, 1] * B[0, 1] * B[1, 0] * t
+    return (S)
+
+
+def cascade_nl(T,U):
+    """
+        Cascading Scattering non local matrices
+    """
+    n=min(np.shape(T)[0], np.shape(U)[0]) - 1
+    m=np.shape(T)[0] - n
+    p=np.shape(U)[0] - n
+    
+    A=T[0: m, 0: m]
+    B=T[0: m, m: m + n]
+    C=T[m: m + n, 0: m]
+    D=T[m: m + n, m: m + n]
+    
+    E=U[0: n, 0: n]
+    F=U[0: n, n: n + p]
+    G=U[n: n + p, 0: n]
+    H=U[n: n + p, n: n + p]
+    
+    J=np.linalg.inv(np.eye(n, n) - E @ D)
+    K=np.linalg.inv(np.eye(n, n) - D @ E)
+    matrix = np.vstack((np.hstack((A + B @ J @ E @ C, B @ J @ F)), np.hstack((G @ K @ C, H + G @ K @ D @ F))))
+    return  matrix
+
+
+def cascade_opti_wavelength(A, B, len_wl): #numpy friendly
+    """
+    ** Only used in coefficient_S_opti_wavelength definition **
+
+    This function takes two 2x2 matrixes A and B of (len_wl, 1) arrays, that are assumed to be scattering matrixes
+    and combines them assuming A is the "upper" one, and B the "lower" one, physically.
+    The result is a 2x2 scattering matrix of (len_wl, 1) arrays.
+
+    Args:
+        A (2x2 numpy array of (len_wl, 1) arrays):
+        B (2x2 numpy arrayof (len_wl, 1) arrays):
 
     """
     t = 1 / (1 - B[0, 0] * A[1, 1])
-    S = np.zeros((2, 2), dtype=complex)
+    S = np.zeros((2, 2, len_wl, 1), dtype=complex)
     S[0, 0] = A[0, 0] + A[0, 1] * B[0, 0] * A[1, 0] * t
     S[0, 1] = A[0, 1] * B[0, 1] * t
     S[1, 0] = B[1, 0] * A[1, 0] * t
@@ -307,7 +517,8 @@ def cascade_DirtoNeu(A, B):
     S[1, 1] = B[1, 1] + B[1, 0] * B[0, 1]  * t
     return (S)
 
-def absorption(struct, wavelength, incidence, polarization):
+
+def absorption(struct, wavelength, incidence, polarization, wavelength_opti=False):
     """
     This function computes the percentage of the incoming energy
     that is absorbed in each layer when the structure is illuminated
@@ -331,8 +542,177 @@ def absorption(struct, wavelength, incidence, polarization):
     is lossless, or they have no true meaning.
 
     """
-
+    if struct.NonLocal:
+        print("Non Local absorption not yet defined")
+    if struct.Anisotropic:
+        print("Anisotropic absorption not yet defined")
+    if wavelength_opti:
+        return absorption_A_opti_wavelength(struct, wavelength, incidence, polarization)
+    
     return absorption_S(struct, wavelength, incidence, polarization)
+
+
+def absorption_A_opti_wavelength(struct, wavelength, incidence, polarization): #numpy friendly
+    """
+    ** OPTIMIZED FUNCTION OF absorption_A FOR 
+    AN ARRAY OF WAVELENGTH, INSTEAD OF A FLOAT **
+
+    This function computes the percentage of the incoming energy
+    that is absorbed in each layer when the structure is illuminated
+    by a plane wave.
+
+    Args:
+        struct (Structure): belongs to the Structure class
+        wavelength (float): wavelength of the incidence light (in nm)
+        incidence (float): incidence angle in radians
+        polarization (float): 0 for TE, 1 (or anything) for TM
+
+    returns:
+        absorb (numpy array): absorption in each layer
+        r (complex): reflection coefficient, phase origin at first interface
+        t (complex): transmission coefficient
+        R (float): Reflectance (energy reflection)
+        T (float): Transmittance (energie transmission)
+
+    R and T are the energy coefficients (real quantities)
+
+    .. warning: The transmission coefficients have a meaning only if the lower medium
+    is lossless, or they have no true meaning.
+    """
+    # In order to get a phase that corresponds to the expected reflected coefficient,
+    # we make the height of the upper (lossless) medium vanish. It changes only the
+    # phase of the reflection coefficient.
+
+    # The medium may be dispersive. The permittivity and permability of each
+    # layer has to be computed each time.
+    len_wl = wavelength.size
+    len_mat = len(struct.materials)
+    wavelength.shape = (len_wl, 1)
+
+    if (struct.unit != "nm"):
+        wavelength = conv_to_nm(wavelength, struct.unit)
+
+    # Epsilon and Mu are (len_wl, len_mat) arrays.
+    Epsilon, Mu = struct.polarizability_opti_wavelength(wavelength)
+    Epsilon.shape, Mu.shape = (len_wl, len_mat), (len_wl, len_mat)
+    thickness = copy.deepcopy(struct.thickness)
+    thickness = np.asarray(thickness)
+
+    # In order to ensure that the phase reference is at the beginning
+    # of the first layer.
+    thickness[0] = 0
+    thickness.shape = (1, len(thickness))
+    Type = struct.layer_type
+    # The boundary conditions will change when the polarization changes.
+    if polarization == 0:
+        f = Mu
+    else:
+        f = Epsilon
+
+    # Wavevector in vacuum. Array of shape (len_wl, 1).
+    k0 = 2 * np.pi / wavelength
+
+    # Number of layers.
+    g = len(struct.layer_type)
+
+    # Wavevector k_x, horizontal. Array of shape (len_wl, 1).
+    Epsilon_first, Mu_first = Epsilon[:,Type[0]], Mu[:,Type[0]]
+    Epsilon_first.shape, Mu_first.shape = (len_wl, 1), (len_wl, 1)
+    alpha = np.sqrt(Epsilon_first * Mu_first) * k0 * np.sin(incidence)
+    # Computation of the vertical wavevectors k_z. Array of shape (len_wl, len_mat).
+    gamma = np.sqrt(
+        Epsilon[:,Type] * Mu[:,Type] * k0 ** 2 - np.ones((len_wl, g)) * alpha ** 2)
+    
+    # Be cautious if the upper medium is a negative index one.
+    mask = np.logical_and(np.real(Epsilon_first) < 0, np.real(Mu_first) < 0)
+    np.putmask(gamma[:,0], mask,-gamma[:,0])
+
+    # Changing the determination of the square root to achieve perfect stability.
+    if g > 2:
+        gamma[:,1:g - 2] = gamma[:,1:g - 2] * (
+                    1 - 2 * (np.imag(gamma[:,1:g - 2]) < 0))
+    
+    # Outgoing wave condition for the last medium.
+    Epsilon_new, Mu_new = Epsilon[:,Type[g-1]], Mu[:,Type[g-1]]
+    Epsilon_new.shape, Mu_new.shape = (len_wl, 1), (len_wl, 1)
+    gamma_new = np.sqrt(Epsilon_new* Mu_new * k0 ** 2 - alpha ** 2)
+    mask = np.logical_and.reduce(
+    (np.real(Epsilon_new) < 0, np.real(Mu_new) < 0, np.real(gamma_new) != 0))
+    not_mask = np.logical_or.reduce(
+    (np.real(Epsilon_new) > 0, np.real(Mu_new) > 0, np.real(gamma_new) == 0))
+    np.putmask(gamma[:,g-1], mask, -gamma_new)
+    np.putmask(gamma[:,g-1], not_mask, gamma_new)
+    
+    # Each layer has a (2, 2) matrix with (len_wl, 1) array as coefficient.
+    T = np.zeros(((g-1, 2, 2, len_wl)), dtype=np.clongdouble)
+    c = np.cos(gamma * thickness)
+    s = np.sin(gamma * thickness)
+    gf = gamma/f[:,Type]
+
+    for k in range(g-1):
+        # Layer scattering matrix
+        ephemeral_c_k, ephemeral_s_k, ephemeral_gf_k = c[:,k], s[:,k], gf[:,k]
+        ephemeral_c_k.shape, ephemeral_s_k.shape, ephemeral_gf_k.shape = (len_wl), (len_wl), (len_wl)
+        T[k] = np.array([[ephemeral_c_k, -ephemeral_s_k / ephemeral_gf_k],
+                  [ephemeral_gf_k * ephemeral_s_k, ephemeral_c_k]])
+
+    # Once the scattering matrixes have been prepared, now let us combine them
+
+    A = np.empty((T.shape[0], 2, 2, len_wl), dtype=np.clongdouble)
+    A[0] = T[0]
+
+    # We change the form of the matrix A to use numpy methods.
+    for i in range(1, T.shape[0]):
+        Y = np.transpose(A[i-1], (2,0,1))
+        X = np.transpose(T[i], (2,0,1))
+        Z = np.matmul(X, Y)
+        A[i] = np.transpose(Z, (1,2,0))
+
+    a = A[-1][0, 0][:]
+    b = A[-1][0, 1][:]
+    c = A[-1][1, 0][:]
+    d = A[-1][1, 1][:]
+
+    amb = a - 1.j * gf[:,0] * b
+    apb = a + 1.j * gf[:,0] * b
+    cmd = c - 1.j * gf[:,0] * d
+    cpd = c + 1.j * gf[:,0] * d
+
+    # reflection coefficient of the whole structure
+    r = -(cmd + 1.j * gf[:,-1] * amb)/(cpd + 1.j * gf[:,-1] * apb)
+    # transmission coefficient of the whole structure
+    t = a * (r+1) + 1.j * gf[:,0] * b * (r-1)
+    # Energy reflexion coefficient;
+    R = np.real(np.absolute(r) ** 2)
+    # Energy transmission coefficient;
+    T = np.real(np.absolute(t) ** 2 * gf[:,g - 1] / gf[:,0])
+
+
+    I = np.zeros(((A.shape[0]+1, 2, len_wl)), dtype=complex)
+
+    for k in range(A.shape[0]):
+        I[k,0][:] = A[k][0, 0][:] * (r + np.ones_like(r)) + A[k][0, 1][:]*(1.j*gf[:,0]*(r - np.ones_like(r)))
+        I[k,1][:] = A[k][1, 0][:] * (r + np.ones_like(r)) + A[k][1, 1][:]*(1.j*gf[:,0]*(r - np.ones_like(r)))
+        # Contains Ey and dzEy in layer k
+    I[-1,:] = [t, -1.j*gf[:,-1]*t]
+
+    w = 0
+    poynting = np.zeros((A.shape[0]+1, len_wl), dtype=complex)
+    if polarization == 0:  # TE
+        for k in range(A.shape[0]+1):
+            poynting[k,:] = np.real(-1.j * I[k, 0,:] * np.conj(I[k, 1,:]) / gf[:,0])
+    else:  # TM
+        for k in range(A.shape[0]+1):
+            poynting[k,:] = np.real(1.j * np.conj(I[k, 0,:]) * I[k, 1,:] / gf[:,0])
+    # Absorption in each layer
+
+    zeros = np.zeros((1, len_wl))
+    diff_poynting = abs(-np.diff(poynting, axis=0))
+    absorb = np.concatenate((zeros, diff_poynting), axis=0)
+    absorb = np.transpose(absorb)
+    # First layer is always supposed non absorbing
+
+    return absorb, r, t, R, T
 
 
 def field(struct, beam, window):
@@ -350,6 +730,10 @@ def field(struct, beam, window):
     Afterwards the matrix may be used to represent either the modulus or the
     real part of the field.
     """
+    if struct.NonLocal:
+        print("Non Local field not yet defined")
+    if struct.Anisotropic:
+        print("Anisotropic field not yet defined")
 
     # Wavelength in vacuum.
     lam = beam.wavelength
@@ -493,6 +877,10 @@ def fields(struct, beam, window):
     Afterwards the matrix may be used to represent either the modulus or the
     real part of the field.
     """
+    if struct.NonLocal:
+        print("Non Local fields not yet defined")
+    if struct.Anisotropic:
+        print("Anisotropic fields not yet defined")
 
     # Wavelength in vacuum.
     lam = beam.wavelength
@@ -654,6 +1042,8 @@ def angular(structure, wavelength, polarization, theta_min, theta_max,
     other functions.
 
     """
+    if structure.Anisotropic:
+        print("Anisotropic angular not yet defined")
 
     # theta min and max in degrees this time !
     import matplotlib.pyplot as plt
@@ -678,7 +1068,7 @@ def spectrum(structure, incidence, polarization, wl_min, wl_max, n_points):
 
     Args:
         structure (Structure): the object describing the multilayer
-        incidence (float): incidence angle in degrees
+        incidence (float): incidence angle in radians
         polarization (float): 0 for TE, 1 for TM
         wl_min (float): minimum wavelength of the spectrum
         wl_max (float): maximum wavelength of the spectrum
@@ -692,20 +1082,17 @@ def spectrum(structure, incidence, polarization, wl_min, wl_max, n_points):
         T (numpy array): Transmittance
 
 
-    .. warning: The incidence angle is in degrees here, contrarily to
-    other functions.
-
     """
-    # incidence in degrees
+    if structure.Anisotropic:
+        print("Anisotropic spectrum not yet defined")
     import matplotlib.pyplot as plt
     r = np.zeros(n_points, dtype=complex)
     t = np.zeros(n_points, dtype=complex)
     R = np.zeros(n_points)
     T = np.zeros(n_points)
     wl = np.linspace(wl_min, wl_max, n_points)
-    theta = incidence / 180 * np.pi
     for k in range(n_points):
-        r[k], t[k], R[k], T[k] = coefficient(structure, wl[k], theta,
+        r[k], t[k], R[k], T[k] = coefficient(structure, wl[k], incidence,
                                              polarization)
     return wl, r, t, R, T
 
@@ -770,6 +1157,53 @@ def photo(struct,incidence,polarization,wl_min,wl_max,active_layers,number_point
     conversion_efficiency = total_current/total_current_max
 
     return conversion_efficiency,total_current,total_current_max,wavelength_list,photon_density,total_absorbed
+
+
+
+def opti_photo(struct,incidence,polarization,wl_min,wl_max,active_layers,number_points): #numpy friendly
+    """ Computes the theoretical short circuit current when the quantum yield is
+    assummed to be 1 (ie no recombination of charge carrier) using the
+    :absorption: function for the solar spectrum (AM 1.5).
+
+    Args:
+        structure (Structure): the object describing the multilayer
+        incidence (float): incidence angle in degrees
+        .. warning: not meant/tested for non-normal incidence, actually.
+        polarization (float): 0 for TE, 1 for TM
+        .. warning: meaningless in normal incidence
+        wl_min (float): minimum wavelength of the spectrum
+        wl_max (float): maximum wavelength of the spectrum
+        active_layers(list): list of integers corresponding to the active layers
+        number_points (int): number of points in the spectrum
+
+    Returns:
+        conversion_efficiency (float): well... conversion efficiency
+        total_current: short circuit current in mA/cm^2
+        total_current_max: short circuit current with unity absorbance (mA/cm^2)
+        wavelength_list (numpy array): list of considered wavelengths
+        spectrum: AM 1.5 solar Spectrum
+        current_density: current by wavelength unit (mA/cm^2/nm)
+        """
+
+    theta=incidence*np.pi/180
+    wavelength_list=np.linspace(wl_min,wl_max,number_points)
+
+    photon_density = np.zeros(number_points, dtype = float)
+    total_absorbed = np.zeros(number_points, dtype = float)
+    spectrum = np.zeros(number_points, dtype = float)
+
+    absorb,r,t,R,T = absorption(struct,wavelength_list,theta,polarization, wavelength_opti=True)
+    photon_density = solar(wavelength_list, unit=struct.unit)
+    total_absorbed = np.sum(absorb[:,active_layers])
+    spectrum = am1_5(wavelength_list, unit=struct.unit)
+    
+    current_density = np.multiply(photon_density,total_absorbed)
+    total_current_max = np.trapz(photon_density,wavelength_list)*1e3
+    total_current = np.trapz(current_density,wavelength_list)*1e3
+    conversion_efficiency = total_current/total_current_max
+
+    return conversion_efficiency,total_current,total_current_max,wavelength_list,photon_density,total_absorbed
+
 
 def dispersion(alpha,struct,wavelength,polarization):
     """ It would probably be better to compute the dispersion relation of a
@@ -1434,12 +1868,18 @@ def green(struct,window,lam,source_interface):
     return En
 #    return r_up,r_d
 
-def coefficient(struct, wavelength, incidence, polarization):
+def coefficient(struct, wavelength, incidence, polarization, wavelength_opti='False'):
     """
         Wrapper function to comput reflection and transmission coefficients
         with various methods.
         (and retrocompatibility)
     """
+    if struct.Anisotropic:
+        return coefficient_ani(struct, wavelength, incidence)
+    if struct.NonLocal:
+        return coefficient_non_local(struct, wavelength, incidence, polarization)
+    if wavelength_opti:
+        return coefficient_A_opti_wavelength(struct, wavelength, incidence, polarization)
     return coefficient_S(struct, wavelength, incidence, polarization)
 
 
@@ -1542,6 +1982,143 @@ def coefficient_S(struct, wavelength, incidence, polarization):
     # Energy transmission coefficient;
     T = np.real(
         abs(t) ** 2 * gamma[g - 1] * f[Type[0]] / (gamma[0] * f[Type[g - 1]]))
+
+    return r, t, R, T
+
+
+
+def coefficient_S_opti_wavelength(struct, wavelength, incidence, polarization): #numpy friendly
+    """
+    ** OPTIMIZED FUNCTION OF coefficient_S FOR 
+    AN ARRAY OF WAVELENGTH, INSTEAD OF A FLOAT **
+    
+    This function computes the reflection and transmission coefficients
+    of the structure.
+
+    Args:
+        struct (Structure): belongs to the Structure class
+        wavelength (numpy array of floats): wavelength of the incidence light (in nm)
+        incidence (float): incidence angle in radians
+        polarization (float): 0 for TE, 1 (or anything) for TM
+
+    returns:
+        r (numpy array of complexs): reflection coefficient, phase origin at first interface
+        t (numpy array of complexs): transmission coefficient
+        R (numpy array of floats): Reflectance (energy reflection)
+        T (numpy array of floats): Transmittance (energy transmission)
+
+
+    R and T are the energy coefficients (real quantities)
+
+    .. warning: The transmission coefficients have a meaning only if the lower medium
+    is lossless, or they have no true meaning.
+    """
+    # In order to get a phase that corresponds to the expected reflected coefficient,
+    # we make the height of the upper (lossless) medium vanish. It changes only the
+    # phase of the reflection coefficient.
+
+    # The medium may be dispersive. The permittivity and permability of each
+    # layer has to be computed each time.
+    len_wl = wavelength.size
+    len_mat = len(struct.materials)
+    wavelength.shape = (len_wl, 1)
+
+    if (struct.unit != "nm"):
+        wavelength = conv_to_nm(wavelength, struct.unit)
+
+    # Epsilon and Mu are (len_wl, len_mat) arrays.
+    Epsilon, Mu = struct.polarizability_opti_wavelength(wavelength)
+    Epsilon.shape, Mu.shape = (len_wl, len_mat), (len_wl, len_mat)
+    thickness = copy.deepcopy(struct.thickness)
+    thickness = np.asarray(thickness)
+
+    # In order to ensure that the phase reference is at the beginning
+    # of the first layer.
+    thickness[0] = 0
+    thickness.shape = (1, len(thickness))
+    Type = struct.layer_type
+
+    # The boundary conditions will change when the polarization changes.
+    if polarization == 0:
+        f = Mu
+    else:
+        f = Epsilon
+
+    # Wavevector in vacuum. Array of shape (len_wl, 1).
+    k0 = 2 * np.pi / wavelength
+
+    # Number of layers
+    g = len(struct.layer_type)
+
+    # Wavevector k_x, horizontal. Array of shape (len_wl, 1).
+    Epsilon_first, Mu_first = Epsilon[:,Type[0]], Mu[:,Type[0]]
+    Epsilon_first.shape, Mu_first.shape = (len_wl, 1), (len_wl, 1)
+    alpha = np.sqrt(Epsilon_first * Mu_first) * k0 * np.sin(incidence)
+
+    # Computation of the vertical wavevectors k_z. Array of shape (len_wl, len_mat).
+    gamma = np.sqrt(
+        Epsilon[:,Type] * Mu[:,Type] * k0 ** 2 - np.ones((len_wl, g)) * alpha ** 2)
+
+    # Be cautious if the upper medium is a negative index one.
+    mask = np.logical_and(np.real(Epsilon_first) < 0, np.real(Mu_first) < 0)
+    np.putmask(gamma[:,0], mask,-gamma[:,0])
+    
+    # Changing the determination of the square root to achieve perfect stability.
+    if g > 2:
+        gamma[:,1:g - 2] = gamma[:,1:g - 2] * (
+                    1 - 2 * (np.imag(gamma[:,1:g - 2]) < 0))
+        
+    # Outgoing wave condition for the last medium.
+    Epsilon_new, Mu_new = Epsilon[:,Type[g-1]], Mu[:,Type[g-1]]
+    Epsilon_new.shape, Mu_new.shape = (len_wl, 1), (len_wl, 1)
+    gamma_new = np.sqrt(Epsilon_new* Mu_new * k0 ** 2 - alpha ** 2)
+    mask = np.logical_and.reduce(
+    (np.real(Epsilon_new) < 0, np.real(Mu_new) < 0, np.real(gamma_new) != 0))
+    not_mask = np.logical_or.reduce(
+    (np.real(Epsilon_new) > 0, np.real(Mu_new) > 0, np.real(gamma_new) == 0))
+    np.putmask(gamma[:,g-1], mask, -gamma_new)
+    np.putmask(gamma[:,g-1], not_mask, gamma_new)
+
+    # Each layer has a (2, 2) matrix with (len_wl, 1) array as coefficient.
+    T = np.zeros(((2 * g, 2, 2, len_wl, 1)), dtype=complex)
+
+    # first S matrix
+    zeros, ones = np.zeros((len_wl, 1)), np.ones((len_wl, 1))
+    T[0] = [[zeros, ones], [ones, zeros]]
+    gf = gamma / f[:,Type]
+    for k in range(g - 1):
+        # Layer scattering matrix
+        t = np.exp((1j) * gamma[:,k] * thickness[0,k])
+        t.shape = (len_wl, 1)
+        T[2 * k + 1] = [[zeros, t], [t, zeros]]
+
+        # Interface scattering matrix
+        b1 = gf[:,k]
+        b2 = gf[:,k + 1]
+        b1.shape, b2.shape = (len_wl, 1), (len_wl, 1)
+        T[2 * k + 2] = np.array([[b1 - b2, 2 * b2],
+                                 [2 * b1, b2 - b1]]) / (b1 + b2)
+    
+    t = np.exp((1j) * gamma[:,g - 1] * thickness[0,g - 1])
+    t.shape = (len_wl, 1)
+    T[2 * g - 1] = [[zeros, t], [t, zeros]]
+
+    # Once the scattering matrixes have been prepared, now let us combine them
+    A = np.zeros(((2 * g - 1, 2, 2, len_wl, 1)), dtype=complex)
+    A[0] = T[0]
+
+    for j in range(len(T) - 2):
+        A[j + 1] = cascade_opti_wavelength(A[j], T[j + 1], len_wl)
+    # reflection coefficient of the whole structure
+    r = A[len(A) - 1][0, 0]
+    # transmission coefficient of the whole structure
+    t = A[len(A) - 1][1, 0]
+    # Energy reflexion coefficient;
+    R = np.real(np.absolute(r) ** 2)
+    # Energy transmission coefficient;
+    ephemeral = gamma[:,g - 1] * f[:,Type[0]] / (gamma[:,0] * f[:,Type[g - 1]])
+    ephemeral.shape = (len_wl, 1)
+    T = np.real(np.absolute(t) ** 2 * ephemeral)
 
     return r, t, R, T
 
@@ -1651,6 +2228,146 @@ def coefficient_A(struct, wavelength, incidence, polarization):
     R = np.real(abs(r) ** 2)
     # Energy transmission coefficient;
     T = np.real(abs(t) ** 2 * gf[g - 1] / gf[0])
+
+    return r, t, R, T
+
+
+
+def coefficient_A_opti_wavelength(struct, wavelength, incidence, polarization): #numpy friendly
+    """
+    ** OPTIMIZED FUNCTION OF coefficient_A FOR 
+    AN ARRAY OF WAVELENGTH, INSTEAD OF A FLOAT **
+
+    This function computes the reflection and transmission coefficients
+    of the structure using the (true) Abeles matrix formalism.
+
+    Args:
+        struct (Structure): belongs to the Structure class
+        wavelength (float): wavelength of the incidence light (in nm)
+        incidence (float): incidence angle in radians
+        polarization (float): 0 for TE, 1 (or anything) for TM
+
+    returns:
+        r (complex): reflection coefficient, phase origin at first interface
+        t (complex): transmission coefficient
+        R (float): Reflectance (energy reflection)
+        T (float): Transmittance (energie transmission)
+
+
+    R and T are the energy coefficients (real quantities)
+
+    .. warning: The transmission coefficients have a meaning only if the lower medium
+    is lossless, or they have no true meaning.
+    """
+    # In order to get a phase that corresponds to the expected reflected coefficient,
+    # we make the height of the upper (lossless) medium vanish. It changes only the
+    # phase of the reflection coefficient.
+
+    # The medium may be dispersive. The permittivity and permability of each
+    # layer has to be computed each time.
+    len_wl = wavelength.size
+    len_mat = len(struct.materials)
+    wavelength.shape = (len_wl, 1)
+
+    if (struct.unit != "nm"):
+        wavelength = conv_to_nm(wavelength, struct.unit)
+
+    # Epsilon and Mu are (len_wl, len_mat) arrays.
+    Epsilon, Mu = struct.polarizability_opti_wavelength(wavelength)
+    Epsilon.shape, Mu.shape = (len_wl, len_mat), (len_wl, len_mat)
+    thickness = copy.deepcopy(struct.thickness)
+    thickness = np.asarray(thickness)
+
+    # In order to ensure that the phase reference is at the beginning
+    # of the first layer.
+    thickness[0] = 0
+    thickness.shape = (1, len(thickness))
+    Type = struct.layer_type
+
+    # The boundary conditions will change when the polarization changes.
+    if polarization == 0:
+        f = Mu
+    else:
+        f = Epsilon
+
+    # Wavevector in vacuum. Array of shape (len_wl, 1).
+    k0 = 2 * np.pi / wavelength
+
+    # Number of layers.
+    g = len(struct.layer_type)
+
+    # Wavevector k_x, horizontal. Array of shape (len_wl, 1).
+    Epsilon_first, Mu_first = Epsilon[:,Type[0]], Mu[:,Type[0]]
+    Epsilon_first.shape, Mu_first.shape = (len_wl, 1), (len_wl, 1)
+    alpha = np.sqrt(Epsilon_first * Mu_first) * k0 * np.sin(incidence)
+    # Computation of the vertical wavevectors k_z. Array of shape (len_wl, len_mat).
+    gamma = np.sqrt(
+        Epsilon[:,Type] * Mu[:,Type] * k0 ** 2 - np.ones((len_wl, g)) * alpha ** 2)
+    
+    # Be cautious if the upper medium is a negative index one.
+    mask = np.logical_and(np.real(Epsilon_first) < 0, np.real(Mu_first) < 0)
+    np.putmask(gamma[:,0], mask,-gamma[:,0])
+
+    # Changing the determination of the square root to achieve perfect stability.
+    if g > 2:
+        gamma[:,1:g - 2] = gamma[:,1:g - 2] * (
+                    1 - 2 * (np.imag(gamma[:,1:g - 2]) < 0))
+    
+    # Outgoing wave condition for the last medium.
+    Epsilon_new, Mu_new = Epsilon[:,Type[g-1]], Mu[:,Type[g-1]]
+    Epsilon_new.shape, Mu_new.shape = (len_wl, 1), (len_wl, 1)
+    gamma_new = np.sqrt(Epsilon_new* Mu_new * k0 ** 2 - alpha ** 2)
+    mask = np.logical_and.reduce(
+    (np.real(Epsilon_new) < 0, np.real(Mu_new) < 0, np.real(gamma_new) != 0))
+    not_mask = np.logical_or.reduce(
+    (np.real(Epsilon_new) > 0, np.real(Mu_new) > 0, np.real(gamma_new) == 0))
+    np.putmask(gamma[:,g-1], mask, -gamma_new)
+    np.putmask(gamma[:,g-1], not_mask, gamma_new)
+    
+    # Each layer has a (2, 2) matrix with (len_wl, 1) array as coefficient.
+    T = np.zeros(((g-1, 2, 2, len_wl)), dtype=np.clongdouble)
+    c = np.cos(gamma * thickness)
+    s = np.sin(gamma * thickness)
+    gf = gamma/f[:,Type]
+
+    for k in range(g-1):
+        # Layer scattering matrix
+        ephemeral_c_k, ephemeral_s_k, ephemeral_gf_k = c[:,k], s[:,k], gf[:,k]
+        ephemeral_c_k.shape, ephemeral_s_k.shape, ephemeral_gf_k.shape = (len_wl), (len_wl), (len_wl)
+        T[k] = np.array([[ephemeral_c_k, -ephemeral_s_k / ephemeral_gf_k],
+                  [ephemeral_gf_k * ephemeral_s_k, ephemeral_c_k]])
+
+    # Once the scattering matrixes have been prepared, now let us combine them
+
+    A = np.empty((2, 2, len_wl), dtype=np.clongdouble)
+    A = T[0]
+
+    # We change the form of the matrix A to use numpy methods.
+    for i in range(1, T.shape[0]):
+        B = T[i,:,:,:]
+        A = np.transpose(A, (2,0,1))
+        B = np.transpose(B, (2,0,1))
+        A = np.matmul(B, A)
+        A = np.transpose(A, (1,2,0))
+
+    a = A[:][0, 0]
+    b = A[:][0, 1]
+    c = A[:][1, 0]
+    d = A[:][1, 1]
+
+    amb = a - 1.j * gf[:,0] * b
+    apb = a + 1.j * gf[:,0] * b
+    cmd = c - 1.j * gf[:,0] * d
+    cpd = c + 1.j * gf[:,0] * d
+
+    # reflection coefficient of the whole structure
+    r = -(cmd + 1.j * gf[:,-1] * amb)/(cpd + 1.j * gf[:,-1] * apb)
+    # transmission coefficient of the whole structure
+    t = a * (r+1) + 1.j * gf[:,0] * b * (r-1)
+    # Energy reflexion coefficient;
+    R = np.real(np.absolute(r) ** 2)
+    # Energy transmission coefficient;
+    T = np.real(np.absolute(t) ** 2 * gf[:,g - 1] / gf[:,0])
 
     return r, t, R, T
 
@@ -2409,6 +3126,153 @@ def diff_coefficient(struct, wavelength, incidence, polarization, method="S", pa
 
 
 
+def coefficient_non_local(struct, wavelength, incidence, polarization) :
+    """
+    This function computes the reflection and transmission coefficients
+    of the structure, and takes account the possibility to have NonLocal materials
+
+    Args:
+        struct (Structure): belongs to the Structure class
+        wavelength (float): wavelength of the incidence light (in nm)
+        incidence (float): incidence angle in radians
+        polarization (float): 0 for TE, 1 (or anything) for TM
+
+    returns:
+        r (complex): reflection coefficient, phase origin at first interface
+        t (complex): transmission coefficient
+        R (float): Reflectance (energy reflection)
+        T (float): Transmittance (energie transmission)
+
+
+    R and T are the energy coefficients (real quantities)
+
+    .. warning: The transmission coefficients have a meaning only if the lower medium
+    is lossless, or they have no true meaning.
+    Also, you should not use two adjacent nonlocal material layers, it doesn't work for the moment..
+    """
+
+    # In order to get a phase that corresponds to the expected reflected coefficient, we make the height of the upper (lossless) medium vanish. It changes only the phase of the reflection coefficient.
+    # The medium may be dispersive. The permittivity and permability of each layer has to be computed each time.
+    if (struct.unit != "nm") :
+        wavelength = conv_to_nm(wavelength, struct.unit)
+
+    Epsilon_mat, Mu_mat = struct.polarizability(wavelength)
+    Type = struct.layer_type
+    Epsilon = [Epsilon_mat[i] for i in Type]
+    Mu = [Mu_mat[i] for i in Type]
+    thickness = copy.deepcopy(struct.thickness)
+    # In order to ensure that the phase reference is at the beginning
+    # of the first layer.
+    thickness[0] = 0
+    
+    if len(struct.thickness) != len(struct.layer_type) :
+        print(f"ArgumentMatchError : layer_type has {len(struct.layer_type)} arguments and thickness has {len(struct.thickness)} arguments")
+        return None
+    
+    # The boundary conditions will change when the polarization changes. (A demander à Antoine pourquoi)
+    if polarization == 0 :
+        print("Non local materials should be used with polarization = 1 (TM)")
+        return 0
+    else :
+        f = Epsilon
+
+    
+    k0 = 2 * np.pi / wavelength
+    g = len(Type)
+    omega_p = [0] * (g - 1)
+    chi_b = [0] * (g - 1)
+    chi_f = [0] * (g - 1)
+    beta2 = [0] * (g - 1)
+    for k in range(g):
+        if struct.materials[Type[k]].specialType == "NonLocal":
+            beta2[k], chi_b[k], chi_f[k], omega_p[k] = struct.materials[Type[k]].get_values_nl(wavelength)
+
+    alpha = np.sqrt(Epsilon[0]) * k0 * np.sin(incidence)
+    gamma = np.array(np.sqrt([(1+0j)*Epsilon[i] * k0 ** 2 - alpha ** 2 for i in range(g)]), dtype = complex)
+    #print(f"Données \nEpsilon vaut {Epsilon} \nMu vaut {Mu} \nType vaut {Type} \nthickness vaut {thickness} \nalpha vaut {alpha}  \ngamma vaut {gamma} \nbeta vaut {beta}")
+
+    T = []
+    thickness[0] = 0
+    T.append(np.array([[0, 1], [1, 0]], dtype = complex))
+    #print(f"Matrice {0} de couche locale (initialisation) \nt vaut : {1., 1.0j}, \n {T[0]}")
+          
+    for k in range(g - 1) :
+        # Stability of square root in complex world :)
+        if np.imag(gamma[k + 1]) < 0 :
+            gamma[k + 1] *= -1
+        
+        b1 = gamma[k] / f[k]
+        b2 = gamma[k + 1] / f[k + 1]
+        #print(f"b1 vaut {b1} \nb2 vaut {b2}")
+ 
+        # local layer matrix
+        if beta2[k] == 0 :
+            t = np.exp(1j * gamma[k] * thickness[k])
+            T.append(np.array([[0, t],
+                               [t, 0]], dtype = complex))
+
+            if beta2[k+1]==0:
+                # local local interface
+                T.append(np.array([[b1 - b2, 2 * b2],
+                                   [2 * b1, b2 - b1]] / (b1 + b2), dtype = complex))
+
+            else:
+                # local non-local interface
+                Kl = np.sqrt(alpha**2 + (omega_p[k+1]**2 / beta2[k+1]) * (1 / chi_f[k+1] + 1 / (1 + chi_b[k+1]) ))
+                omega = (alpha**2 / Kl) * (1 / Epsilon[k+1] - 1 / (1 + chi_b[k+1]))
+
+                T.append(np.array([[b1 - b2 + 1j * omega, 2 * b2, 2],
+                                   [2 * b1, b2 - b1 + 1j * omega, 2],
+                                   [2 * 1j * omega * b1, 2 * 1j * omega * b2, b1 + b2 + 1j * omega]] / (b1 + b2 - 1j * omega), dtype = complex))
+                #print(f"Matrice {2 * k + 1} de couche locale \nt vaut : {t} \n {T[2 * k + 1]}")
+        
+        else : # if beta[k] != 0 :
+            Kl = np.sqrt(alpha**2 + (omega_p[k]**2 / beta2[k]) * (1 / chi_f[k] + 1 / (1 + chi_b[k]) ))
+            omega = (alpha**2 / Kl) * (1 / Epsilon[k] - 1 / (1 + chi_b[k]))
+            t = np.exp(1j * gamma[k] * thickness[k])
+            l = np.exp(- Kl * thickness[k])
+            T.append(np.array([[0, 0, t, 0],
+                               [0, 0, 0, l],
+                               [t, 0, 0, 0],
+                               [0, l, 0, 0]], dtype = complex))
+            #print(f"Matrice {2 * k + 1} de couche non-locale \nt vaut : {t} \nl vaut : {l} \n, {T[2 * k + 1]}")
+
+            if k == g-2 or beta2[k+1]==0:
+                # non-local local interface
+                T.append(np.array([[b1 - b2 + 1j * omega, -2, 2 * b2],
+                          [-2 * 1j * omega *  b1, b1 + b2 + 1j * omega, -2  * 1j * omega * b2],
+                          [2 * b1, -2, b2 - b1 + 1j * omega]] / (b1 + b2 - 1j * omega), dtype = complex))
+            
+            else:
+                # non-local non-local interface
+                print("We can't use cascadage for non local - non local layers (yet)")
+    
+    # Last layer
+    t = np.exp(1j * gamma[g - 1] * thickness[g - 1])
+    T.append(np.array([[0, t],
+                       [t, 0]], dtype = complex))
+    #print(f"Matrice {2 * g - 1} de couche locale, t vaut : {t} \n {T[2 * g - 1]}")
+    #print(f"kl vaut {Kl} \nomega vaut {omega}")
+
+    # INITIALISATION
+    A = T[0] # np.array([[0, 1], [1, 0]], dtype = complex)
+
+    # Cascading scattering matrices
+    for p in range(len(T) - 1) : # len(T) - 1 = 2 * g - 1
+        A = cascade(A, T[p])
+    # Reflection coefficient
+    r = A[0, 0]
+    # Transmission coefficient
+    t = A[1, 0]
+    # Energy reflexion coefficient
+    R = np.real(abs(r) ** 2)
+    # Energy transmission coefficient
+    T = np.real(abs(t) ** 2 * gamma[g - 1] * f[Type[0]] / (gamma[0] * f[Type[g - 1]]))
+
+    return r, t, R, T
+
+
+
 def absorption_S(struct, wavelength, incidence, polarization, layers=[]):
     """
     This function computes the percentage of the incoming energy
@@ -2717,3 +3581,295 @@ def absorption_A(struct, wavelength, incidence, polarization):
     # First layer is always supposed non absorbing
 
     return absorb, r, t, R, T
+
+
+#### Anisotropic functions TODO: check
+
+def Halfspace_method(Structure, layer_number, wl, theta_entry):
+        """
+        This function calculates the HalfSpace's eigenvectors and eigenvalues analytically for a given layer and returns them sorted.
+
+        Args:
+        Structure (class): description of the multi-mayered 
+        layer_number (int): position in the stack of the studied layer
+        wl (float): the working wavelength (in nanometers)
+        theta_entry (float): angle of the incident light
+
+        return: p_sorted 4x4 array of eigenvectors whose columns are the same as p_unsorted's but sorted
+        and q_sorted 4x4 diagonal matrix of eigenvalues whose columns are the same as q_unsorted's but sorted
+        """
+        #Calcul de K_x :
+        k_0 = 2 * np.pi / wl
+        eps_entry = Structure.permittivity_tensor_list(wl)[layer_number]
+        n = np.sqrt(eps_entry[0,0])
+        Kx = n * np.sin(theta_entry) # Kx STAY THE SAME THROUGH THE ALL STACK !
+
+
+        # Obtention de l'angle des valeurs propres et des vecteurs propres triées (q_sorted et p-sorted resp.)
+        # (sqrt donne des nombres réels (ou nan), à moins que l'argument soit complexe)
+        sin_phi = Kx / n
+        cos_phi = np.sqrt(1 - sin_phi ** 2 + 0j)
+        q_sorted = [n * cos_phi, n * cos_phi, -n * cos_phi, -n * cos_phi]
+        p_sorted_mat = np.array([
+            [cos_phi, 0, cos_phi, 0],
+            [n, 0, -n, 0],
+            [0, 1, 0, 1],
+            [0, n * cos_phi, 0, -n * cos_phi]
+        ])
+
+        """# DEBUG
+        #p_sorted_mat = p_sorted_mat / np.linalg.norm(q_sorted, ord=2)
+        print("Valeurs de q et p print depuis _calc_p_q_sorted() de HalfSpace :")
+        print("q_sorted_hs =","\n",q_sorted)
+        print("p_sorted_hs =","\n",p_sorted_mat)
+        print(f'premiere colonne de p_sorted_mat: {p_sorted_mat[0]}')
+        print("------------------------------------------------------------------------------")
+"""
+        Q = np.eye(4, dtype=complex) #ref: article de PyLlama p14
+        
+        return p_sorted_mat, Q
+        
+
+def Berreman_method(Structure, layer_number, wl, theta_entry): #AV_Added# 
+    """
+    This function computes Berreman’s matrix D for a given layer "layer_number" in the stack and its associated eigenvalues q and associated eigenvectors for a given layer "layer_number" in the stack .
+    Then P (interface matrix) and Q (propagation matirix) are computed layer in the stack
+    
+    Args:
+    Structure (class): description of the multi-mayered 
+    layer_number (int): position in the stack of the studied layer
+    wl (float): the working wavelength (in nanometers)
+    theta_entry (float): angle of the incident light
+
+    return: Delta, P and Q matrices as 4x4 Numpy array
+
+    """
+    k_0 = 2 * np.pi / wl
+    eps_entry = Structure.permittivity_tensor_list(wl)[0]
+    n_entry = np.sqrt(eps_entry[0,0])
+    Kx = n_entry * np.sin(theta_entry)#AV# Kx STAY THE SAME THROUGH THE ALL STACK
+
+    eps_list = Structure.permittivity_tensor_list(wl)
+
+    eps_list_R = Structure.rotate_permittivity_tensor_list(eps_list, Structure.ani_rot_angle, Structure.ani_rot_axis)
+
+    eps = eps_list_R[layer_number]
+
+    #print("PyMoosh : eps_entry=",eps_entry,"n_entry=",n_entry,"Kx=",Kx,"eps=",eps)
+    # Delta matrix  (i.e Berreman matrix) 
+
+    eps_xx = eps[0, 0]
+    eps_xy = eps[0, 1]
+    eps_yx = eps[1, 0]
+    eps_yy = eps[1, 1]
+    eps_xz = eps[0, 2]
+    eps_zx = eps[2, 0]
+    eps_zz = eps[2, 2]
+    eps_zy = eps[2, 1]
+    eps_yz = eps[1, 2]
+    Delta = np.array([[- Kx * eps_zx / eps_zz, 1 - Kx ** 2 / eps_zz, - Kx * eps_zy / eps_zz, 0],
+                      [eps_xx - (eps_xz * eps_zx) / eps_zz, - Kx * eps_xz / eps_zz, eps_xy - (eps_xz * eps_zy) / eps_zz, 0],
+                      [0, 0, 0, 1],
+                      [eps_yx - (eps_yz * eps_zx) / eps_zz, - Kx * eps_yz / eps_zz, - Kx ** 2 + eps_yy - (eps_yz * eps_zy) / eps_zz, 0]],dtype=complex)
+    #print('D =',Delta)
+    q,P  = la_np.eig(Delta) # q is the row vector containing unsorted Delta's eigenvalues and P is the array which column P[:,i] is the eigenvector corresponding to the eigenvalues q[i].
+    
+    #print("valeurs fournies par eig() dans berreman_method():")
+
+    #print('q_pm =',"\n",q)
+    #print('P_pm =',"\n",P)
+    
+    Q = np.diagflat([np.exp(1j*k_0*Structure.thickness[layer_number]*q[0]), np.exp(1j*k_0*Structure.thickness[layer_number]*q[1])
+                , np.exp(1j*k_0*Structure.thickness[layer_number]*q[2]), np.exp(1j*k_0*Structure.thickness[layer_number]*q[3])] )
+    #print('Q =',"\n",Q)
+
+#-------------------------------------------------------------------------------------------------------------
+    ### tri des rayons avec poynting ### TO DO
+    sort = False
+    if sort:
+        # Calcul des champs (Les valeurs de ces champs devront être récupérées dans la matrice d'Interface P => ref. PyLlama equation (7) p9) :
+        Ex, Ey, Hx, Hy = 0.0, 0.0, 0.0, 0.0
+        Ez = - (eps_zx / eps_zz) * Ex - (eps_zy / eps_zz) * Ey - (Kx / eps_zz) * Hy
+        Hz = Kx * Ey
+
+        # Calcul du vecteur de Poynting :
+        Sx = Ey * Hz - Ez * Hy
+        Sy = Ez * Hx - Ex * Hz
+        Sz = Ex * Hy - Ey * Hx
+        poynting = [Sx, Sy, Sz]
+#-------------------------------------------------------------------------------------------------------------
+    
+    return Delta,P,Q
+
+@staticmethod
+def build_scattering_matrix_to_next(P_a, Q_a, P_b): #AV_Aded#
+    """
+    This function constructs the scattering matrix S_{ab} between two successive layers a and
+    b by taking into acount the following phenomena:
+    - the propagation through the first layer with the propagation matrix Q_a of layer_a
+    - the transition from the first layer (layer_a’s matrix P_a) and the second layer (layer_b’s matrix P_b)
+
+    Args:
+        transition matrix : P_a
+        propagation matrix : Q_a
+        transition matrix : P_b
+
+    :return: partial scattering matrix from layer a to layer b, a 4x4 Numpy array
+    """
+
+    print(f'DEBUG Pa Pymoosh: {P_a}')
+    print(f'DEBUG Qa Pymoosh: {Q_a}')
+    print(f'DEBUG Pb Pymoosh: {P_b}')
+    Q_forward = np.array([
+        [Q_a[0, 0], Q_a[0, 1], 0, 0],
+        [Q_a[1, 0], Q_a[1, 1], 0, 0],
+        [0, 0, 1, 0],
+        [0, 0, 0, 1]
+    ])
+
+    Q_backward = np.array([
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, Q_a[2, 2], Q_a[2, 3]],
+        [0, 0, Q_a[3, 2], Q_a[3, 3]]
+    ])
+    # On obtient toujours des matrices non inversibles car
+    # le trie des rayons s'avers finalement nécessaire ! 
+    # Il faut trier les rayons AVANT de construire P_out et P_in,
+    # au risque d'avoir une matrice non inversible.
+
+    # Il faut donc ajouter la méthode de tri des rayons de Pyllama pour s'en sortir
+    # Celle-ci a été partiellement ajoutée dans 'Berreman_method', et n'est pas achevée.
+
+    P_out = np.array([
+        [P_a[0, 0], P_a[0, 1], -P_b[0, 2], -P_b[0, 3]],
+        [P_a[1, 0], P_a[1, 1], -P_b[1, 2], -P_b[1, 3]],
+        [P_a[2, 0], P_a[2, 1], -P_b[2, 2], -P_b[2, 3]],
+        [P_a[3, 0], P_a[3, 1], -P_b[3, 2], -P_b[3, 3]]
+    ])
+
+    P_in = np.array([
+        [P_b[0, 0], P_b[0, 1], -P_a[0, 2], -P_a[0, 3]],
+        [P_b[1, 0], P_b[1, 1], -P_a[1, 2], -P_a[1, 3]],
+        [P_b[2, 0], P_b[2, 1], -P_a[2, 2], -P_a[2, 3]],
+        [P_b[3, 0], P_b[3, 1], -P_a[3, 2], -P_a[3, 3]]
+    ])
+    print('DEBUG ', P_in)
+    print('DEBUG det', np.linalg.det(P_in))
+    print("DEBUG P_in**-1 =", la_np.inv(P_in))
+
+    print("DEBUG Q_backward**-1 =",la_np.inv(Q_backward))
+    Sab = la_np.multi_dot((la_np.inv(Q_backward), la_np.inv(P_in), P_out, Q_forward))
+    return Sab
+
+@staticmethod
+def combine_scattering_matrices(S_ab, S_bc): #AV_Aded#
+    """
+    This function constructs the scattering matrix between three successive layers a, b and c by combining
+    the scattering matrices S_{ab} from layer a to layer b and S_{bc} from layer b to layer c.
+
+    :param ndarray S_ab: the scattering matrix from layer a to layer b, a 4x4 Numpy array
+    :param ndarray S_bc: the scattering matrix from layer b to layer c, a 4x4 Numpy array
+    :return: partial scattering matrix from layer a to layer c, a 4x4 Numpy array
+    """
+    S_ab00 = np.array([
+        [S_ab[0, 0], S_ab[0, 1]],
+        [S_ab[1, 0], S_ab[1, 1]],
+    ])
+    S_ab01 = np.array([
+        [S_ab[0, 2], S_ab[0, 3]],
+        [S_ab[1, 2], S_ab[1, 3]],
+    ])
+    S_ab10 = np.array([
+        [S_ab[2, 0], S_ab[2, 1]],
+        [S_ab[3, 0], S_ab[3, 1]],
+    ])
+    S_ab11 = np.array([
+        [S_ab[2, 2], S_ab[2, 3]],
+        [S_ab[3, 2], S_ab[3, 3]],
+    ])
+    S_bc00 = np.array([
+        [S_bc[0, 0], S_bc[0, 1]],
+        [S_bc[1, 0], S_bc[1, 1]],
+    ])
+    S_bc01 = np.array([
+        [S_bc[0, 2], S_bc[0, 3]],
+        [S_bc[1, 2], S_bc[1, 3]],
+    ])
+    S_bc10 = np.array([
+        [S_bc[2, 0], S_bc[2, 1]],
+        [S_bc[3, 0], S_bc[3, 1]],
+    ])
+    S_bc11 = np.array([
+        [S_bc[2, 2], S_bc[2, 3]],
+        [S_bc[3, 2], S_bc[3, 3]],
+    ])
+    C = la_np.inv(np.identity(2) - np.dot(S_ab01, S_bc10))
+    S_ac00 = la_np.multi_dot((S_bc00, C, S_ab00))
+    S_ac01 = S_bc01 + la_np.multi_dot((S_bc00, C, S_ab01, S_bc11))
+    S_ac10 = S_ab10 + la_np.multi_dot((S_ab11, S_bc10, C, S_ab00))
+    S_ac11 = la_np.multi_dot((S_ab11, (np.identity(2) + la_np.multi_dot((S_bc10, C, S_ab01))), S_bc11))
+
+    S_ac = np.array([
+        [S_ac00[0, 0], S_ac00[0, 1], S_ac01[0, 0], S_ac01[0, 1]],
+        [S_ac00[1, 0], S_ac00[1, 1], S_ac01[1, 0], S_ac01[1, 1]],
+        [S_ac10[0, 0], S_ac10[0, 1], S_ac11[0, 0], S_ac11[0, 1]],
+        [S_ac10[1, 0], S_ac10[1, 1], S_ac11[1, 0], S_ac11[1, 1]]
+    ])
+    return S_ac
+
+
+def coefficient_ani(structure, wl, theta_inc): #AV_Aded# automatic calculation of coefficients r_kj and t_kj using the previously defined functions
+    """
+    This function returns the four reflection and transmission coefficients of the all structure from its global scattering matrix.
+    To get P and Q for each layer, calculation of the eigenvalues and eigenvectors are done analytically for the superstrate and the substrate with Halfspace_method()
+    In every other layer we computes these e.val and e.vect with Berreman_method() (containing the sorting algorithm).
+
+    Args:
+    Structure (class): description of the multi-mayered 
+    wl (float): the working wavelength (in nanometers)
+    theta_inc (float): angle of the incident light
+
+    return: t_pp, t_ps, t_sp, t_ss, r_pp, r_ps, r_sp and r_ss
+
+    """
+    # step 1: create all P, Q matrices (interface and propagation resp.)
+    P_list = []
+    Q_list = []
+    for layer_number in range(len(structure.layer_type)):
+        if (layer_number == 0) or (layer_number == len(structure.layer_type) -1):
+            P, Q = Halfspace_method(structure, layer_number, wl, theta_inc)
+            P_list.append(P)
+            Q_list.append(Q)
+
+        else:
+            D, P, Q = Berreman_method(structure, layer_number, wl, theta_inc)
+            P_list.append(P)
+            Q_list.append(Q)
+
+    # step 2 : create Sab matrices
+    S_list = []
+    for lay in range(len(structure.layer_type)):
+        Sab = build_scattering_matrix_to_next(P_list[lay], Q_list[lay], P_list[lay +1])
+        S_list.append(Sab)
+
+    # step 3 : cascading all Sab matrices to get S_tot
+    S_stack = combine_scattering_matrices(S_list[0],S_list[1])    
+    for s in range(2,len(S_list)):
+        S_stack = combine_scattering_matrices(S_stack,S_list[s])
+    
+    # step 4 : extract r and t coefficients (r_kj <=> reflection coeff. of a k polarized incident wave reflected in a j polarized wave)
+                                           #(t_kj <=> transmison coeff. of a k polarized incident wave transmitted in a j polarized wave)
+
+    t_pp = S_stack[0,0]
+    t_ps = S_stack[0,1]
+    t_sp = S_stack[1,0]
+    t_ss = S_stack[1,1]
+
+
+    r_pp = S_stack[2,0]
+    r_ps = S_stack[2,1]
+    r_sp = S_stack[3,0]
+    r_ss = S_stack[3,1]
+
+    return t_pp,t_ps,t_sp,t_ss,r_pp,r_ps,r_sp,r_ss
