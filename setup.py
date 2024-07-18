@@ -54,7 +54,7 @@ setup(
     url='https://github.com/AnMoreau/PyMoosh',
     keywords=['Moosh','Maxwell','Optics','Multilayers','Plasmonics','Photovoltaics'],
     install_requires=[
-          'numpy','matplotlib','scipy'
+          'numpy','matplotlib','scipy','refractiveindex'
       ],
 
 )
