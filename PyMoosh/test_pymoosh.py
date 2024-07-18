@@ -22,7 +22,7 @@ def test_pymoosh():
     stack = [0] + [2,1] * (n//2) + [2]
     thicknesses = [0.] + list(x) + [0.]
     structure = pm.Structure(materials,stack,np.array(thicknesses),verbose = False)
-    _, R = pm.coefficient_I(structure,wl,0.,0)
+    _, _, R, _ = pm.coefficient_I(structure,wl,0.,0)
     cost = 1-R
     return cost
   

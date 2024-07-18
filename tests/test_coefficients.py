@@ -10,7 +10,7 @@ materials = [1, 1.2**2, 1.5**2 ]
 unit = "nm"
 wav = 600
 eps = 1e-12
-nb = 100
+nb = 10
 
 
 print("WARNING: the impedance formalism only computes r and R for the moment")
@@ -50,7 +50,7 @@ r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,0)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,0)
 
 
-r_i, R_i = PM.coefficient_I(chose,wav,incidence,0)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,0)
 
 if (abs(r-r_ab)> eps):
     print("Problem with single interface and abeles coeff refl in TE")
@@ -71,6 +71,10 @@ if (abs(r-r_i)> eps):
 if (abs(t-t_ab)> eps):
     print("Problem with single interface and abeles coeff trans in TE")
     print(f"t = {t}, t_abeles={t_ab}")
+    nb_prob+=1
+if (abs(t-t_i)> eps):
+    print("Problem with single interface and impedance coeff trans in TE")
+    print(f"t = {t}, t_impedance={t_i}")
     nb_prob+=1
 if (abs(t-t_t)> eps):
     print("Problem with single interface and TMatrix coeff trans in TE")
@@ -107,7 +111,7 @@ r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,1)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,1)
 
 
-r_i, R_i = PM.coefficient_I(chose,wav,incidence,1)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,1)
 
 
 if (abs(r-r_ab)> eps):
@@ -129,6 +133,10 @@ if (abs(r-r_i)> eps):
 if (abs(t-t_ab)> eps):
     print("Problem with single interface and abeles coeff trans in TM")
     print(f"t = {t}, t_abeles={t_ab}")
+    nb_prob+=1
+if (abs(t-t_i)> eps):
+    print("Problem with single interface and impedance coeff trans in TM")
+    print(f"t = {t}, t_impedance={t_i}")
     nb_prob+=1
 if (abs(t-t_t)> eps):
     print("Problem with single interface and TMatrix coeff trans in TM")
@@ -164,7 +172,7 @@ r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,0)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,0)
 
 
-r_i, R_i = PM.coefficient_I(chose,wav,incidence,0)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,0)
 
 
 if (abs(r-r_ab)> eps):
@@ -186,6 +194,10 @@ if (abs(r-r_i)> eps):
 if (abs(t-t_ab)> eps):
     print("Problem with two layers and abeles coeff trans in TE")
     print(f"t = {t}, t_abeles={t_ab}")
+    nb_prob+=1
+if (abs(t-t_i)> eps):
+    print("Problem with two layers and impedance coeff trans in TE")
+    print(f"t = {t}, t_impedance={t_i}")
     nb_prob+=1
 if (abs(t-t_t)> eps):
     print("Problem with two layers and TMatrix coeff trans in TE")
@@ -222,7 +234,7 @@ r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,1)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,1)
 
 
-r_i, R_i = PM.coefficient_I(chose,wav,incidence,1)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,1)
 
 
 if (abs(r-r_ab)> eps):
@@ -244,6 +256,10 @@ if (abs(r-r_i)> eps):
 if (abs(t-t_ab)> eps):
     print("Problem with two layers and abeles coeff trans in TM")
     print(f"t = {t}, t_abeles={t_ab}")
+    nb_prob+=1
+if (abs(t-t_i)> eps):
+    print("Problem with two layers and impedance coeff trans in TM")
+    print(f"t = {t}, t_impedance={t_i}")
     nb_prob+=1
 if (abs(t-t_t)> eps):
     print("Problem with two layers and TMatrix coeff trans in TM")
@@ -288,7 +304,7 @@ r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,0)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,0)
 
 
-r_i, R_i = PM.coefficient_I(chose,wav,incidence,0)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,0)
 
 if (abs(r-r_ab)> eps):
     print("Problem with single interface and abeles coeff refl in TE")
@@ -309,6 +325,10 @@ if (abs(r-r_i)> eps):
 if (abs(t-t_ab)> eps):
     print("Problem with single interface and abeles coeff trans in TE")
     print(f"t = {t}, t_abeles={t_ab}")
+    nb_prob+=1
+if (abs(t-t_i)> eps):
+    print("Problem with single interface and impedance coeff trans in TE")
+    print(f"t = {t}, t_impedance={t_i}")
     nb_prob+=1
 if (abs(t-t_t)> eps):
     print("Problem with single interface and TMatrix coeff trans in TE")
@@ -345,7 +365,7 @@ r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,1)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,1)
 
 
-r_i, R_i = PM.coefficient_I(chose,wav,incidence,1)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,1)
 
 if (abs(r-r_ab)> eps):
     print("Problem with single interface and abeles coeff refl in TM")
@@ -366,6 +386,10 @@ if (abs(r-r_i)> eps):
 if (abs(t-t_ab)> eps):
     print("Problem with single interface and abeles coeff trans in TM")
     print(f"t = {t}, t_abeles={t_ab}")
+    nb_prob+=1
+if (abs(t-t_i)> eps):
+    print("Problem with single interface and impedance coeff trans in TM")
+    print(f"t = {t}, t_impedance={t_i}")
     nb_prob+=1
 if (abs(t-t_t)> eps):
     print("Problem with single interface and TMatrix coeff trans in TM")
@@ -401,7 +425,7 @@ r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,0)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,0)
 
 
-r_i, R_i = PM.coefficient_I(chose,wav,incidence,0)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,0)
 
 if (abs(r-r_ab)> eps):
     print("Problem with two layers and abeles coeff refl in TE")
@@ -422,6 +446,10 @@ if (abs(r-r_i)> eps):
 if (abs(t-t_ab)> eps):
     print("Problem with two layers and abeles coeff trans in TE")
     print(f"t = {t}, t_abeles={t_ab}")
+    nb_prob+=1
+if (abs(t-t_i)> eps):
+    print("Problem with two layers and impedance coeff trans in TE")
+    print(f"t = {t}, t_impedance={t_i}")
     nb_prob+=1
 if (abs(t-t_t)> eps):
     print("Problem with two layers and TMatrix coeff trans in TE")
@@ -458,7 +486,7 @@ r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,1)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,1)
 
 
-r_i, R_i = PM.coefficient_I(chose,wav,incidence,1)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,1)
 
 if (abs(r-r_ab)> eps):
     print("Problem with two layers and abeles coeff refl in TM")
@@ -479,6 +507,10 @@ if (abs(r-r_i)> eps):
 if (abs(t-t_ab)> eps):
     print("Problem with two layers and abeles coeff trans in TM")
     print(f"t = {t}, t_abeles={t_ab}")
+    nb_prob+=1
+if (abs(t-t_i)> eps):
+    print("Problem with two layers and impedance coeff trans in TM")
+    print(f"t = {t}, t_impedance={t_i}")
     nb_prob+=1
 if (abs(t-t_t)> eps):
     print("Problem with two layers and TMatrix coeff trans in TM")
@@ -524,7 +556,7 @@ r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,0)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,0)
 
 
-r_i, R_i = PM.coefficient_I(chose,wav,incidence,0)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,0)
 
 if (abs(r-r_ab)> eps):
     print("Problem with single interface and abeles coeff refl in TE")
@@ -545,6 +577,10 @@ if (abs(r-r_i)> eps):
 if (abs(t-t_ab)> eps):
     print("Problem with single interface and abeles coeff trans in TE")
     print(f"t = {t}, t_abeles={t_ab}")
+    nb_prob+=1
+if (abs(t-t_i)> eps):
+    print("Problem with single interface and impedance coeff trans in TE")
+    print(f"t = {t}, t_impedance={t_i}")
     nb_prob+=1
 if (abs(t-t_t)> eps):
     print("Problem with single interface and TMatrix coeff trans in TE")
@@ -581,7 +617,7 @@ r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,1)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,1)
 
 
-r_i, R_i = PM.coefficient_I(chose,wav,incidence,1)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,1)
 
 if (abs(r-r_ab)> eps):
     print("Problem with single interface and abeles coeff refl in TM")
@@ -602,6 +638,10 @@ if (abs(r-r_i)> eps):
 if (abs(t-t_ab)> eps):
     print("Problem with single interface and abeles coeff trans in TM")
     print(f"t = {t}, t_abeles={t_ab}")
+    nb_prob+=1
+if (abs(t-t_i)> eps):
+    print("Problem with single interface and impedance coeff trans in TM")
+    print(f"t = {t}, t_impedance={t_i}")
     nb_prob+=1
 if (abs(t-t_t)> eps):
     print("Problem with single interface and TMatrix coeff trans in TM")
@@ -637,7 +677,7 @@ r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,0)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,0)
 
 
-r_i, R_i = PM.coefficient_I(chose,wav,incidence,0)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,0)
 
 if (abs(r-r_ab)> eps):
     print("Problem with two layers and abeles coeff refl in TE")
@@ -658,6 +698,10 @@ if (abs(r-r_i)> eps):
 if (abs(t-t_ab)> eps):
     print("Problem with two layers and abeles coeff trans in TE")
     print(f"t = {t}, t_abeles={t_ab}")
+    nb_prob+=1
+if (abs(t-t_i)> eps):
+    print("Problem with two layers and impedance coeff trans in TE")
+    print(f"t = {t}, t_impedance={t_i}")
     nb_prob+=1
 if (abs(t-t_t)> eps):
     print("Problem with two layers and TMatrix coeff trans in TE")
@@ -693,7 +737,7 @@ r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,1)
 r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,1)
 
 
-r_i, R_i = PM.coefficient_I(chose,wav,incidence,1)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,1)
 
 
 if (abs(r-r_ab)> eps):
@@ -715,6 +759,10 @@ if (abs(r-r_i)> eps):
 if (abs(t-t_ab)> eps):
     print("Problem with two layers and abeles coeff trans in TM")
     print(f"t = {t}, t_abeles={t_ab}")
+    nb_prob+=1
+if (abs(t-t_i)> eps):
+    print("Problem with two layers and impedance coeff trans in TM")
+    print(f"t = {t}, t_impedance={t_i}")
     nb_prob+=1
 if (abs(t-t_t)> eps):
     print("Problem with two layers and TMatrix coeff trans in TM")

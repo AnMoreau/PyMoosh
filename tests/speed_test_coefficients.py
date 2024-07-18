@@ -68,7 +68,7 @@ for i in range(nb_iter):
 
         chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
         a = time()
-        r_i, R_i = PM.coefficient_I(chose1,wav,incidence,1)
+        r_i, t_i, R_i, T_i = PM.coefficient_I(chose1,wav,incidence,1)
         b = time()
         times_i_tm[j] += (b-a)/nb_iter
 
