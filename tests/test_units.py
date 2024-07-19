@@ -93,7 +93,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_i, R_i = PM.coefficient_I(multi_stack1,wav,incidence,0)
+    r_i, t_i, R_i, T_i = PM.coefficient_I(multi_stack1,wav,incidence,0)
     b = time()
     rs_i_te_um.append(R_i)
 
@@ -133,7 +133,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_i, R_i = PM.coefficient_I(multi_stack1,wav,incidence,1)
+    r_i, t_i, R_i, T_i = PM.coefficient_I(multi_stack1,wav,incidence,1)
     b = time()
     rs_i_tm_um.append(R_i)
 
@@ -247,7 +247,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_i, R_i = PM.coefficient_I(multi_stack1,wav,incidence,0)
+    r_i, t_i, R_i, T_i = PM.coefficient_I(multi_stack1,wav,incidence,0)
     b = time()
     rs_i_te_nm.append(R_i)
 
@@ -287,7 +287,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_i, R_i = PM.coefficient_I(multi_stack1,wav,incidence,1)
+    r_i, t_i, R_i, T_i = PM.coefficient_I(multi_stack1,wav,incidence,1)
     b = time()
     rs_i_tm_nm.append(R_i)
 

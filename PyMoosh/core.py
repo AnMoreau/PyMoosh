@@ -2659,9 +2659,9 @@ def coefficient_I(struct, wavelength, incidence, polarization):
     n_s[1:] = np.sqrt(n[Type[1:]]**2 - n[Type[0]]**2 * sin_theta[0]**2)
     opp = np.imag(n_s) > 0
     n_s = n_s - 2* n_s * (opp)
-
     n_p = n[Type]**2 / n_s
-    delta = 2*np.pi*thickness*n_s/wavelength
+
+    delta = np.array(2*np.pi*thickness*n_s/wavelength)
     #cos_theta = np.cos(np.arcsin(sin_theta))
     temp = -1.j*np.tan(delta)
 
@@ -2672,15 +2672,23 @@ def coefficient_I(struct, wavelength, incidence, polarization):
 
     Y = admittance[-1]
 
+    PR = 1
     for m in np.arange(g-2,-1,-1):
-        Y = (Y + admittance[m]*temp[m])/(1 + Y*temp[m]/admittance[m])
+        Y = (Y + admittance[m+1]*temp[m+1])/(1 + Y*temp[m+1]/admittance[m+1])
+        if (m>0):
+            PR *= (np.cos(delta[m]) - 1.0j * Y * np.sin(delta[m])/admittance[m])
 
     r = (admittance[0]-Y) / (admittance[0]+Y)
+    if polarization == 1:
+        t = (admittance[-1].real / admittance[0].real)  * (r+1) / PR
+    else:
+        t = (1+r)/PR
+
     if (polarization == 1):
         r = -r
     R = abs(r)**2
-
-    return(r,R)
+    T = abs(t)**2
+    return (r, t, R, T)
 
 def coefficient_with_grad_A(struct, wavelength, incidence, polarization, mode="value", i_change=-1, saved_mat=None):
     """

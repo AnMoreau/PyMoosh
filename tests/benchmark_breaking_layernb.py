@@ -74,7 +74,7 @@ for mat1, mat2, ep1, ep2 in iter.product(mats1, mats2, eps1, eps2):
             rs_dn_te[ilay, iinc] = R_dn
             ts_dn_te[ilay, iinc] = T_dn
 
-            r_i, R_i = PM.coefficient_I(multi_stack,wav,incidence,0)
+            r_i, t_i, R_i, T_i = PM.coefficient_I(multi_stack,wav,incidence,0)
             rs_i_te[ilay, iinc] = R_i
 
 
@@ -95,7 +95,7 @@ for mat1, mat2, ep1, ep2 in iter.product(mats1, mats2, eps1, eps2):
             rs_dn_tm[ilay, iinc] = R_dn
             ts_dn_tm[ilay, iinc] = T_dn
 
-            r_i, R_i = PM.coefficient_I(multi_stack,wav,incidence,1)
+            r_i, t_i, R_i, T_i = PM.coefficient_I(multi_stack,wav,incidence,1)
             rs_i_tm[ilay, iinc] = R_i
 
 

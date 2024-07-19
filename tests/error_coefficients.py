@@ -42,7 +42,7 @@ r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,0)
 
 
 chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
-r_i, R_i = PM.coefficient_I(chose1,wav,incidence,0)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose1,wav,incidence,0)
 
 
 
@@ -92,7 +92,7 @@ r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,1)
 
 
 chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
-r_i, R_i = PM.coefficient_I(chose1,wav,incidence,1)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose1,wav,incidence,1)
 
 print(f"single interface and abeles coeff refl in TM error = {np.format_float_scientific(abs(abs(r-r_ab)/r), 2)}")
 
@@ -143,7 +143,7 @@ r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,0)
 
 
 chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
-r_i, R_i = PM.coefficient_I(chose1,wav,incidence,0)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose1,wav,incidence,0)
 
 print(f"two layers and abeles coeff refl in TE error = {np.format_float_scientific(abs(abs(r-r_ab)/r), 2)}")
 
@@ -196,7 +196,7 @@ r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,1)
 
 
 chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
-r_i, R_i = PM.coefficient_I(chose1,wav,incidence,1)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose1,wav,incidence,1)
 
 print(f"two layers and abeles coeff refl in TM error = {np.format_float_scientific(abs(abs(r-r_ab)/r), 2)}")
 
@@ -255,7 +255,7 @@ r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,0)
 
 
 chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
-r_i, R_i = PM.coefficient_I(chose1,wav,incidence,0)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose1,wav,incidence,0)
 print(f"single interface and abeles coeff refl in TE error = {np.format_float_scientific(abs(abs(r-r_ab)/r), 2)}")
 
 
@@ -307,7 +307,7 @@ r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,1)
 
 
 chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
-r_i, R_i = PM.coefficient_I(chose1,wav,incidence,1)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose1,wav,incidence,1)
 print(f"single interface and abeles coeff refl in TM error = {np.format_float_scientific(abs(abs(r-r_ab)/r), 2)}")
 
 
@@ -358,7 +358,7 @@ r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,0)
 
 
 chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
-r_i, R_i = PM.coefficient_I(chose1,wav,incidence,0)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose1,wav,incidence,0)
 print(f"two layers and abeles coeff refl in TE error = {np.format_float_scientific(abs(abs(r-r_ab)/r), 2)}")
 
 
@@ -410,7 +410,7 @@ r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,1)
 
 
 chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
-r_i, R_i = PM.coefficient_I(chose1,wav,incidence,1)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose1,wav,incidence,1)
 print(f"two layers and abeles coeff refl in TM error = {np.format_float_scientific(abs(abs(r-r_ab)/r), 2)}")
 
 
@@ -469,7 +469,7 @@ r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,0)
 
 
 chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
-r_i, R_i = PM.coefficient_I(chose1,wav,incidence,0)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose1,wav,incidence,0)
 print(f"single interface and abeles coeff refl in TE error = {np.format_float_scientific(abs(abs(r-r_ab)/r), 2)}")
 
 
@@ -521,7 +521,7 @@ r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,1)
 
 
 chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
-r_i, R_i = PM.coefficient_I(chose1,wav,incidence,1)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose1,wav,incidence,1)
 print(f"single interface and abeles coeff refl in TM error = {np.format_float_scientific(abs(abs(r-r_ab)/r), 2)}")
 
 
@@ -572,7 +572,7 @@ r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,0)
 
 
 chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
-r_i, R_i = PM.coefficient_I(chose1,wav,incidence,0)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose1,wav,incidence,0)
 print(f"two layers and abeles coeff refl in TE error = {np.format_float_scientific(abs(abs(r-r_ab)/r), 2)}")
 
 
@@ -623,7 +623,7 @@ r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose1,wav,incidence,1)
 
 
 chose1 = PM.Structure(materials,stack,epaisseurs, verbose=False)
-r_i, R_i = PM.coefficient_I(chose1,wav,incidence,1)
+r_i, t_i, R_i, T_i = PM.coefficient_I(chose1,wav,incidence,1)
 
 print(f"two layers and abeles coeff refl in TM error = {np.format_float_scientific(abs(abs(r-r_ab)/r), 2)}")
 
