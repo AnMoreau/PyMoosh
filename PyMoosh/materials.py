@@ -224,11 +224,13 @@ class Material:
             self.specialType = specialType
             if (len(mat) == 2):
                 # Uniaxial, only two values given, no and ne
+                self.material_list = [mat[0], mat[0], mat[1]]
                 self.material_x = mat[0]
                 self.material_y = mat[0]
                 self.material_z = mat[1]
             elif (len(mat) == 3):
                 # Biaxial, three values given,
+                self.material_list = [mat[0], mat[1], mat[2]]
                 self.material_x = mat[0]
                 self.material_y = mat[1]
                 self.material_z = mat[2]
@@ -476,15 +478,19 @@ class Material:
     def get_permittivity_ani(self, wavelength):
         epsilon_medium = []
         for material in self.material_list:
-            try:
-                k = material.get_extinction_coefficient(wavelength)
-                epsilon_medium.append(material.get_epsilon(wavelength)) # Here we use the fact that "get_epsilon(wl)" return an error if k is not given in the Ref Ind dataB to go in the except where we deal with the real index case. 
-                print('k =',k )
-                print('epsilon_medium =' ,material.get_epsilon(wavelength)) 
-            except:                                                              # If k exist we use get_epsilon(wl) 
-                n = material.get_refractive_index(wavelength)
-                epsilon_medium.append(n**2)
-                print('n =',n)
+            if issubclass(material.__class__,RefractiveIndexMaterial):
+                try:
+                    k = material.get_extinction_coefficient(wavelength)
+                    epsilon_medium.append(material.get_epsilon(wavelength)) # Here we use the fact that "get_epsilon(wl)" return an error if k is not given in the Ref Ind dataB to go in the except where we deal with the real index case. 
+                    print('k =',k )
+                    print('epsilon_medium =' ,material.get_epsilon(wavelength)) 
+                except:                                                              # If k exist we use get_epsilon(wl) 
+                    n = material.get_refractive_index(wavelength)
+                    epsilon_medium.append(n**2)
+                    print('n =',n)
+            else:
+                # Was directly given
+                epsilon_medium.append(complex(material))
         return epsilon_medium
 '''Reminder : this function can handle the case of complex n thanks to 
 def get_epsilon(self, wavelength_nm, exp_type='exp_minus_i_omega_t'):
