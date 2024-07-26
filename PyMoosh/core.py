@@ -2219,7 +2219,7 @@ def coefficient(struct, wavelength, incidence, polarization, wavelength_opti='Fa
         (and retrocompatibility)
     """
     if struct.Anisotropic:
-        return coefficient_ani(struct, wavelength, incidence)
+        return coefficients_ani(struct, wavelength, incidence)
     if struct.NonLocal:
         return coefficient_non_local(struct, wavelength, incidence, polarization)
     if wavelength_opti:
