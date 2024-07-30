@@ -24,7 +24,7 @@ def constant(wl: float):
 
 def attributeFunction(functions: list, incidence: float, polar: int, active_layer: float):
     """
-    For plot purpose. From the list of functions to draw, return differents informations for plots.
+    For plot purpose. From the list of functions to draw, return different information for plots.
     Inputs:
     - draw_functions : list of functions or 'keywords' to use built-in functions
     - wl_domain      : *see 'optimization' class docstring.
@@ -36,7 +36,7 @@ def attributeFunction(functions: list, incidence: float, polar: int, active_laye
     - is_reference_list (list of bool)      : Tell if the function is a reference function or not
     - function_list     (list of functions) : List of the functions to draw. The first function is 
                                               expected to be one of the reference function, otherwise
-                                              the optimization could returns nonsense.
+                                              the optimization could return nonsense.
     - short_name_list   (list of strings)   : List of the shortnames of the optical properties.
     - name_list         (list of strings)   : List of the names of the optical properties.
         """
@@ -251,6 +251,7 @@ class optimization:
         computation_window: np.ndarray,
         budget: int,
         nb_runs: int,
+        population: int = 30,
         wl_domain: np.ndarray = np.linspace(400, 800, 100),
         draw_functions = 'R',
         objective_function = constant,
@@ -279,6 +280,7 @@ class optimization:
         self.polar = polar
         self.X_min = X_min
         self.X_max = X_max
+        self.population = population
         self.computation_window = computation_window
         self.budget = budget
         self.nb_runs = nb_runs
@@ -344,30 +346,30 @@ class optimization:
         self.cost_function = wrapper_cost_function(function_list[0], is_reference_list[0], self.mat, self.stack, self.thickness, 
                                                    self.indices, self.which_layers, objective_vector, computation_window, X_min, cost_function)
 
-    def wrapper_algorithms(self, cost_function, budget: int, X_min, X_max, progression: bool):
+    def wrapper_algorithms(self, cost_function, budget: int, X_min, X_max, pop: int, progression: bool):
         """
         Return the algorithm we use for the optimization.
         """
         if self.optimizer == 'DE':
-            return pm.differential_evolution(cost_function, budget, X_min, X_max, population=30, progression=progression)
+            return pm.differential_evolution(cost_function, budget, X_min, X_max, population=pop, progression=progression)
         
         elif self.optimizer == 'QODE':
-            return pm.QODE(cost_function, budget, X_min, X_max, population=30, progression=progression)
+            return pm.QODE(cost_function, budget, X_min, X_max, population=pop, progression=progression)
         
         elif self.optimizer == 'QNDE':
-            return pm.QNDE(cost_function, budget, X_min, X_max, population=30, progression=progression)
+            return pm.QNDE(cost_function, budget, X_min, X_max, population=pop, progression=progression)
         
         elif self.optimizer == 'BFGS':
             return pm.bfgs(cost_function, budget, self.thickness, X_min, X_max)
         
         elif self.optimizer == 'QODEd':
-            return pm.QODE_distance(cost_function, budget, X_min, X_max, population=30, progression=progression)
+            return pm.QODE_distance(cost_function, budget, X_min, X_max, population=pop, progression=progression)
         
         elif self.optimizer == 'QNDEd':
-            return pm.QNDE_distance(cost_function, budget, X_min, X_max, population=30, progression=progression)
+            return pm.QNDE_distance(cost_function, budget, X_min, X_max, population=pop, progression=progression)
         
         elif self.optimizer == 'super_QNDE':
-            return pm.super_QNDE(cost_function, budget, X_min, X_max, population=30, progression=progression)
+            return pm.super_QNDE(cost_function, budget, X_min, X_max, population=pop, progression=progression)
         
         else:
             print('Unknown optimizer. See docstring:')
@@ -375,7 +377,7 @@ class optimization:
             sys.exit()
 
 
-    def do_optimize(self, cost_function, nb_runs: int, budget: int, X_min, X_max, progression: bool):
+    def do_optimize(self, cost_function, nb_runs: int, budget: int, X_min, X_max, pop:int, progression: bool):
         """
         For a given algorithm, budget and number of runs, prepare the function
         to execute to run properly the optimization then do the optimization.
@@ -389,7 +391,7 @@ class optimization:
         if self.optimizer == 'QODEd' or self.optimizer == 'QNDEd':
 
             def iterate_runs(_):
-                best, convergence, distances = self.wrapper_algorithms(cost_function, budget, X_min, X_max, progression)
+                best, convergence, distances = self.wrapper_algorithms(cost_function, budget, X_min, X_max, population=pop, progression=progression)
                 return best, convergence, distances
             
             best_list, convergence_list, distances_list = [], [], []
@@ -410,7 +412,7 @@ class optimization:
         elif self.optimizer == 'super_QNDE':
             
             def iterate_runs(_):
-                best, convergence, population, distances, matrix = self.wrapper_algorithms(cost_function, budget, X_min, X_max, progression)
+                best, convergence, population, distances, matrix = self.wrapper_algorithms(cost_function, budget, X_min, X_max, population=pop, progression=progression)
                 return best, convergence, population, distances, matrix
             
             best_list, convergence_list, population_list, distances_list, matrix_distances_list = [], [], [], [], []
@@ -432,7 +434,7 @@ class optimization:
         else:
 
             def iterate_runs(_):
-                best, convergence = self.wrapper_algorithms(cost_function, budget, X_min, X_max, progression)
+                best, convergence = self.wrapper_algorithms(cost_function, budget, X_min, X_max, population=pop, progression=progression)
                 return best, convergence
             
             best_list, convergence_list = [], []
@@ -624,7 +626,7 @@ class optimization:
         print("Current Time =", datetime.now().strftime("%H:%M:%S"))
         start = time.perf_counter()
 
-        result = self.do_optimize(self.cost_function, self.nb_runs, self.budget, self.X_min, self.X_max, self.progression)
+        result = self.do_optimize(self.cost_function, self.nb_runs, self.budget, self.X_min, self.X_max, self.population, self.progression)
         best_list, convergence_list = result[0], result[1]
 
         # Stop counter.
@@ -693,7 +695,7 @@ class optimization:
         print("Current Time =", datetime.now().strftime("%H:%M:%S"))
         start = time.perf_counter()
 
-        worst_list = self.do_optimize(opposite_cost_function, nb_runs, budget, xmin, xmax, progression=True)[0]
+        worst_list = self.do_optimize(opposite_cost_function, nb_runs, budget, xmin, xmax, self.population, progression=True)[0]
 
         # Stop counter.
         perf = round(time.perf_counter()-start, 2)
