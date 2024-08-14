@@ -2212,7 +2212,7 @@ def green(struct,window,lam,source_interface):
     return En
 #    return r_up,r_d
 
-def coefficient(struct, wavelength, incidence, polarization, wavelength_opti='False'):
+def coefficient(struct, wavelength, incidence, polarization, wavelength_opti=False):
     """
         Wrapper function to comput reflection and transmission coefficients
         with various methods.
