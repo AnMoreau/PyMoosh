@@ -1,5 +1,7 @@
 """
 This file contains the most fundamental functions for PyMoosh
+Ideally, these would also be all the functions translated
+into anisotropic and non local versions
 """
 
 import numpy as np
@@ -32,6 +34,10 @@ def cascade(A, B):
 
 
 
+    if struct.NonLocal:
+        print("Non Local field not yet defined")
+    if struct.Anisotropic:
+        print("Anisotropic field not yet defined")
 def absorption(struct, wavelength, incidence, polarization):
     """
     This function computes the percentage of the incoming energy
@@ -56,13 +62,6 @@ def absorption(struct, wavelength, incidence, polarization):
     is lossless, or they have no true meaning.
 
     """
-    # if struct.NonLocal:
-    #     print("Non Local absorption not yet defined")
-    # if struct.Anisotropic:
-    #     print("Anisotropic absorption not yet defined")
-    # if wavelength_opti:
-    #     return absorption_A_opti_wavelength(struct, wavelength, incidence, polarization)
-
     return absorption_S(struct, wavelength, incidence, polarization)
 
 
@@ -81,10 +80,6 @@ def field(struct, beam, window):
     Afterwards the matrix may be used to represent either the modulus or the
     real part of the field.
     """
-    if struct.NonLocal:
-        print("Non Local field not yet defined")
-    if struct.Anisotropic:
-        print("Anisotropic field not yet defined")
 
     # Wavelength in vacuum.
     lam = beam.wavelength
@@ -228,10 +223,6 @@ def fields(struct, beam, window):
     Afterwards the matrix may be used to represent either the modulus or the
     real part of the field.
     """
-    if struct.NonLocal:
-        print("Non Local fields not yet defined")
-    if struct.Anisotropic:
-        print("Anisotropic fields not yet defined")
 
     # Wavelength in vacuum.
     lam = beam.wavelength
@@ -372,16 +363,10 @@ def fields(struct, beam, window):
 
 def coefficient(struct, wavelength, incidence, polarization):
     """
-        Wrapper function to comput reflection and transmission coefficients
+        Wrapper function to compute reflection and transmission coefficients
         with various methods.
         (and retrocompatibility)
     """
-    # if struct.Anisotropic:
-    #     return coefficients_ani(struct, wavelength, incidence)
-    # if struct.NonLocal:
-    #     return coefficient_non_local(struct, wavelength, incidence, polarization)
-    # if wavelength_opti:
-    #     return coefficient_A_opti_wavelength(struct, wavelength, incidence, polarization)
     return coefficient_S(struct, wavelength, incidence, polarization)
 
 

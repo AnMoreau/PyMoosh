@@ -1,5 +1,120 @@
 import numpy as np
 import copy
+from core import conv_to_nm
+from base import Material, Structure
+
+# TODO: classes
+
+class NLStructure(Structure):
+    """
+    This is probably necessary
+    TODO
+    """
+
+    def __init__(self, materials, layer_type, thickness, verbose=True, unit="nm", si_units=False):
+
+        if (unit != "nm"):
+            thickness = conv_to_nm(thickness, unit)
+            if not(si_units):
+                print("I can see you are using another unit than nanometers, ",
+                        "please make sure you keep using that unit everywhere.",
+                        " To suppress this message, add the keyword argument si_units=True when you call Structure")
+
+        self.unit = unit
+
+        self.NonLocal = True
+
+        materials_final=list()
+        if verbose :
+            print("List of materials:")
+        for mat in materials:
+            if issubclass(mat.__class__,Material):
+                materials_final.append(mat)
+                if verbose :
+                    print("Object:",mat.__class__.__name__)
+            else :
+                new_mat = NLMaterial(mat, verbose=verbose)
+                materials_final.append(new_mat)
+        self.materials = materials_final
+        self.layer_type = layer_type
+        self.thickness = thickness
+
+        if self.NonLocal:
+            if materials_final[layer_type[0]].specialType == "NonLocal" or materials_final[layer_type[-1]].specialType == "NonLocal":
+                raise Exception("Superstrate's and Substrate's material have to be local !")
+
+
+class NLMaterial(Material):
+    """
+        A specific class, child of Material, to manage Non local materials
+
+        From the old material function
+
+        Non local materials
+            - custom function based / function   and params         / 'NonLocal'       / 'NonLocalModel'
+
+            All non local materials need: beta0, tau, omegap
+            + all the parameters needed in their respective models
+            custom function must return: beta2, chi_b, chi_f, omega_p
+
+            
+        elif specialType == "NonLocal" : 
+            self.specialType = "NonLocal"
+            # Non local material defined as a function for the parameters
+            # The function must follow the following workings:
+            # returns beta2, chi_b, chi_f and omega_p (in this order)
+            if  mat[0].__class__.__name__ != "function" :
+                print("Please provide a function for the model, or used default Drude/BB models")
+            else:
+                self.type = "NonLocalModel"
+                self.name = "NonLocalModel : " + str(mat[0])
+                self.NL_function = mat[0]
+                self.params = [mat[i+1] for i in range(len(mat)-1)]
+                if verbose :
+                    print("Custom non local dispersive material defined by function ", str(self.NL_function))
+
+            
+    """
+    #TODO
+    # Must manage both regular and NL materials
+    # because structure will contain both
+
+    def __init__(self, mat, verbose=False):
+        super.init()
+    
+
+    
+    def get_values_nl(self, wavelength = 500) :
+        # Retrieving the non local material parameters
+
+        w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wavelength
+
+        if self.type == "NonLocalModel" :
+            res = self.NL_function(wavelength, *self.params)
+            beta2 = res[0]
+            chi_b = res[1]
+            chi_f = res[2]
+            omega_p = res[3]
+        
+        # elif self.type == "NonLocalDrude" :
+        #     beta2 = self.beta0**2 + 1.0j * w * self.tau
+        #     chi_b = self.omega_p
+        #     # chi_f = #INSERT DRUDE MODEL HERE
+        #     omega_p = self.omega_p
+        
+        # elif self.type == "NonLocalBrendelBormann" :
+        #     beta2 = self.beta0**2 + 1.0j * w * self.tau
+        #     chi_b = self.omega_p
+        #     # chi_f = #INSERT BB MODEL HERE
+        #     omega_p = self.omega_p
+
+        else:
+            print("You're not supposed to be here: get_values_nl with no known NL function defined")
+
+        return beta2, chi_b, chi_f, omega_p
+        
+
+
 
 def cascade_nl(T,U):
     """

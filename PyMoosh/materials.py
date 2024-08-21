@@ -1,3 +1,7 @@
+"""
+TODO: This file should be removed, eventually
+"""
+
 # encoding utf-8
 import numpy as np
 from scipy.special import wofz

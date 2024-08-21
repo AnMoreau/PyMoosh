@@ -1,5 +1,6 @@
 """
 This file contains all the basic structure necessary for PyMoosh to run
+TODO: remove all traces of anisotropy and nonlocality
 """
 
 import numpy as np
@@ -27,55 +28,6 @@ def conv_to_nm(length, unit):
     else:
         print("Please provide lengths in m, mm, um, pm or nm")
 
-
-
-def rotate_permittivity(eps, angle_rad, axis='z'): #AV#Aded
-    """
-    This function calculates the rotated permittivity tensor of eps around the given axis about the required angle
-
-    Args :
-    eps : permittivity tensor: a 3x3 Numpy array
-    angle_rad : rotation angle (in radians) around the rotation axis ``axis``
-    axis : rotation axis as a one-dimensional Numpy array of length 3 or a string  'x', 'y' or 'z'
-    return : rotated permittivity tensor: a 3x3 Numpy array
-    """
-
-    # Retrieve the rotation axis
-    # vec_u = unit vector
-    x_u = np.array([1, 0, 0])
-    y_u = np.array([0, 1, 0])
-    z_u = np.array([0, 0, 1])
-    if isinstance(axis, str):
-        if axis == 'x':
-            axis = x_u
-        elif axis == 'y':
-            axis = y_u
-        elif axis == 'z':
-            axis = z_u
-        else:
-            raise Exception('Invalid rotation axis.')
-    if la_np.norm(axis) == 0: #if axis has zero norm then necessarily: axis=[0,0,0]
-        raise Exception('Invalid axis. Axis can not be (0, 0, 0).')
-    if np.array(axis).shape != x_u.shape :
-        raise Exception('axis as to be a one-dimensional Numpy array of lenght 3')
-
-    # Rotation matrix
-    # theta_rad = theta_rad % (2 * np.pi)
-    axis = axis / la_np.norm(axis) # axis normalisation
-    ux = axis[0]
-    uy = axis[1]
-    uz = axis[2]
-    costheta = np.cos(angle_rad)
-    sintheta = np.sin(angle_rad)
-    R = np.array([[costheta + (ux ** 2) * (1 - costheta), ux * uy * (1 - costheta) - uz * sintheta,
-                        ux * uz * (1 - costheta) + uy * sintheta],
-                        [uy * ux * (1 - costheta) + uz * sintheta, costheta + (uy ** 2) * (1 - costheta),
-                        uy * uz * (1 - costheta) - ux * sintheta],
-                        [uz * ux * (1 - costheta) - uy * sintheta, uz * uy * (1 - costheta) + ux * sintheta,
-                        costheta + (uz ** 2) * (1 - costheta)]])
-    # Rotate permittivity tensor
-    eps_rot = la_np.multi_dot((R, eps, R.transpose()))
-    return eps_rot
 
 
 
@@ -128,26 +80,9 @@ class Structure:
     gold layer and an infinite substrate, of which a thickness of 500 nm will be
     represented is asked.
 
-    In the case of materials with anisotropic relative permittivity, it is necessary
-    to define for each layer the orientation of the material's eigenbase (where the
-    permittivity tensor is diagonal). This orientation is defined in relation to our
-    reference base (in which the z axis is normal to the interface and the x axis
-    lies in the plane of incidence). The rotation matrix used to express the
-    permittivities in our reference basis from the medium's proper permittivities
-    is defined by :
-
-        a single rotation angle as an int or a float
-
-        a rotation axis as a string ('x','y' or 'z') or a 3-row array (this vector will be automatically normalized)
-
-    The list :ani_rot_angle: contain the rotation angles associated to each layer of the stack in :layer_type:.
-    Similarly, the list :ani_rot_axis: contain the rotation axis associated to each layer of the stack in :layer_type:.
-    To maintain the logic used to report the layer characteristics, we want the sizes of these two lists to match :layer_type:.
-    So even if a layer is isotropic, it must have an angle and an axis assigned to it (which, in any case, will not affect its permittivity).
-
     """
 
-    def __init__(self, materials, layer_type, thickness, ani_rot_angle=None, ani_rot_axis=None, verbose=True, unit="nm", si_units=False):
+    def __init__(self, materials, layer_type, thickness, verbose=True, unit="nm", si_units=False):
 
         if (unit != "nm"):
             thickness = conv_to_nm(thickness, unit)
@@ -158,8 +93,6 @@ class Structure:
 
         self.unit = unit
 
-        self.Anisotropic = False
-        self.NonLocal = False
 
         materials_final=list()
         if verbose :
@@ -167,10 +100,6 @@ class Structure:
         for mat in materials:
             if issubclass(mat.__class__,Material):
                 materials_final.append(mat)
-                if mat.type == "Anisotropic":
-                    self.Anisotropic = True
-                elif mat.specialType == "NonLocal":
-                    self.NonLocal = True
                 if verbose :
                     print("Object:",mat.__class__.__name__)
             else :
@@ -179,39 +108,6 @@ class Structure:
         self.materials = materials_final
         self.layer_type = layer_type
         self.thickness = thickness
-
-
-        if self.Anisotropic:
-            if ani_rot_angle == None:   # Setting all the angles to 0 if nothing has been specified by the user.
-                self.ani_rot_angle = [0]*np.size(layer_type)
-
-            else :
-                self.ani_rot_angle = ani_rot_angle  # ani_rot_angle is a list of angle in radian (float or int). One for each layer, setting isotropic layers to the default angle = 0
-
-            for ang in self.ani_rot_angle: # Checking format.
-                if not(isinstance(ang, float) or isinstance(ang, int)):
-                    raise Exception("angle have to be a float or a int")
-
-
-            if ani_rot_axis == None: # Setting all the axis to 'z' if nothing has been specified by the user.
-                self.ani_rot_axis = ['z']*np.size(layer_type)
-            else :
-                self.ani_rot_axis = ani_rot_axis# ani_rot-axis is a list of axis reprensented as a row array of length 3
-                                                #or as the string ``'x'``, ``'y'`` or ``'z'``. One for each layer in the stack, setting isotropic layers to the default axis 'z'
-
-            for ax in self.ani_rot_axis: # Checking format.
-                if not(isinstance(ax, str)) and np.shape(ax) != np.shape([0,0,0]) :
-                    raise Exception("axis have to be a string ``'x'``, ``'y'`` or ``'z'` or a row array of length 3")
-
-            # Checking if the first and last layers are isotrop (Superstrate and Substrate are halfspaces respectively
-            #representing the medium of the incoming and outgoing light of the multi-layer stack)
-            if materials_final[layer_type[0]].type == "Anisotropic" or materials_final[layer_type[-1]].type == "Anisotropic":
-                raise Exception("Superstrate's and Substrate's material have to be isotropic !")
-
-        if self.NonLocal:
-            if materials_final[layer_type[0]].specialType == "NonLocal" or materials_final[layer_type[-1]].specialType == "NonLocal":
-                raise Exception("Superstrate's and Substrate's material have to be local !")
-
 
 
     def __str__(self):
@@ -248,6 +144,9 @@ class Structure:
 
         Args:
             wavelength (numpy array): the working wavelength (in nanometers)
+
+        TODO: make this a function outside of class Structure
+        and move it to vectorized
         """
 
 
@@ -270,58 +169,6 @@ class Structure:
             mu[:,k] = material_get_permeability
 
         return epsilon, mu
-
-
-    def permittivity_tensor_list(self, wavelength, layer=None):#AV_Added#
-        """ Return the permittivity tensor of each material considered in the structure as a row array of 3*3 array. Both isotropic and anisotropic materials are supported.
-
-         Args:
-         wavelength (float): the working wavelength (in nanometers)
-        """
-        if layer is not None:
-            Id_3 = np.eye(3 , 3)
-            mat_lay_i = self.materials[self.layer_type[layer]]
-            if mat_lay_i.type != "Anisotropic":
-                return mat_lay_i.get_permittivity(wavelength)*Id_3
-            else :
-                return mat_lay_i.get_permittivity_ani(wavelength)*Id_3
-        else:
-            eps_tens_list = list()
-            Id_3 = np.eye(3 , 3)
-            for i in self.layer_type:
-                mat_lay_i = self.materials[i]
-                if mat_lay_i.type != "Anisotropic":
-                    eps_tens_list.append(mat_lay_i.get_permittivity(wavelength)*Id_3)
-                else :
-                    eps_tens_list.append(mat_lay_i.get_permittivity_ani(wavelength)*Id_3)
-
-        return eps_tens_list
-
-
-    def rotate_permittivity_tensor(self, eps, ani_rot_angle, ani_rot_axis):
-        """
-            Rotates the permittivity tensor of a material layer
-        """
-        eps_R = rotate_permittivity(eps, ani_rot_angle, ani_rot_axis)
-        return eps_R
-
-
-
-    def rotate_permittivity_tensor_list(self, eps_tens_list, ani_rot_angle, ani_rot_axis):#AV_Added#
-        """ Return the list of rotated permittivities tensors from permittivity_tensor_list. Each tensor is rotated about the corresponding angles and axis in the list ani_rot_angle and ani_rot_axis.
-
-         Args:
-         eps_tens_list : row array of 3*3 array
-         ani_rot_angle : list of int or float
-         ani_rot_axis : list of row array of length 3 or string 'x', 'y' or 'z'
-        """
-        i=0
-        new_eps_tens_list = copy.deepcopy(eps_tens_list)
-        for eps in new_eps_tens_list:
-            eps_R = rotate_permittivity(eps, ani_rot_angle,ani_rot_axis)
-            new_eps_tens_list[i] = eps_R
-            i=i+1
-        return new_eps_tens_list
 
 
     def plot_stack(self, wavelength=None, lim_eps_colors=[1.5, 4], precision=3):
@@ -471,43 +318,26 @@ class Material:
 
     """
         Types of material (default):
-              type                   / format:                 / specialType:
+              type                   / format of "mat" variable:
 
-            - material               / Material object         / 'Default'
-            - CustomFunction         / function (wav)          / 'Default'
-            - simple_perm            / complex                 / 'Default'
-            - magnetic               / list(complex, float)    / 'Default'
-            - Database               / string                  / 'Default'
-                  Database types can take any special types from below
+            - material               / Material object         
+            - CustomFunction         / function (wav)          
+            - simple_perm            / complex                 
+            - magnetic               / list(complex, float)    
+            - Database               / string                  
+                  Database types can take many special types
 
-        The Default types can be used directly when initialising the structure
+            There is two special types:
+            -> when importing from the Refractive Index Database
+                Then the specialType variable should be set to "RII"
+                - RefractiveIndexInfo    / list(shelf, book, page)
+            -> when using a function with custom parameters
+                Then the specialType variable should be set to "Model"
+                - Model                  / list(function(wav, params), params)
+            
+            And these materials have to be processed through the Material constructor first
+            before being fed to Structure
 
-        Types of material (special): / format:                           / specialType keyword / detectable self.type:
-
-            - CustomModel            / list(function, parameters)        / 'Model'          / 'Model'
-            - BB Model               / list(parameters)                  / 'BrendelBormann' / 'BrendelBormann'
-            - Drude Model            / list(parameters)                  / 'Drude'          / 'Drude' or 'DrudeLorentz
-            - ExpData                / tuple(list(lambda), list(perm))   / 'ExpData'        / 'ExpData'
-            - ExpData with mu        / as above with list(permeabilities)/ 'ExpData'        / 'ExpDataMu'
-            - RefractiveIndexInfo    / list(shelf, book, page)           / 'RII'            / 'RefractiveIndexInfo'
-            - Anisotropic            / list(no, ne) or list(n1, n2, n3)  / 'ANI'            / 'Anisotropic'
-            - Anisotropic from RII   / list(shelf, book, page)           / 'ANI_RII'        / 'Anisotropic'
-
-        Models
-            Drude case needs    : gamma0 (damping) and omega_p
-            Drude-Lorentz needs : gamma0 (damping) and omega_p + f, gamma and omega of all resonance
-            BB case needs       : gamma0 (damping) and omega_p + f, gamma, omega and sigma of all resonance
-
-
-        Non local materials
-            - custom function based / function   and params         / 'NonLocal'       / 'NonLocalModel'
-
-            All non local materials need: beta0, tau, omegap
-            + all the parameters needed in their respective models
-            custom function must return: beta2, chi_b, chi_f, omega_p
-
-        Special types must be processed through the Material constructor before being passed on to Structure as a Material object
-        Models included are "BrendelBormann" "Drude" "DrudeLorentz" [TODO]
     """
 
     def __init__(self, mat, specialType="Default", verbose=False):
@@ -549,6 +379,7 @@ class Material:
 
             elif isinstance(mat,str):
             # iterable: string --> database material from file in shipped database
+            # TODO: check database
                 import pkgutil
                 f = pkgutil.get_data(__name__, "data/material_data.json")
                 f_str = f.decode(encoding='utf8')
@@ -620,105 +451,6 @@ class Material:
                 print("Material from Refractiveindex Database")
             if len(mat) != 3:
                 print(f'Warning: Material from RefractiveIndex Database should have 3 values (shelf, book, page), but {len(mat)} were given.')
-
-        elif specialType == "BrendelBormann" :
-            # Brendel-Bormann model with n resonances
-            self.type = "BrendelBormann"
-            self.specialType = specialType
-            self.name = "BrendelBormann model : " + str(mat)
-            self.f0 = mat[0]
-            self.Gamma0 = mat[1]
-            self.omega_p = mat[2]
-            if (len(mat[3])==len(mat[4])==len(mat[5])==len(mat[6])):
-                self.f = np.array(mat[3])
-                self.gamma = np.array(mat[4])
-                self.omega = np.array(mat[5])
-                self.sigma = np.array(mat[6])
-            if verbose:
-                print("Brendel Bormann model for material with parameters ", str(mat))
-
-        elif specialType == "Drude" or specialType == "DrudeLorentz" :
-            # Simple Drude-Lorentz  model
-            self.type = "Drude"
-            self.specialType = specialType
-            self.name = "Drude model : " + str(mat)
-            self.Gamma0 = mat[0]
-            self.omega_p = mat[1]
-            if len(mat) == 5 and (len(mat[2])==len(mat[3])==len(mat[4])):
-                self.type = "DrudeLorentz"
-                self.f = np.array(mat[2])
-                self.gamma = np.array(mat[3])
-                self.omega = np.array(mat[4])
-            if verbose:
-                print("Drude(Lorentz) model for material with parameters ", str(mat))
-
-        elif specialType == "Lorentz" :
-            # Simple Lorentz model
-            self.type = "Lorentz"
-            self.specialType = specialType
-            self.name = "Lorentz model : " + str(mat)
-            self.eps = mat[0]
-            if len(mat) == 4 and (len(mat[1])==len(mat[2])==len(mat[3])):
-                self.type = "DLorentz"
-                self.f = np.array(mat[1])
-                self.gamma = np.array(mat[2])
-                self.omega = np.array(mat[3])
-            if verbose:
-                print("Drude(Lorentz) model for material with parameters ", str(mat))
-
-        elif specialType == "ExpData":
-            # Experimental Data given as a list of wavelengths and permittivities
-            self.type = "ExpData"
-            self.name = "ExpData: "+ str(mat)
-            self.specialType = specialType
-
-            self.wavelength_list = np.array(mat[0], dtype=float)
-            self.permittivities  = np.array(mat[1], dtype=complex)
-            if len(mat) == 3:
-                self.type = "ExpDataMu"
-                self.permeabilities  = np.array(mat[2], dtype=complex)
-
-        elif specialType == "ANI" :
-            # User defined Anisotropic material
-            if len(mat) < 2 or len(mat) > 3:
-                print(f'Warning: Anisotropic material is expected to be a list of 2 or 3 index values, but {len(mat)} were given.')
-            self.type = "Anisotropic"
-            self.specialType = specialType
-            if (len(mat) == 2):
-                # Uniaxial, only two values given, no and ne
-                self.material_list = [mat[0], mat[0], mat[1]]
-                self.material_x = mat[0]
-                self.material_y = mat[0]
-                self.material_z = mat[1]
-            elif (len(mat) == 3):
-                # Biaxial, three values given,
-                self.material_list = [mat[0], mat[1], mat[2]]
-                self.material_x = mat[0]
-                self.material_y = mat[1]
-                self.material_z = mat[2]
-
-            self.name = "Anisotropic material" + str(mat)
-            if verbose :
-                print("Anisotropic material of indices ", str(mat))
-                
-        elif specialType == "ANI_RII" :
-            # Anisotropic material from the refractive index database
-            if len(mat) != 3:
-                print(f'Warning: Anisotropic material from Refractiveindex.info is expected to be a list of 3 values, but {len(mat)} were given.')
-            self.type = "Anisotropic"
-            self.specialType = specialType
-            shelf, book, page = mat[0], mat[1], mat[2]
-            self.path = "shelf: {}, book: {}, page: {}".format(shelf, book, page) # not necessary ?
-            material_list = wrapper_anisotropy(shelf, book, page) # A list of three materials
-            self.material_list = material_list
-            self.material_x = material_list[0]
-            self.material_y = material_list[1]
-            self.material_z = material_list[2]
-            self.name = "Anisotropic material from Refractiveindex.info: " + str(mat)
-            if verbose :
-                print("Material from Refractiveindex Database")
-            if len(mat) != 3:
-                print(f'Warning: Material from RefractiveIndex Database should have 3 values (shelf, book, page), but {len(mat)} were given.')
         
         elif specialType == "Model":
             # A custom function that takes more parameters than simply the wavelength
@@ -727,67 +459,6 @@ class Material:
             self.permittivity_function = mat[0]
             self.params = [mat[i+1] for i in range(len(mat)-1)]
             self.name = "Customfunction: " + str(mat[0])
-
-        elif specialType == "NonLocal" : 
-            self.specialType = "NonLocal"
-            # Non local material defined as a function for the parameters
-            # The function must follow the following workings:
-            # returns beta2, chi_b, chi_f and omega_p (in this order)
-            if  mat[0].__class__.__name__ != "function" :
-                print("Please provide a function for the model, or used default Drude/BB models")
-            else:
-                self.type = "NonLocalModel"
-                self.name = "NonLocalModel : " + str(mat[0])
-                self.NL_function = mat[0]
-                self.params = [mat[i+1] for i in range(len(mat)-1)]
-                if verbose :
-                    print("Custom non local dispersive material defined by function ", str(self.NL_function))
-
-        # elif specialType == "NL" or specialType == "NLDrude" :
-        #     # Non local material defined by a Drude model for the chi_f
-        #     self.SpecialType = "NL"
-        #     self.type = "NonLocalDrude"
-        #     self.beta0 = self.mat[0]
-        #     self.tau = self.mat[1]
-        #     self.omega_p = self.mat[2]
-        #     self.chi_b = self.mat[3]
-        #     self.gamma = self.mat[4]
-        #     self.name = "NonLocalDrude :" + str(mat)
-            
-        #     self.Gamma0 = mat[0]
-        #     self.omega_p = mat[1]
-        #     if len(mat) == 5 and (len(mat[2])==len(mat[3])==len(mat[4])):
-        #         self.type = "DrudeLorentz"
-        #         self.f = np.array(mat[2])
-        #         self.gamma = np.array(mat[3])
-        #         self.omega = np.array(mat[4])
-
-        #     if verbose :
-        #         print(f"NonLocalMaterial : [chi_b = {self.chi_b}, chi_f = {self.chi_f}, w_p = {self.w_p}, beta = {self.beta}] SpecialType = {self.SpecialType}")
-
-
-        #elif specialType == "NLBB" : # WIP
-            # Non local material defined by a Brendel Borman model for the chi_f
-            # self.SpecialType = "NL"
-            # self.beta0 = self.mat[0]
-            # self.tau = self.mat[1]
-            # self.omega_p = self.mat[2]
-            # self.chi_b = self.mat[3]
-            # self.gamma = self.mat[4]
-            # self.f0 = mat[0]
-            # self.Gamma0 = mat[1]
-            # self.omega_p = mat[2]
-            # if (len(mat[3])==len(mat[4])==len(mat[5])==len(mat[6])):
-            #     self.f = np.array(mat[3])
-            #     self.gamma = np.array(mat[4])
-            #     self.omega = np.array(mat[5])
-            #     self.sigma = np.array(mat[6])
-                          
-            
-        elif specialType == "Unspecified":
-            self.specialType = specialType
-            print(specialType, "Unknown type of material (for the moment)")
-            # sys.exit()
 
         else:
             print(f'Warning: Unknown type : {specialType}')
@@ -810,36 +481,6 @@ class Material:
         elif self.type == "Model":
             return self.permittivity_function(wavelength, *self.params)
         
-        elif self.type == "BrendelBormann":
-            w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wavelength
-            a = np.sqrt(w * (w + 1j * self.gamma))
-            x = (a - self.omega) / (np.sqrt(2) * self.sigma)
-            y = (a + self.omega) / (np.sqrt(2) * self.sigma)
-            # Polarizability due to bound electrons
-            chi_b = np.sum(1j * np.sqrt(np.pi) * self.f * self.omega_p ** 2 /
-                        (2 * np.sqrt(2) * a * self.sigma) * (wofz(x) + wofz(y)))
-            # Equivalent polarizability linked to free electrons (Drude model)
-            chi_f = -self.omega_p ** 2 * self.f0 / (w * (w + 1j * self.Gamma0))
-            epsilon = 1 + chi_f + chi_b
-            return epsilon
-        
-        elif self.type == "Drude":
-            # TODO: decide if omega_p / gamma are in Hz or rad s-1 !!
-            w = 2*np.pi*299792458*1e9 / wavelength
-            chi_f = - self.omega_p ** 2 / (w * (w + 1j * self.Gamma0))
-            return 1 + chi_f
-        
-        elif self.type == "Lorentz":
-            w = 2*np.pi*299792458*1e9 / wavelength
-            chi = np.sum(self.f/(self.omega**2 - w**2 - 1.0j*self.gamma*w))
-            return self.eps + chi
-        
-        elif self.type == "DrudeLorentz":
-            w = 2*np.pi*299792458*1e9 / wavelength
-            chi_f = - self.omega_p ** 2 / (w * (w + 1j * self.Gamma0))
-            chi_b = np.sum(self.f/(self.omega**2 - w**2 - 1.0j*self.gamma*w))
-            return 1 + chi_f + chi_b
-        
         elif self.type == "RefractiveIndexInfo":
             try:
                 k = self.material.get_extinction_coefficient(wavelength)
@@ -847,17 +488,6 @@ class Material:
             except:
                 n = self.material.get_refractive_index(wavelength)
                 return n**2
-        
-        elif self.type == "ExpData":
-            return np.interp(wavelength, self.wavelength_list, self.permittivities)
-        
-        elif self.type == "Anisotropic":
-            print(f'Warning: Functions for anisotropic materials generaly requires more information than isotropic ones. You probably want to use \'get_permittivity_ani()\' function.')
-        
-        elif self.specialType == "NonLocal":
-            _, chi_b, chi_f, _ = self.get_values_nl(wavelength)
-            return 1 + chi_b + chi_f
-           
 
 
     def get_permeability(self,wavelength, verbose=False):
@@ -867,150 +497,9 @@ class Material:
             if verbose:
                 print('Warning: Magnetic parameters from RefractiveIndex Database are not implemented. Default permeability is set to 1.0 .')
             return 1.0
-        elif self.type == "Anisotropic":
-            if verbose:
-                print('Warning: Magnetic parameters from RefractiveIndex Database are not implemented. Default permeability is set to 1.0 .')
-            return [1.0, 1.0, 1.0]
-        elif self.type == "ExpDataMu":
-            return np.interp(wavelength, self.wavelength_list, self.permeabilities)
         return 1.0
     
-
-    # def old_get_values_nl(self, wavelength = 500) :
-    #     # Retrieving the non local material parameters
-
-    #     if self.type == "NonLocalModel" :
-    #         self.beta = self.mat(wavelength)[3]
-    #         self.w_p = self.mat(wavelength)[2]
-    #         self.chi_b = self.mat(wavelength)[0]
-    #         self.chi_f = self.mat(wavelength)[1]
-        
-    #     elif self.type == "NonLocalMaterial" :
-    #         self.beta = self.mat[3]
-    #         self.w_p = self.mat[2]
-    #         self.chi_b = self.mat[0]
-    #         self.chi_f = self.mat[1]
-
-    #     return self.chi_b, self.chi_f, self.w_p, self.beta
     
-    def get_values_nl(self, wavelength = 500) :
-        # Retrieving the non local material parameters
-
-        w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wavelength
-
-        if self.type == "NonLocalModel" :
-            res = self.NL_function(wavelength, *self.params)
-            beta2 = res[0]
-            chi_b = res[1]
-            chi_f = res[2]
-            omega_p = res[3]
-        
-        # elif self.type == "NonLocalDrude" :
-        #     beta2 = self.beta0**2 + 1.0j * w * self.tau
-        #     chi_b = self.omega_p
-        #     # chi_f = #INSERT DRUDE MODEL HERE
-        #     omega_p = self.omega_p
-        
-        # elif self.type == "NonLocalBrendelBormann" :
-        #     beta2 = self.beta0**2 + 1.0j * w * self.tau
-        #     chi_b = self.omega_p
-        #     # chi_f = #INSERT BB MODEL HERE
-        #     omega_p = self.omega_p
-
-        else:
-            print("You're not supposed to be here: get_values_nl with no known NL function defined")
-
-        return beta2, chi_b, chi_f, omega_p
-    
-
-# Anisotropic method
-    """ def get_permittivity_ani(self, wavelength, elevation_beam, precession, nutation, spin):
-        # We have three permittivities to extract
-        refraction_indices_medium = []
-        for material in self.material_list:# A complex refractive index is denoted m=n+ik. However, in the Refractive index database  
-            try:                           # n and k are only given separately by "get_refractive_index" and "get_extinction_coefficient" respectivly.
-                k = material.get_extinction_coefficient(wavelength)
-                refraction_indices_medium.append(material.material.get_epsilon(wavelength))# Here we use the fact that "get_epsilon(wl)" return an error if k is not given in the Ref Ind dataB.  
-            except:
-                n = material.get_refractive_index(wavelength)
-                refraction_indices_medium.append(n**2)
-        return np.sqrt(get_refraction_indices(elevation_beam, refraction_indices_medium, precession, nutation, spin))"""
-    
-#AV# Here i just need to get the permittivity of the material but this function does much more than getting the permittivity so i make mine: 
-    def get_permittivity_ani(self, wavelength):
-        epsilon_medium = []
-        for material in self.material_list:
-            if issubclass(material.__class__,RefractiveIndexMaterial):
-                try:
-                    k = material.get_extinction_coefficient(wavelength)
-                    epsilon_medium.append(material.get_epsilon(wavelength)) # Here we use the fact that "get_epsilon(wl)" return an error if k is not given in the Ref Ind dataB to go in the except where we deal with the real index case. 
-                    print('k =',k )
-                    print('epsilon_medium =' ,material.get_epsilon(wavelength)) 
-                except:                                                              # If k exist we use get_epsilon(wl) 
-                    n = material.get_refractive_index(wavelength)
-                    epsilon_medium.append(n**2)
-                    print('n =',n)
-            else:
-                # Was directly given
-                epsilon_medium.append(complex(material))
-        return epsilon_medium
-'''Reminder : this function can handle the case of complex n thanks to 
-def get_epsilon(self, wavelength_nm, exp_type='exp_minus_i_omega_t'):
-        n = self.get_refractive_index(wavelength_nm)
-        k = self.get_extinction_coefficient(wavelength_nm)
-        if exp_type=='exp_minus_i_omega_t':
-            return (n + 1j*k)**2
-        else:
-            return (n - 1j*k)**2 '''
-
-
-def wrapper_anisotropy(shelf, book, page):
-    if page.endswith("-o") or page.endswith("-e"):
-        if page.endswith("-e"):
-            page_e, page_o = page, page.replace("-e", "-o")
-        elif page.endswith("-o"):
-            page_e, page_o = page.replace("-o", "-e"), page
-
-        # create ordinary and extraordinary object.
-        material_o = RefractiveIndexMaterial(shelf, book, page_o)
-        material_e = RefractiveIndexMaterial(shelf, book, page_e)
-        return [material_o, material_o, material_e]
-    
-    elif page.endswith("-alpha") or page.endswith("-beta") or page.endswith("-gamma"):
-        if page.endswith("-alpha"):
-            page_a, page_b, page_c = page, page.replace("-alpha", "-beta"), page.replace("-alpha", "-gamma")
-        elif page.endswith("-beta"):
-            page_a, page_b, page_c = page.replace("-beta", "-alpha"), page, page.replace("-beta", "-gamma")
-        elif page.endswith("-gamma"):
-            page_a, page_b, page_c = page.replace("-gamma", "-alpha"), page.replace("-gamma", "-beta"), page
-        
-        # create ordinary and extraordinary object.
-        material_alpha = RefractiveIndexMaterial(shelf, book, page_a)
-        material_beta = RefractiveIndexMaterial(shelf, book, page_b)
-        material_gamma = RefractiveIndexMaterial(shelf, book, page_c)
-        return [material_alpha, material_beta, material_gamma]
-    
-    else:
-        # there may better way to do it.
-        try:
-            page_e, page_o = page + "-e", page + "-o"
-            material_o = RefractiveIndexMaterial(shelf, book, page_o)
-            material_e = RefractiveIndexMaterial(shelf, book, page_e)
-            return [material_o, material_o, material_e]
-        except:
-            try:
-                page_a, page_b, page_c = page + "-alpha", page + "-beta", page + "-gamma"
-                print(page_a)
-                material_alpha = RefractiveIndexMaterial(shelf, book, page_a)
-                print(material_alpha)
-                material_beta = RefractiveIndexMaterial(shelf, book, page_b)
-                print(material_beta)
-                material_gamma = RefractiveIndexMaterial(shelf, book, page_c)
-                print(material_gamma)
-                return [material_alpha, material_beta, material_gamma]
-            except:
-                print(f'Warning: Given material is not known to be anisotropic in the Refractiveindex.info database. You should try to remove "ANI" keyword in material definition or to spellcheck the given path.')
-
 
 # TODO: this stays here for the moment, but should be removed evenually
 authorized = {"permittivity_glass":None}

@@ -1,8 +1,8 @@
 """
 This file contains all functions linked to computing green functions
 """
-import core
-import base
+from core import cascade
+from base import conv_to_nm
 import numpy as np
 
 
@@ -28,7 +28,7 @@ def green(struct,window,lam,source_interface):
 
     # Computation of all the permittivities/permeabilities
     if (struct.unit != "nm"):
-        wavelength = base.conv_to_nm(wavelength, struct.unit)
+        wavelength = conv_to_nm(wavelength, struct.unit)
     Epsilon, Mu = struct.polarizability(lam)
     thickness = np.array(struct.thickness)
     pol = 0
@@ -121,8 +121,8 @@ def green(struct,window,lam,source_interface):
         A_up[0] = [[0, 1], [1, 0]]
 
         for k in range(2*source_interface-1):
-            A_up[k + 1] = core.cascade(A_up[k], T[k + 1])
-            H_up[k + 1] = core.cascade(T[2*source_interface-1-k], H_up[k])
+            A_up[k + 1] = cascade(A_up[k], T[k + 1])
+            H_up[k + 1] = cascade(T[2*source_interface-1-k], H_up[k])
 
         I_up = np.zeros((2*source_interface, 2, 2), dtype=complex)
         for k in range(2*source_interface-1):
