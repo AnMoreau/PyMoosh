@@ -56,21 +56,23 @@ plt.plot(wavelength_list, plot, label="ref")
 plt.plot(wl, R*0.2, label="R plot with parameters de tic et tac")
 plt.legend()
 plt.show()
-eps = []
-for w in wl:
-    beta2, chi_b, chi_f, w_p = nl_function(w, 11.6644913)
-    eps.append(1+chi_b+chi_f)
-eps = np.array(eps)
-plt.plot(wl, eps)
-plt.ylabel("Eps(NL)")
-plt.show()
+
+# Test de la permittivité du modèle.
+# eps = []
+# for w in wl:
+#     beta2, chi_b, chi_f, w_p = nl_function(w, 11.6644913)
+#     eps.append(1+chi_b+chi_f)
+# eps = np.array(eps)
+# plt.plot(wl, eps)
+# plt.ylabel("Eps(NL)")
+# plt.show()
 
 
 #%% Optimization
 
 
 wavelength_list = np.linspace(5000, 8000, 3001)
-# plot = 
+# plot =
 
 nb_lam = 50
 
@@ -99,15 +101,15 @@ def cost_function(X):
     R = R*scale + base
     new_wl = np.linspace(5000, 8000, nb_lam)
     obj  = np.interp(new_wl, wavelength_list, plot)
-    cost = np.sum(np.abs(R - obj))
+    cost = np.mean(np.abs(R - obj))+10*np.mean(np.abs(np.diff(R)-np.diff(obj)))
     return cost/nb_lam
 
 budget = 2000 #
 nb_runs = 1
 
 
-X_min = np.array([5, 1e14, 1e12, 1e15, 1e14, 0, 0.01])
-X_max = np.array([20, 1e15, 1e13, 1e16, 2e15, 1, 2])
+X_min = np.array([11.4, 1e14, 1e12, 1e14, 5e14, 0, 0.01])
+X_max = np.array([11.8, 1e15, 1e13, 1.5e15, 1.2e15, 1, 2])
 
 bests = []
 convergences = []
@@ -130,7 +132,7 @@ pol = 1.0
 chose = PM.Structure(materials,stack,thickness, verbose=False)
 wl, r, t, R, T = PM.spectrum(chose, theta, pol, 5000, 8000, 500)
 R = R*scale + base
-print(f"best parameters found : chi_b={chi_b}, w_p={w_p}, gamma={gamma}, beta_0={beta_0}, tau={tau}")
+print(f"best parameters found : chi_b={chi_b:e}, w_p={w_p:e}, gamma={gamma:e}, beta_0={beta_0:e}, tau={tau:e}")
 plt.plot(np.linspace(5000,8000,500), R, label="optimized")
 plt.plot(wavelength_list, plot, label="ref")
 plt.legend()
