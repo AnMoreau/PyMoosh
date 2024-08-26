@@ -137,40 +137,6 @@ class Structure:
         return epsilon, mu
 
 
-    def polarizability_opti_wavelength(self, wavelength): #numpy friendly
-        """ ** Only used for coefficient_S_opti_wavelength **
-        Computes the actual permittivity and permeability of each material considered in
-        the structure. This method is called before each calculation.
-
-        Args:
-            wavelength (numpy array): the working wavelength (in nanometers)
-
-        TODO: make this a function outside of class Structure
-        and move it to vectorized
-        """
-
-
-        # Create empty mu and epsilon arrays
-        mu = np.ones((wavelength.size, len(self.materials)), dtype=np.clongdouble)
-        epsilon = np.ones((wavelength.size, len(self.materials)), dtype=np.clongdouble)
-        # Loop over all materials
-        for k in range(len(self.materials)):
-            # Populate epsilon and mu arrays from the material.
-            material = self.materials[k]
-            material_get_permittivity = material.get_permittivity(wavelength)
-            material_get_permeability = material.get_permeability(wavelength)
-            try:
-                material_get_permittivity.shape = (len(wavelength),)
-                material_get_permeability.shape = (len(wavelength),)
-            except:
-                pass
-
-            epsilon[:,k] = material_get_permittivity
-            mu[:,k] = material_get_permeability
-
-        return epsilon, mu
-
-
     def plot_stack(self, wavelength=None, lim_eps_colors=[1.5, 4], precision=3):
         """plot layerstack
 
