@@ -4,11 +4,12 @@ from core import conv_to_nm
 from base import Material, Structure
 
 # TODO: classes
+# TODO: add other functionalities (field/absorption, etc.)
 
 class NLStructure(Structure):
     """
     This is probably necessary
-    TODO
+    TODO create test w & w/o NLStructure, I feel it isn't necessary
     """
 
     def __init__(self, materials, layer_type, thickness, verbose=True, unit="nm", si_units=False):
@@ -22,26 +23,26 @@ class NLStructure(Structure):
 
         self.unit = unit
 
-        self.NonLocal = True
-
         materials_final=list()
         if verbose :
             print("List of materials:")
         for mat in materials:
             if issubclass(mat.__class__,Material):
+                # Checks if the material is already instanciated
+                # NOTE 1: all NL materials should be instanciated
+                # NOTE 2: should not be an anisotropic material
                 materials_final.append(mat)
                 if verbose :
                     print("Object:",mat.__class__.__name__)
             else :
-                new_mat = NLMaterial(mat, verbose=verbose)
+                new_mat = Material(mat, verbose=verbose)
                 materials_final.append(new_mat)
         self.materials = materials_final
         self.layer_type = layer_type
         self.thickness = thickness
 
-        if self.NonLocal:
-            if materials_final[layer_type[0]].specialType == "NonLocal" or materials_final[layer_type[-1]].specialType == "NonLocal":
-                raise Exception("Superstrate's and Substrate's material have to be local !")
+        if materials_final[layer_type[0]].specialType == "NonLocal" or materials_final[layer_type[-1]].specialType == "NonLocal":
+            raise Exception("Superstrate's and Substrate's material have to be local !")
 
 
 class NLMaterial(Material):
@@ -54,34 +55,30 @@ class NLMaterial(Material):
             - custom function based / function   and params         / 'NonLocal'       / 'NonLocalModel'
 
             All non local materials need: beta0, tau, omegap
-            + all the parameters needed in their respective models
-            custom function must return: beta2, chi_b, chi_f, omega_p
-
-            
-        elif specialType == "NonLocal" : 
-            self.specialType = "NonLocal"
-            # Non local material defined as a function for the parameters
-            # The function must follow the following workings:
-            # returns beta2, chi_b, chi_f and omega_p (in this order)
-            if  mat[0].__class__.__name__ != "function" :
-                print("Please provide a function for the model, or used default Drude/BB models")
-            else:
-                self.type = "NonLocalModel"
-                self.name = "NonLocalModel : " + str(mat[0])
-                self.NL_function = mat[0]
-                self.params = [mat[i+1] for i in range(len(mat)-1)]
-                if verbose :
-                    print("Custom non local dispersive material defined by function ", str(self.NL_function))
-
-            
+            + all the parameters needed in their respective functions
+            custom function must return: beta2, chi_b, chi_f, omega_p     
     """
-    #TODO
-    # Must manage both regular and NL materials
-    # because structure will contain both
 
     def __init__(self, mat, verbose=False):
         super.init()
+        self.specialType = "NonLocal"
+        # Non local material defined as a function for the parameters
+        # The function must follow the following workings:
+        # returns beta2, chi_b, chi_f and omega_p (in this order)
+        if  mat[0].__class__.__name__ != "function" :
+            print("Please provide a function for the model")
+        else:
+            self.type = "NonLocalModel"
+            self.name = "NonLocalModel : " + str(mat[0])
+            self.NL_function = mat[0]
+            self.params = [mat[i+1] for i in range(len(mat)-1)]
+            if verbose :
+                print("Custom non local dispersive material defined by function ", str(self.NL_function))
     
+
+    def get_permittivity(self, wavelength):
+        _, chi_b, chi_f, _ = self.get_values_nl(wavelength)
+        return 1 + chi_b + chi_f
 
     
     def get_values_nl(self, wavelength = 500) :
@@ -89,30 +86,13 @@ class NLMaterial(Material):
 
         w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wavelength
 
-        if self.type == "NonLocalModel" :
-            res = self.NL_function(wavelength, *self.params)
-            beta2 = res[0]
-            chi_b = res[1]
-            chi_f = res[2]
-            omega_p = res[3]
-        
-        # elif self.type == "NonLocalDrude" :
-        #     beta2 = self.beta0**2 + 1.0j * w * self.tau
-        #     chi_b = self.omega_p
-        #     # chi_f = #INSERT DRUDE MODEL HERE
-        #     omega_p = self.omega_p
-        
-        # elif self.type == "NonLocalBrendelBormann" :
-        #     beta2 = self.beta0**2 + 1.0j * w * self.tau
-        #     chi_b = self.omega_p
-        #     # chi_f = #INSERT BB MODEL HERE
-        #     omega_p = self.omega_p
-
-        else:
-            print("You're not supposed to be here: get_values_nl with no known NL function defined")
+        res = self.NL_function(wavelength, *self.params)
+        beta2 = res[0]
+        chi_b = res[1]
+        chi_f = res[2]
+        omega_p = res[3]
 
         return beta2, chi_b, chi_f, omega_p
-        
 
 
 
@@ -138,6 +118,7 @@ def cascade_nl(T,U):
     K=np.linalg.inv(np.eye(n, n) - D @ E)
     matrix = np.vstack((np.hstack((A + B @ J @ E @ C, B @ J @ F)), np.hstack((G @ K @ C, H + G @ K @ D @ F))))
     return  matrix
+
 
 def coefficient_non_local(struct, wavelength, incidence, polarization) :
     """
@@ -172,7 +153,6 @@ def coefficient_non_local(struct, wavelength, incidence, polarization) :
     Epsilon_mat, Mu_mat = struct.polarizability(wavelength)
     Type = struct.layer_type
     Epsilon = [Epsilon_mat[i] for i in Type]
-    Mu = [Mu_mat[i] for i in Type]
     thickness = copy.deepcopy(struct.thickness)
     # In order to ensure that the phase reference is at the beginning
     # of the first layer.
