@@ -8,8 +8,7 @@ from base import Material, Structure
 
 class NLStructure(Structure):
     """
-    This is probably necessary
-    TODO create test w & w/o NLStructure, I feel it isn't necessary
+    Specific function for multilayer structures containing Non Local materials
     """
 
     def __init__(self, materials, layer_type, thickness, verbose=True, unit="nm", si_units=False):

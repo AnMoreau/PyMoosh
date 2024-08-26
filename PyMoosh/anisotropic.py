@@ -4,9 +4,9 @@ This file contains all functions for anisotropic material computations
 import numpy as np
 import copy
 from numpy import linalg as la_np
-from base import Material, Structure
+from base import Material, Structure, conv_to_nm
 from refractiveindex import RefractiveIndexMaterial
-# TODO: classes
+# TODO: create tests!
 
 
 def rotate_permittivity(eps, angle_rad, axis='z'): #AV#Aded
@@ -59,9 +59,8 @@ def rotate_permittivity(eps, angle_rad, axis='z'): #AV#Aded
 
 class AniStructure(Structure):
     """
-    This is probably necessary
-
-
+    Specific Structure class for multilayer structures containing
+    Anisotropic material
 
     In the case of materials with anisotropic relative permittivity, it is necessary
     to define for each layer the orientation of the material's eigenbase (where the
@@ -94,52 +93,49 @@ class AniStructure(Structure):
 
         self.unit = unit
 
-        self.Anisotropic = True
-
         materials_final=list()
         if verbose :
             print("List of materials:")
         for mat in materials:
             if issubclass(mat.__class__,Material):
+                # Checks if the material is already instanciated
+                # NOTE 1: all Anisotropic materials should be instanciated
+                # NOTE 2: should not be an non local material
                 materials_final.append(mat)
-                if mat.type == "Anisotropic":
-                    self.Anisotropic = True
                 if verbose :
                     print("Object:",mat.__class__.__name__)
             else :
-                new_mat = AniMaterial(mat, verbose=verbose)
+                new_mat = Material(mat, verbose=verbose)
                 materials_final.append(new_mat)
         self.materials = materials_final
         self.layer_type = layer_type
         self.thickness = thickness
 
+        if ani_rot_angle == None:   # Setting all the angles to 0 if nothing has been specified by the user.
+            self.ani_rot_angle = [0]*np.size(layer_type)
 
-        if self.Anisotropic:
-            if ani_rot_angle == None:   # Setting all the angles to 0 if nothing has been specified by the user.
-                self.ani_rot_angle = [0]*np.size(layer_type)
+        else :
+            self.ani_rot_angle = ani_rot_angle  # ani_rot_angle is a list of angle in radian (float or int). One for each layer, setting isotropic layers to the default angle = 0
 
-            else :
-                self.ani_rot_angle = ani_rot_angle  # ani_rot_angle is a list of angle in radian (float or int). One for each layer, setting isotropic layers to the default angle = 0
-
-            for ang in self.ani_rot_angle: # Checking format.
-                if not(isinstance(ang, float) or isinstance(ang, int)):
-                    raise Exception("angle have to be a float or a int")
+        for ang in self.ani_rot_angle: # Checking format.
+            if not(isinstance(ang, float) or isinstance(ang, int)):
+                raise Exception("angle have to be a float or a int")
 
 
-            if ani_rot_axis == None: # Setting all the axis to 'z' if nothing has been specified by the user.
-                self.ani_rot_axis = ['z']*np.size(layer_type)
-            else :
-                self.ani_rot_axis = ani_rot_axis# ani_rot-axis is a list of axis reprensented as a row array of length 3
-                                                #or as the string ``'x'``, ``'y'`` or ``'z'``. One for each layer in the stack, setting isotropic layers to the default axis 'z'
+        if ani_rot_axis == None: # Setting all the axis to 'z' if nothing has been specified by the user.
+            self.ani_rot_axis = ['z']*np.size(layer_type)
+        else :
+            self.ani_rot_axis = ani_rot_axis# ani_rot-axis is a list of axis reprensented as a row array of length 3
+                                            #or as the string ``'x'``, ``'y'`` or ``'z'``. One for each layer in the stack, setting isotropic layers to the default axis 'z'
 
-            for ax in self.ani_rot_axis: # Checking format.
-                if not(isinstance(ax, str)) and np.shape(ax) != np.shape([0,0,0]) :
-                    raise Exception("axis have to be a string ``'x'``, ``'y'`` or ``'z'` or a row array of length 3")
+        for ax in self.ani_rot_axis: # Checking format.
+            if not(isinstance(ax, str)) and np.shape(ax) != np.shape([0,0,0]) :
+                raise Exception("axis have to be a string ``'x'``, ``'y'`` or ``'z'` or a row array of length 3")
 
-            # Checking if the first and last layers are isotrop (Superstrate and Substrate are halfspaces respectively
-            #representing the medium of the incoming and outgoing light of the multi-layer stack)
-            if materials_final[layer_type[0]].type == "Anisotropic" or materials_final[layer_type[-1]].type == "Anisotropic":
-                raise Exception("Superstrate's and Substrate's material have to be isotropic !")
+        # Checking if the first and last layers are isotrop (Superstrate and Substrate are halfspaces respectively
+        #representing the medium of the incoming and outgoing light of the multi-layer stack)
+        if materials_final[layer_type[0]].type == "Anisotropic" or materials_final[layer_type[-1]].type == "Anisotropic":
+            raise Exception("Superstrate's and Substrate's material have to be isotropic !")
 
 
 
@@ -177,7 +173,6 @@ class AniStructure(Structure):
         return eps_R
 
 
-
     def rotate_permittivity_tensor_list(self, eps_tens_list, ani_rot_angle, ani_rot_axis):#AV_Added#
         """ Return the list of rotated permittivities tensors from permittivity_tensor_list. Each tensor is rotated about the corresponding angles and axis in the list ani_rot_angle and ani_rot_axis.
 
@@ -196,21 +191,24 @@ class AniStructure(Structure):
 
 
 
-class AniMaterial(Material):
+class AniMaterial():
     """
-        A specific class, child of Material, to manage anisotropic materials
-
+    TODO:better define what is going on
         From the old Material
 
             - Anisotropic            / list(no, ne) or list(n1, n2, n3)  / 'ANI'            / 'Anisotropic'
             - Anisotropic from RII   / list(shelf, book, page)           / 'ANI_RII'        / 'Anisotropic'
 
 
-        elif specialType == "ANI" :
+    """
+
+    def __init__(self, mat, specialType="ANI", verbose=False):
+        self.type = "Anisotropic"
+
+        if specialType == "ANI" :
             # User defined Anisotropic material
             if len(mat) < 2 or len(mat) > 3:
                 print(f'Warning: Anisotropic material is expected to be a list of 2 or 3 index values, but {len(mat)} were given.')
-            self.type = "Anisotropic"
             self.specialType = specialType
             if (len(mat) == 2):
                 # Uniaxial, only two values given, no and ne
@@ -233,7 +231,6 @@ class AniMaterial(Material):
             # Anisotropic material from the refractive index database
             if len(mat) != 3:
                 print(f'Warning: Anisotropic material from Refractiveindex.info is expected to be a list of 3 values, but {len(mat)} were given.')
-            self.type = "Anisotropic"
             self.specialType = specialType
             shelf, book, page = mat[0], mat[1], mat[2]
             self.path = "shelf: {}, book: {}, page: {}".format(shelf, book, page) # not necessary ?
@@ -247,30 +244,8 @@ class AniMaterial(Material):
                 print("Material from Refractiveindex Database")
             if len(mat) != 3:
                 print(f'Warning: Material from RefractiveIndex Database should have 3 values (shelf, book, page), but {len(mat)} were given.')
-
-    """
-    # TODO
-    # Must manage both regular and ani materials
-    # because structure will contain both
-
-    def __init__(self, mat, verbose=False):
-        super.init()
         
     
-# Anisotropic method
-    """ def get_permittivity_ani(self, wavelength, elevation_beam, precession, nutation, spin):
-        # We have three permittivities to extract
-        refraction_indices_medium = []
-        for material in self.material_list:# A complex refractive index is denoted m=n+ik. However, in the Refractive index database  
-            try:                           # n and k are only given separately by "get_refractive_index" and "get_extinction_coefficient" respectivly.
-                k = material.get_extinction_coefficient(wavelength)
-                refraction_indices_medium.append(material.material.get_epsilon(wavelength))# Here we use the fact that "get_epsilon(wl)" return an error if k is not given in the Ref Ind dataB.  
-            except:
-                n = material.get_refractive_index(wavelength)
-                refraction_indices_medium.append(n**2)
-        return np.sqrt(get_refraction_indices(elevation_beam, refraction_indices_medium, precession, nutation, spin))"""
-    
-#AV# Here i just need to get the permittivity of the material but this function does much more than getting the permittivity so i make mine: 
     def get_permittivity_ani(self, wavelength):
         epsilon_medium = []
         for material in self.material_list:
@@ -288,15 +263,7 @@ class AniMaterial(Material):
                 # Was directly given
                 epsilon_medium.append(complex(material))
         return epsilon_medium
-'''Reminder : this function can handle the case of complex n thanks to 
-def get_epsilon(self, wavelength_nm, exp_type='exp_minus_i_omega_t'):
-        n = self.get_refractive_index(wavelength_nm)
-        k = self.get_extinction_coefficient(wavelength_nm)
-        if exp_type=='exp_minus_i_omega_t':
-            return (n + 1j*k)**2
-        else:
-            return (n - 1j*k)**2 '''
-
+    
 
 def wrapper_anisotropy(shelf, book, page):
     if page.endswith("-o") or page.endswith("-e"):
@@ -358,12 +325,12 @@ def calc_cp(Sx, Sy):
         return np.abs(Sx) ** 2 / deno
 
 
-def Halfspace_method(Structure, layer_number, wl, theta_entry): #AV_Added#
+def Halfspace_method(struct, layer_number, wl, theta_entry): #AV_Added#
         """
         This function calculates the HalfSpace's eigenvectors and eigenvalues analytically for a given layer and returns them sorted.
 
         Args:
-        Structure (class): description of the multi-mayered
+        struct (class): description of the multi-mayered
         layer_number (int): position in the stack of the studied layer
         wl (float): the working wavelength (in nanometers)
         theta_entry (float): angle of the incident light
@@ -372,7 +339,7 @@ def Halfspace_method(Structure, layer_number, wl, theta_entry): #AV_Added#
         and q_sorted 4x4 diagonal matrix of eigenvalues whose columns are the same as q_unsorted's but sorted
         """
         k_0 = 2 * np.pi / wl
-        eps_entry = Structure.permittivity_tensor_list(wl)[layer_number]
+        eps_entry = struct.permittivity_tensor_list(wl)[layer_number]
         n = np.sqrt(eps_entry[0,0])
         Kx = n * np.sin(theta_entry)
 
@@ -390,13 +357,13 @@ def Halfspace_method(Structure, layer_number, wl, theta_entry): #AV_Added#
         return p_sorted_mat, Q
 
 
-def Berreman_method(Structure, layer_number, wl, theta_entry): #AV_Added#
+def Berreman_method(struct, layer_number, wl, theta_entry): #AV_Added#
     """
     This function computes Berreman's matrix D for a given layer "layer_number" in the stack and its associated eigenvalues q and associated eigenvectors for a given layer "layer_number" in the stack .
     Then P (interface matrix) and Q (propagation matirix) are computed layer in the stack
 
     Args:
-    Structure (class): description of the multi-mayered
+    struct (class): description of the multi-mayered
     layer_number (int): position in the stack of the studied layer
     wl (float): the working wavelength (in nanometers)
     theta_entry (float): angle of the incident light
@@ -405,13 +372,13 @@ def Berreman_method(Structure, layer_number, wl, theta_entry): #AV_Added#
 
     """
     k_0 = 2 * np.pi / wl
-    eps_entry = Structure.permittivity_tensor_list(wl, layer=0)
+    eps_entry = struct.permittivity_tensor_list(wl, layer=0)
     n_entry = np.sqrt(eps_entry[0,0])
     Kx = n_entry * np.sin(theta_entry)
 
-    eps = Structure.permittivity_tensor_list(wl, layer=layer_number)
+    eps = struct.permittivity_tensor_list(wl, layer=layer_number)
 
-    eps_R = Structure.rotate_permittivity_tensor(eps, Structure.ani_rot_angle[layer_number], Structure.ani_rot_axis[layer_number])
+    eps_R = struct.rotate_permittivity_tensor(eps, struct.ani_rot_angle[layer_number], struct.ani_rot_axis[layer_number])
 
     # Delta matrix  (i.e Berreman matrix)
 
@@ -432,9 +399,8 @@ def Berreman_method(Structure, layer_number, wl, theta_entry): #AV_Added#
     q,P  = la_np.eig(Delta)
     # q is the row vector containing unsorted Delta's eigenvalues and
     # # P is the array which column P[:,i] is the eigenvector corresponding to the eigenvalues q[i].
-
-    Q = np.array([np.exp(1j*k_0*Structure.thickness[layer_number]*q[0]), np.exp(1j*k_0*Structure.thickness[layer_number]*q[1])
-                , np.exp(1j*k_0*Structure.thickness[layer_number]*q[2]), np.exp(1j*k_0*Structure.thickness[layer_number]*q[3])] )
+    jk0h = 1j*k_0*struct.thickness[layer_number]
+    Q = np.exp(jk0h*q)
     # Propagation matrix
 
     # Sorting wavevectors and eigenvalues to construct "forward" and "backward" matrices
@@ -528,25 +494,13 @@ def build_scattering_matrix_to_next(P_a, Q_a, P_b):
 
 
     P_out = np.block([[P_a[:,:2], -P_b[:,2:]]])
-    # P_out = np.array([
-    #     [P_a[0, 0], P_a[0, 1], -P_b[0, 2], -P_b[0, 3]],
-    #     [P_a[1, 0], P_a[1, 1], -P_b[1, 2], -P_b[1, 3]],
-    #     [P_a[2, 0], P_a[2, 1], -P_b[2, 2], -P_b[2, 3]],
-    #     [P_a[3, 0], P_a[3, 1], -P_b[3, 2], -P_b[3, 3]]
-    # ])
 
     P_in = np.block([P_b[:,:2], -P_a[:,2:]])
-    # P_in = np.array([
-    #     [P_b[0, 0], P_b[0, 1], -P_a[0, 2], -P_a[0, 3]],
-    #     [P_b[1, 0], P_b[1, 1], -P_a[1, 2], -P_a[1, 3]],
-    #     [P_b[2, 0], P_b[2, 1], -P_a[2, 2], -P_a[2, 3]],
-    #     [P_b[3, 0], P_b[3, 1], -P_a[3, 2], -P_a[3, 3]]
-    # ])
     Sab = la_np.multi_dot((la_np.inv(Q_backward), la_np.inv(P_in), P_out, Q_forward))
     return Sab
 
 
-def combine_scattering_matrices(S_ab, S_bc): #AV_Aded#
+def combine_scattering_matrices(S_ab, S_bc):
     """
     This function constructs the scattering matrix between three successive layers a, b and c by combining
     the scattering matrices S_{ab} from layer a to layer b and S_{bc} from layer b to layer c.
@@ -555,61 +509,66 @@ def combine_scattering_matrices(S_ab, S_bc): #AV_Aded#
     :param ndarray S_bc: the scattering matrix from layer b to layer c, a 4x4 Numpy array
     :return: partial scattering matrix from layer a to layer c, a 4x4 Numpy array
     """
-    S_ab00 = np.array([
-        [S_ab[0, 0], S_ab[0, 1]],
-        [S_ab[1, 0], S_ab[1, 1]],
-    ])
-    S_ab01 = np.array([
-        [S_ab[0, 2], S_ab[0, 3]],
-        [S_ab[1, 2], S_ab[1, 3]],
-    ])
-    S_ab10 = np.array([
-        [S_ab[2, 0], S_ab[2, 1]],
-        [S_ab[3, 0], S_ab[3, 1]],
-    ])
-    S_ab11 = np.array([
-        [S_ab[2, 2], S_ab[2, 3]],
-        [S_ab[3, 2], S_ab[3, 3]],
-    ])
-    S_bc00 = np.array([
-        [S_bc[0, 0], S_bc[0, 1]],
-        [S_bc[1, 0], S_bc[1, 1]],
-    ])
-    S_bc01 = np.array([
-        [S_bc[0, 2], S_bc[0, 3]],
-        [S_bc[1, 2], S_bc[1, 3]],
-    ])
-    S_bc10 = np.array([
-        [S_bc[2, 0], S_bc[2, 1]],
-        [S_bc[3, 0], S_bc[3, 1]],
-    ])
-    S_bc11 = np.array([
-        [S_bc[2, 2], S_bc[2, 3]],
-        [S_bc[3, 2], S_bc[3, 3]],
-    ])
+    S_ab00 = S_ab[:2, :2]
+    # np.array([
+    #     [S_ab[0,  0],  S_ab[0,  1]], 
+    #     [S_ab[1,  0],  S_ab[1,  1]], 
+    # ])
+    S_ab01 = S_ab[:2, 2:]
+    # np.array([
+    #     [S_ab[0,  2],  S_ab[0,  3]], 
+    #     [S_ab[1,  2],  S_ab[1,  3]], 
+    # ])
+    S_ab10 = S_ab[2:, :2]
+    # np.array([
+    #     [S_ab[2,  0],  S_ab[2,  1]], 
+    #     [S_ab[3,  0],  S_ab[3,  1]], 
+    # ])
+    S_ab11 = S_ab[2:, 2:]
+    # np.array([
+    #     [S_ab[2,  2],  S_ab[2,  3]], 
+    #     [S_ab[3,  2],  S_ab[3,  3]], 
+    # ])
+    S_bc00 = S_bc[:2, :2]
+    # np.array([
+    #     [S_bc[0,  0],  S_bc[0,  1]], 
+    #     [S_bc[1,  0],  S_bc[1,  1]], 
+    # ])
+    S_bc01 = S_bc[:2, 2:]
+    # np.array([
+    #     [S_bc[0,  2],  S_bc[0,  3]], 
+    #     [S_bc[1,  2],  S_bc[1,  3]], 
+    # ])
+    S_bc10 = S_bc[2:,  :2]
+    # np.array([
+    #     [S_bc[2,  0],  S_bc[2,  1]], 
+    #     [S_bc[3,  0],  S_bc[3,  1]], 
+    # ])
+    S_bc11 = S_bc[2:, 2:]
+    # np.array([
+    #     [S_bc[2, 2], S_bc[2, 3]],
+    #     [S_bc[3, 2], S_bc[3, 3]],
+    # ])
     C = la_np.inv(np.identity(2) - np.dot(S_ab01, S_bc10))
     S_ac00 = la_np.multi_dot((S_bc00, C, S_ab00))
     S_ac01 = S_bc01 + la_np.multi_dot((S_bc00, C, S_ab01, S_bc11))
     S_ac10 = S_ab10 + la_np.multi_dot((S_ab11, S_bc10, C, S_ab00))
     S_ac11 = la_np.multi_dot((S_ab11, (np.identity(2) + la_np.multi_dot((S_bc10, C, S_ab01))), S_bc11))
 
-    S_ac = np.array([
-        [S_ac00[0, 0], S_ac00[0, 1], S_ac01[0, 0], S_ac01[0, 1]],
-        [S_ac00[1, 0], S_ac00[1, 1], S_ac01[1, 0], S_ac01[1, 1]],
-        [S_ac10[0, 0], S_ac10[0, 1], S_ac11[0, 0], S_ac11[0, 1]],
-        [S_ac10[1, 0], S_ac10[1, 1], S_ac11[1, 0], S_ac11[1, 1]]
-    ])
+    S_ac = np.stack([[S_ac00[:2, :2], S_ac01[:2, :2]],
+                     [S_ac10[:2, :2], S_ac11[:2, :2]]])
+    # TODO: check that these matrices are not already 2x2 in shape
     return S_ac
 
 
-def coefficients_ani(structure, wl, theta_inc): #AV_Aded# automatic calculation of coefficients r_kj and t_kj using the previously defined functions
+def coefficients_ani(structure, wl, theta_inc): 
     """
     This function returns the four reflection and transmission coefficients of the all structure from its global scattering matrix.
     To get P and Q for each layer, calculation of the eigenvalues and eigenvectors are done analytically for the superstrate and the substrate with Halfspace_method()
     In every other layer we computes these e.val and e.vect with Berreman_method() (containing the sorting algorithm).
 
     Args:
-    Structure (class): description of the multi-mayered
+    struct (class): description of the multi-mayered
     wl (float): the working wavelength (in nanometers)
     theta_inc (float): angle of the incident light
 
@@ -619,17 +578,21 @@ def coefficients_ani(structure, wl, theta_inc): #AV_Aded# automatic calculation 
     # step 1: create all P, Q matrices (interface and propagation resp.)
     P_list = []
     Q_list = []
-    for layer_number in range(len(structure.layer_type)):
-        # print(layer_number, structure.layer_type)
-        if (layer_number == 0) or (layer_number == len(structure.layer_type) -1):
-            P, Q = Halfspace_method(structure, layer_number, wl, theta_inc)
-            P_list.append(P)
-            Q_list.append(Q)
 
-        else:
-            D, P, Q = Berreman_method(structure, layer_number, wl, theta_inc)
-            P_list.append(P)
-            Q_list.append(Q)
+    # Upper Halfspace (superstrate)
+    P, Q = Halfspace_method(structure, 0, wl, theta_inc)
+    P_list.append(P)
+    Q_list.append(Q)
+    for layer_number in range(1, len(structure.layer_type)-1):
+
+        D, P, Q = Berreman_method(structure, layer_number, wl, theta_inc)
+        P_list.append(P)
+        Q_list.append(Q)
+    
+    # Lower Halfspace (substrate)
+    P, Q = Halfspace_method(structure, len(structure.layer_type)-1, wl, theta_inc)
+    P_list.append(P)
+    Q_list.append(Q)
 
     # step 2 : create S matrices
     S_last_period = np.identity(4)
