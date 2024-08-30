@@ -193,13 +193,13 @@ class AniStructure(Structure):
 
 class AniMaterial():
     """
-    TODO:better define what is going on
-        From the old Material
+       Anisotropic material class
 
-            - Anisotropic            / list(no, ne) or list(n1, n2, n3)  / 'ANI'            / 'Anisotropic'
-            - Anisotropic from RII   / list(shelf, book, page)           / 'ANI_RII'        / 'Anisotropic'
-
-
+       Can be instanciated in two ways:
+       - From RefractiveIndex -> specialType should be ANI_RII
+                                 mat should be shelf, book, page
+       - Given by hand -> special Type should be ANI
+                          mat should be a list of 2 (uniaxial) or 3 (biaxial) permittivities
     """
 
     def __init__(self, mat, specialType="ANI", verbose=False):
@@ -247,6 +247,11 @@ class AniMaterial():
         
     
     def get_permittivity_ani(self, wavelength):
+        """
+            Get the permittivities of the anisotropic material
+            Either uses the built in function from RefractiveIndex
+            or the value given by the user
+        """
         epsilon_medium = []
         for material in self.material_list:
             if issubclass(material.__class__,RefractiveIndexMaterial):
@@ -266,6 +271,14 @@ class AniMaterial():
     
 
 def wrapper_anisotropy(shelf, book, page):
+    """
+        Helper function to find the correct RefractiveIndex pages:
+        2 main cases:
+            - uniaxial material, only 2 values stored as
+            ordinary (-o) and extraordinary (-e) values
+            - biaxial material, 3 different values, stored as
+            -alpha, -beta, and -gamma
+    """
     if page.endswith("-o") or page.endswith("-e"):
         if page.endswith("-e"):
             page_e, page_o = page, page.replace("-e", "-o")
@@ -292,14 +305,15 @@ def wrapper_anisotropy(shelf, book, page):
         return [material_alpha, material_beta, material_gamma]
     
     else:
-        # there may better way to do it.
-        try:
+        # No extensions were given, so we have to try both
+        # uniaxial and biaxial cases
+        try: # uniaxial
             page_e, page_o = page + "-e", page + "-o"
             material_o = RefractiveIndexMaterial(shelf, book, page_o)
             material_e = RefractiveIndexMaterial(shelf, book, page_e)
             return [material_o, material_o, material_e]
         except:
-            try:
+            try: # biaxial
                 page_a, page_b, page_c = page + "-alpha", page + "-beta", page + "-gamma"
                 print(page_a)
                 material_alpha = RefractiveIndexMaterial(shelf, book, page_a)

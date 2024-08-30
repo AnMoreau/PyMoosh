@@ -1,11 +1,5 @@
 {
 
-    "Glass":
-    {
-      "model":"CustomFunction",
-      "function":"permittivity_glass"
-    },
-
     "BK7":
     {
     "model":"ExpData",

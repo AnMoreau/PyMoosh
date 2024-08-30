@@ -35,26 +35,24 @@ def conv_to_nm(length, unit):
 class Structure:
     """Each instance of Structure describes a multilayer completely.
     This includes the materials the multilayer is made of and the
-    thickness of each layer. If there is at least one anisotropic material
-    in the stack, Structure also contain the list of rotation angle and rotation axis to orient the permittivity eigenbasis in each layer.
+    thickness of each layer. 
 
     Args:
         materials (list) : a list of material definition
         layer_type (list) : how the different materials are stacked
         thickness (list) : thickness of each layer in nm
-        ani_rot_angle (list) : rotation angle for each layer used to define the orientation of the medium's eigenbasis
-        ani_rot_axis (list) : rotation axis for each layer used to define the orientation of the medium's eigenbasis
         units (str) : the length unit used for thickness
 
     Materials can be defined in the list :materials:
-    -by giving their permittivity as a real number for non dispersive materials
-    -by giving a list of two floats. The first is the permittivity and the
+    -by giving their permittivity as a complex number for non dispersive materials
+    -by giving a list of two complex numbers. The first is the permittivity and the
     second one the permeability. It is considered non dispersive.
     -by giving its name for dispersive materials that are in the database.
     -by giving a custom permittivity function, taking as an argument the
     wavelength in nanometer.
 
-    .. warning: the working wavelength always is given in nanometers.
+    Other material types must be implemented beforehand, see the :Material: class.
+
 
     Example: [1.,'Si','Au'] means we will use a material with a permittivity
     of 1. (air), silicon and gold.
@@ -68,18 +66,17 @@ class Structure:
     on top of Si, on top of gold and a substrate made of air.
 
     The thickness of each layer is given in the :thickness: list, in nanometers
-    typically. The thickness of the superstrate is assumed to be zero by most
+    by default. The thickness of the superstrate is assumed to be zero by most
     of the routines (like :coefficient:, :absorption:) so that the first
     interface is considered as the phase reference. The reflection coefficient
     of the structure will thus never be impacted by the thickness of the first
     layer.For other routines (like :field:), this thickness define the part
     of the superstrate (or substrate) that must be represented on the figure.
 
-    Example: [0,200,300,500] actually refers to an infinite air superstrate but
-    non of it will be represented, a 200 nm thick silicon layer, a 300 nm thick
-    gold layer and an infinite substrate, of which a thickness of 500 nm will be
-    represented is asked.
-
+    Example with the previous definitions:
+    [0,200,300,500]  refers to an infinite air superstrate, a 200 nm thick silicon layer,
+    a 300 nm thick gold layer and an infinite air substrate.
+    The thicknessees of superstrates and substrates are here for visualisation purposes.
     """
 
     def __init__(self, materials, layer_type, thickness, verbose=True, unit="nm", si_units=False):
@@ -278,7 +275,6 @@ class Window:
 from scipy.special import wofz
 import json
 from refractiveindex import RefractiveIndexMaterial
-#from PyMoosh.anisotropic_functions import get_refraction_indices
 
 class Material:
 
@@ -367,7 +363,7 @@ class Material:
                         self.wavelength_list = np.array(wl, dtype=float)
                         self.permittivities  = np.array(epsilon, dtype=complex)
                     
-                    if model == "BrendelBormann":
+                    elif model == "BrendelBormann":
                         # Brendel & Bormann model with all necessary parameters
                         self.type = "BrendelBormann"
                         self.name = "BrendelBormann model: " + str(mat)
@@ -378,13 +374,6 @@ class Material:
                         self.gamma = np.array(material_data["Gamma"])
                         self.omega = np.array(material_data["omega"])
                         self.sigma = np.array(material_data["sigma"])
-
-                    elif model == "CustomFunction":
-                        # Database custom function taking only the wavelength as argument
-                        self.type = "CustomDatabaseFunction"
-                        self.name = "CustomDatabaseFunction: " + str(mat)
-                        permittivity = material_data["function"]
-                        self.permittivity_function = authorized[permittivity]
 
                     else:
                         print(model," not an existing model (yet).")
@@ -402,14 +391,13 @@ class Material:
                 print(self.__doc__)
 
         elif specialType == "RII":
-            # Refractive index material, anisotropic
+            # Refractive index material
             if len(mat) != 3:
                 print(f'Warning: Material RefractiveIndex Database is expected to be a list of 3 values, but {len(mat)} were given.')
             self.type = "RefractiveIndexInfo"
             self.specialType = specialType
             self.name = "MaterialRefractiveIndexDatabase: " + str(mat)
             shelf, book, page = mat[0], mat[1], mat[2]
-            self.path = "shelf: {}, book: {}, page: {}".format(shelf, book, page) # not necessary ?
             material = RefractiveIndexMaterial(shelf, book, page) # create object
             self.material = material
             if verbose :
@@ -464,8 +452,3 @@ class Material:
                 print('Warning: Magnetic parameters from RefractiveIndex Database are not implemented. Default permeability is set to 1.0 .')
             return 1.0
         return 1.0
-    
-    
-
-# TODO: this stays here for the moment, but should be removed evenually
-authorized = {"permittivity_glass":None}
