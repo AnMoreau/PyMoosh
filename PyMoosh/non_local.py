@@ -1,3 +1,8 @@
+"""
+This file contains all functions necessary to compute
+the behavior of non-local (spatially dispersive) materials/structures
+"""
+
 import numpy as np
 import copy
 from core import conv_to_nm

@@ -1,13 +1,14 @@
 """
-This file contains all the basic structure necessary for PyMoosh to run
-TODO: remove all traces of anisotropy and nonlocality
+This file contains all the basic structures necessary for PyMoosh to run
 """
 
 import numpy as np
-from numpy import linalg as la_np
-import copy
 import re
 import matplotlib.pyplot as plt
+from scipy.special import wofz
+import json
+from refractiveindex import RefractiveIndexMaterial
+
 
 
 def conv_to_nm(length, unit):
@@ -207,7 +208,8 @@ class Structure:
 
 
 class Beam:
-    """ An object of the class contains all the parameters defining an incident
+    """
+    An object of the class contains all the parameters defining an incident
     beam. At initialization, a few messages will be displayed to inform the
     user.
 
@@ -238,8 +240,9 @@ class Beam:
 
 
 class Window:
-    """An object containing all the parameters defining the spatial domain
-    which is represented.
+    """
+    An object containing all the parameters defining the spatial domain
+    to be computed (considered periodic).
 
     Args:
         width (float): width of the spatial domain (in nm)
@@ -252,7 +255,7 @@ class Window:
 
     The position of the center of the beam is automatically deduced from
     the relative position: 0 means complete left of the domain, 1 complete
-    right and 0.5 in the middle of the domaine, of course.
+    right and 0.5 in the middle of the domaine.
     """
 
     def __init__(self, width, beam_relative_position, horizontal_pixel_size,
@@ -272,10 +275,6 @@ class Window:
 
 
 
-from scipy.special import wofz
-import json
-from refractiveindex import RefractiveIndexMaterial
-
 class Material:
 
     """
@@ -289,7 +288,7 @@ class Material:
             - Database               / string                  
                   Database types can take many special types
 
-            There is two special types:
+            There are two special types:
             -> when importing from the Refractive Index Database
                 Then the specialType variable should be set to "RII"
                 - RefractiveIndexInfo    / list(shelf, book, page)
@@ -298,7 +297,7 @@ class Material:
                 - Model                  / list(function(wav, params), params)
             
             And these materials have to be processed through the Material constructor first
-            before being fed to Structure
+            before being fed to Structure as Material objects
 
     """
 
@@ -341,7 +340,6 @@ class Material:
 
             elif isinstance(mat,str):
             # iterable: string --> database material from file in shipped database
-            # TODO: check database
                 import pkgutil
                 f = pkgutil.get_data(__name__, "data/material_data.json")
                 f_str = f.decode(encoding='utf8')
@@ -434,6 +432,22 @@ class Material:
         
         elif self.type == "Model":
             return self.permittivity_function(wavelength, *self.params)
+        
+        elif self.type == "BrendelBormann":
+            w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wavelength
+            a = np.sqrt(w * (w + 1j * self.gamma))
+            x = (a - self.omega) / (np.sqrt(2) * self.sigma)
+            y = (a + self.omega) / (np.sqrt(2) * self.sigma)
+            # Polarizability due to bound electrons
+            chi_b = np.sum(1j * np.sqrt(np.pi) * self.f * self.omega_p ** 2 /
+                        (2 * np.sqrt(2) * a * self.sigma) * (wofz(x) + wofz(y)))
+            # Equivalent polarizability linked to free electrons (Drude model)
+            chi_f = -self.omega_p ** 2 * self.f0 / (w * (w + 1j * self.Gamma0))
+            epsilon = 1 + chi_f + chi_b
+            return epsilon
+        
+        elif self.type == "ExpData":
+            return np.interp(wavelength, self.wavelength_list, self.permittivities)
         
         elif self.type == "RefractiveIndexInfo":
             try:
