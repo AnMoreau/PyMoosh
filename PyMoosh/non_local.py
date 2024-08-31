@@ -5,8 +5,8 @@ the behavior of non-local (spatially dispersive) materials/structures
 
 import numpy as np
 import copy
-from core import conv_to_nm
-from base import Material, Structure
+from PyMoosh.core import conv_to_nm
+from PyMoosh.classes import Material, Structure
 
 # TODO: classes
 # TODO: add other functionalities (field/absorption, etc.)

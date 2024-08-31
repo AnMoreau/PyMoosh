@@ -4,7 +4,7 @@ This file contains all functions for anisotropic material computations
 import numpy as np
 import copy
 from numpy import linalg as la_np
-from base import Material, Structure, conv_to_nm
+from PyMoosh.classes import Material, Structure, conv_to_nm
 from refractiveindex import RefractiveIndexMaterial
 # TODO: create tests!
 

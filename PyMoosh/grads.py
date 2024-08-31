@@ -3,9 +3,9 @@ This file contains all functions that helps with computing gradients
 """
 import numpy as np
 import copy
-from base import conv_to_nm, Structure
-from alt_methods import coefficient_A, coefficient_T
-from core import coefficient_S
+from PyMoosh.classes import conv_to_nm, Structure
+from PyMoosh.alt_methods import coefficient_A, coefficient_T
+from PyMoosh.core import coefficient_S
 
 
 def coefficient_with_grad_A(struct, wavelength, incidence, polarization, mode="value", i_change=-1, saved_mat=None):

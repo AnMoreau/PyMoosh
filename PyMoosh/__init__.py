@@ -30,9 +30,8 @@ __author__ = 'Antoine Moreau'
 
 
 ## make accessible everything from `core` directly from the PyMoosh base package
-from PyMoosh.core import *
-from PyMoosh.base import *
-from PyMoosh.optim_algo import *
+from . import core
+from . import classes
+from . import optim_algo
 
 # TODO: what should be accessible from where?
-# Also, I don't like "import *"

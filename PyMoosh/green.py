@@ -1,8 +1,8 @@
 """
 This file contains all functions linked to computing green functions
 """
-from core import cascade
-from base import conv_to_nm
+from PyMoosh.core import cascade
+from PyMoosh.classes import conv_to_nm
 import numpy as np
 
 

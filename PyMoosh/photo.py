@@ -2,8 +2,8 @@
 This file contains all functions necessary for solar spectra and
 solar panel efficiency computations
 """
-from base import conv_to_nm
-from core import absorption
+from PyMoosh.classes import conv_to_nm
+from PyMoosh.core import absorption
 import numpy as np
 
 

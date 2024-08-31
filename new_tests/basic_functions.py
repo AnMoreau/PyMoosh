@@ -9,10 +9,10 @@ thickness = [300, 200, 500, 200]
 # there must be a better way, because this is sure to break once its an external
 # library
 # TODO: fix imports
-from context import PM
+import PyMoosh as PM
 print(PM.__version__)
 
-thing = PM.Structure(material_list, stack, thickness)
+thing = PM.classes.Structure(material_list, stack, thickness)
 
 si = thing.materials[2]
 water = thing.materials[3]
@@ -24,13 +24,13 @@ epsilon = water.get_permittivity(600)
 print(np.sqrt(epsilon))
 
 wavelength = 600
-interface = PM.Structure([1.,2.25],[0, 1],[10*wavelength, 10*wavelength])
+interface = PM.classes.Structure([1.,2.25],[0, 1],[10*wavelength, 10*wavelength])
 
 # Incidence angle
 angle_inc = 0.
 # Polarization
 pol = 1.
-[r,t,R,T] = PM.coefficient(interface,wavelength,angle_inc,pol)
+[r,t,R,T] = PM.core.coefficient(interface,wavelength,angle_inc,pol)
 
 print('Fresnel coefficient')
 print(r)

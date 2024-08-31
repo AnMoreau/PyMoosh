@@ -2,7 +2,7 @@
 This file contains all alternate methods to the S Matrix computation
 """
 import numpy as np
-from base import conv_to_nm
+from PyMoosh.classes import conv_to_nm
 import copy
 
 

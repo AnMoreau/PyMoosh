@@ -8,9 +8,11 @@ that are optimized using numpy
 # TODO: add absorb keyword in the wrapper
 # TODO: angular (A, S, absorption for both)
 import numpy as np
+import sys
+print(sys.path)
 from PyMoosh.core import coefficient
 import copy
-from PyMoosh.base import conv_to_nm
+from PyMoosh.classes import conv_to_nm
 
 
 def polarizability_opti_wavelength(struct, wavelengths): #numpy friendly

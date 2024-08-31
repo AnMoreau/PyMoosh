@@ -2,8 +2,8 @@
 This file contain all functions linked to mode finding and plotting
 """
 import numpy as np
-from base import conv_to_nm
-from core import cascade
+from PyMoosh.classes import conv_to_nm
+from PyMoosh.core import cascade
 import copy
 import itertools
 import matplotlib.pyplot as plt
