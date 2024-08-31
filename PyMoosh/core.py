@@ -7,7 +7,7 @@ into anisotropic and non local versions
 import numpy as np
 from math import *
 import copy
-from base import conv_to_nm
+from PyMoosh.base import conv_to_nm
 
 
 def cascade(A, B):

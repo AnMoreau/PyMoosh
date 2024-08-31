@@ -8,9 +8,9 @@ that are optimized using numpy
 # TODO: add absorb keyword in the wrapper
 # TODO: angular (A, S, absorption for both)
 import numpy as np
-from core import coefficient
+from PyMoosh.core import coefficient
 import copy
-from base import conv_to_nm
+from PyMoosh.base import conv_to_nm
 
 
 def polarizability_opti_wavelength(struct, wavelengths): #numpy friendly
@@ -117,10 +117,10 @@ def spectrum_S(struct, incidence, polarization, wl_min, wl_max, len_wl):
         wavelengths = conv_to_nm(wavelengths, struct.unit)
 
     # Epsilon and Mu are (len_wl, len_mat) arrays.
-    Epsilon, Mu = struct.polarizability_opti_wavelength(wavelengths)
+    Epsilon, Mu = polarizability_opti_wavelength(struct, wavelengths)
     Epsilon.shape, Mu.shape = (len_wl, len_mat), (len_wl, len_mat)
     thickness = copy.deepcopy(struct.thickness)
-    # thickness = np.asarray(thickness)
+    thickness = np.asarray(thickness)
 
     # In order to ensure that the phase reference is at the beginning
     # of the first layer.
@@ -254,7 +254,7 @@ def spectrum_A(struct, incidence, polarization, wl_min, wl_max, len_wl, absorb=F
         wavelengths = conv_to_nm(wavelengths, struct.unit)
 
     # Epsilon and Mu are (len_wl, len_mat) arrays.
-    Epsilon, Mu = struct.polarizability_opti_wavelength(wavelengths)
+    Epsilon, Mu = polarizability_opti_wavelength(struct, wavelengths)
     Epsilon.shape, Mu.shape = (len_wl, len_mat), (len_wl, len_mat)
     thickness = copy.deepcopy(struct.thickness)
     thickness = np.asarray(thickness)
@@ -436,9 +436,6 @@ def angular(structure, wavelength, polarization, theta_min, theta_max,
     other functions.
 
     """
-    if structure.Anisotropic:
-        print("Anisotropic angular not yet defined")
-
     # theta min and max in degrees this time !
     import matplotlib.pyplot as plt
     r = np.zeros(n_points, dtype=complex)
