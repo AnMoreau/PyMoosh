@@ -1,8 +1,8 @@
 import PyMoosh as PM
 
 PM.classes
-# PM.alt_methods DOES NOT WORK (and shouldn't)
-# but at least now I can import other methods
+# PM.alt_methods DOES NOT WORK at this point (and shouldn't)
+# but at least now you can import other methods
 import PyMoosh.alt_methods as alt
 
 material_list = [1.,1.5**2,"Water"]
