@@ -1,6 +1,5 @@
 import PyMoosh as PM
 
-PM.classes
 # PM.alt_methods DOES NOT WORK at this point (and shouldn't)
 # but at least now you can import other methods
 import PyMoosh.alt_methods as alt
@@ -9,14 +8,14 @@ material_list = [1.,1.5**2,"Water"]
 stack = [0,2,1,0]
 thickness=[0,500,500,0]
 
-multilayer = PM.classes.Structure(material_list,stack,thickness)
+multilayer = PM.Structure(material_list,stack,thickness)
 # Incidence angle
 angle_inc=0.
 # Polarization
 pol=1.
 # Wavelength
 wavelength = 2.5
-r, t, R, T = PM.core.coefficient(multilayer,wavelength,angle_inc,pol)
+r, t, R, T = PM.coefficient(multilayer,wavelength,angle_inc,pol)
 
 print(f"Reflection coefficient: {r}, Reflectance coefficient: {R}")
 print(f"Transmission coefficient: {t}, Transmittance coefficient: {T}")
@@ -43,8 +42,8 @@ stack = [0,2,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.classes.Structure(materials,stack,epaisseurs, verbose=False)
-r, t, R, T = PM.core.coefficient_S(chose,wav,incidence,0)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+r, t, R, T = PM.coefficient_S(chose,wav,incidence,0)
 
 r_ab, t_ab, R_ab, T_ab = alt.coefficient_A(chose,wav,incidence,0)
 
@@ -86,8 +85,8 @@ stack = [0,2,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.classes.Structure(materials,stack,epaisseurs, verbose=False)
-r, t, R, T = PM.core.coefficient_S(chose,wav,incidence,1)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+r, t, R, T = PM.coefficient_S(chose,wav,incidence,1)
 
 r_ab, t_ab, R_ab, T_ab = alt.coefficient_A(chose,wav,incidence,1)
 
@@ -130,8 +129,8 @@ stack = [0,2, 1,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.classes.Structure(materials,stack,epaisseurs, verbose=False)
-r, t, R, T = PM.core.coefficient_S(chose,wav,incidence,0)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+r, t, R, T = PM.coefficient_S(chose,wav,incidence,0)
 
 r_ab, t_ab, R_ab, T_ab = alt.coefficient_A(chose,wav,incidence,0)
 
@@ -176,8 +175,8 @@ stack = [0,2, 1,0]
 
 epaisseurs = np.concatenate(([0],structure,[0]))
 
-chose = PM.classes.Structure(materials,stack,epaisseurs, verbose=False)
-r, t, R, T = PM.core.coefficient_S(chose,wav,incidence,1)
+chose = PM.Structure(materials,stack,epaisseurs, verbose=False)
+r, t, R, T = PM.coefficient_S(chose,wav,incidence,1)
 
 r_ab, t_ab, R_ab, T_ab = alt.coefficient_A(chose,wav,incidence,1)
 
