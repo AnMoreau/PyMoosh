@@ -188,12 +188,12 @@ class Structure:
             spacing = ""
             if len(_thick) > 12:
                 spacing = " " #* np.random.randint(50)
-            if i not in _index_diff:
-                text = f'{spacing}eps={n}'
-            else:
-                n =  _mats_names[np.where(_index_diff==i)[0][0]]
-                n = [float(s) for s in re.findall(r"-?\d+\.?\d*", n)][0]
-                text = f'{spacing}mat={np.round(n, precision)}'
+            # if i not in _index_diff:
+            text = f'{spacing}eps={n}'
+            # else:
+            #     n =  _mats_names[np.where(_index_diff==i)[0][0]]
+            #     n = [float(s) for s in re.findall(r"-?\d+\.?\d*", n)][0]
+            #     text = f'{spacing}mat={np.round(n, precision)}'
 
             if len(_thick)-1 > i >= 1:
                 plt.text(0.05, d0+di/2, text, ha='left', va='center',fontsize=8)
