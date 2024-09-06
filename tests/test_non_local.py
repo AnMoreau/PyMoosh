@@ -2,12 +2,11 @@ import numpy as np
 from context import PM
 import matplotlib.pyplot as plt
 import csv
-
+from PyMoosh.non_local import *
 #Xbest =  [11.6644913, 8.9e+14, 3.53201120e+12,  1.92864068e+30,  9.718*10**14]
 #        [chi_b,      w_p,     gamma,           beta_0,          tau         ]
 
 wavelength_list = np.linspace(5000, 8000, 3001)
-
 
 with open('nlplot.data', newline='') as csvfile:
     plot = list(csv.reader(csvfile))[0]
@@ -38,7 +37,7 @@ def nl_function(wavelength, chi_b):
 
     return beta2, chi_b, chi_f, w_p
 
-mat_non_local = PM.Material([nl_function, 11.6644913], specialType="NonLocal")
+mat_non_local = NLMaterial([nl_function, 11.6644913])
 materials = [14.2129, 15.6816, mat_non_local]
 
 stack = [1, 2, 0]
@@ -46,7 +45,7 @@ thickness = [0, 105, 0]
 theta = np.pi * 37 / 180
 pol = 1.0
 
-chose = PM.Structure(materials,stack,thickness, verbose=False)
+chose = NLStructure(materials,stack,thickness, verbose=False)
 
 wl, r, t, R, T = PM.spectrum(chose, theta, pol, 5000, 8000, 300)
 

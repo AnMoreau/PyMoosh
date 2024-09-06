@@ -7,7 +7,7 @@ import re
 import matplotlib.pyplot as plt
 from scipy.special import wofz
 import json
-from refractiveindex import RefractiveIndexMaterial
+#from refractiveindex import RefractiveIndexMaterial
 
 
 
@@ -36,7 +36,7 @@ def conv_to_nm(length, unit):
 class Structure:
     """Each instance of Structure describes a multilayer completely.
     This includes the materials the multilayer is made of and the
-    thickness of each layer. 
+    thickness of each layer.
 
     Args:
         materials (list) : a list of material definition
@@ -281,11 +281,11 @@ class Material:
         Types of material (default):
               type                   / format of "mat" variable:
 
-            - material               / Material object         
-            - CustomFunction         / function (wav)          
-            - simple_perm            / complex                 
-            - magnetic               / list(complex, float)    
-            - Database               / string                  
+            - material               / Material object
+            - CustomFunction         / function (wav)
+            - simple_perm            / complex
+            - magnetic               / list(complex, float)
+            - Database               / string
                   Database types can take many special types
 
             There are two special types:
@@ -295,7 +295,7 @@ class Material:
             -> when using a function with custom parameters
                 Then the specialType variable should be set to "Model"
                 - Model                  / list(function(wav, params), params)
-            
+
             And these materials have to be processed through the Material constructor first
             before being fed to Structure as Material objects
 
@@ -326,7 +326,7 @@ class Material:
                 self.permittivity = complex(mat)
                 if verbose :
                     print("Simple, non dispersive: epsilon=",self.permittivity)
-                    
+
             elif isinstance(mat, list) and isinstance(mat[0], float) and isinstance(mat[1], float): # magnetic == [float, float]
             # iterable: if list or similar --> magnetic
                 self.type = "magnetic"
@@ -347,7 +347,7 @@ class Material:
                 if mat in database:
                     material_data = database[mat]
                     model = material_data["model"]
-                    
+
                     if model == "ExpData":
                         # Experimnental data to be interpolated
                         self.type = "ExpData"
@@ -360,7 +360,7 @@ class Material:
 
                         self.wavelength_list = np.array(wl, dtype=float)
                         self.permittivities  = np.array(epsilon, dtype=complex)
-                    
+
                     elif model == "BrendelBormann":
                         # Brendel & Bormann model with all necessary parameters
                         self.type = "BrendelBormann"
@@ -403,7 +403,7 @@ class Material:
                 print("Material from Refractiveindex Database")
             if len(mat) != 3:
                 print(f'Warning: Material from RefractiveIndex Database should have 3 values (shelf, book, page), but {len(mat)} were given.')
-        
+
         elif specialType == "Model":
             # A custom function that takes more parameters than simply the wavelength
             self.type = 'Model'
@@ -423,16 +423,16 @@ class Material:
     def get_permittivity(self,wavelength):
         if self.type == "simple_perm":
             return self.permittivity
-        
+
         elif self.type == "magnetic":
             return self.permittivity
-        
+
         elif self.type == "CustomFunction":
             return self.permittivity_function(wavelength)
-        
+
         elif self.type == "Model":
             return self.permittivity_function(wavelength, *self.params)
-        
+
         elif self.type == "BrendelBormann":
             w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wavelength
             a = np.sqrt(w * (w + 1j * self.gamma))
@@ -445,10 +445,10 @@ class Material:
             chi_f = -self.omega_p ** 2 * self.f0 / (w * (w + 1j * self.Gamma0))
             epsilon = 1 + chi_f + chi_b
             return epsilon
-        
+
         elif self.type == "ExpData":
             return np.interp(wavelength, self.wavelength_list, self.permittivities)
-        
+
         elif self.type == "RefractiveIndexInfo":
             try:
                 k = self.material.get_extinction_coefficient(wavelength)

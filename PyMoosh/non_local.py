@@ -60,11 +60,11 @@ class NLMaterial(Material):
 
             All non local materials need: beta0, tau, omegap
             + all the parameters needed in their respective functions
-            custom function must return: beta2, chi_b, chi_f, omega_p     
+            custom function must return: beta2, chi_b, chi_f, omega_p
     """
 
     def __init__(self, mat, verbose=False):
-        super.init()
+        #super.init()
         self.specialType = "NonLocal"
         # Non local material defined as a function for the parameters
         # The function must follow the following workings:
@@ -78,13 +78,13 @@ class NLMaterial(Material):
             self.params = [mat[i+1] for i in range(len(mat)-1)]
             if verbose :
                 print("Custom non local dispersive material defined by function ", str(self.NL_function))
-    
+
 
     def get_permittivity(self, wavelength):
         _, chi_b, chi_f, _ = self.get_values_nl(wavelength)
         return 1 + chi_b + chi_f
 
-    
+
     def get_values_nl(self, wavelength = 500) :
         # Retrieving the non local material parameters
 
@@ -124,7 +124,7 @@ def cascade_nl(T,U):
     return  matrix
 
 
-def coefficient_non_local(struct, wavelength, incidence, polarization) :
+def NLcoefficient(struct, wavelength, incidence, polarization) :
     """
     This function computes the reflection and transmission coefficients
     of the structure, and takes account the possibility to have NonLocal materials

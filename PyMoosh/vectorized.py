@@ -104,7 +104,7 @@ def spectrum_S(struct, incidence, polarization, wl_min, wl_max, len_wl):
 
 
     """
-    
+
     # In order to get a phase that corresponds to the expected reflected coefficient,
     # we make the height of the upper (lossless) medium vanish. It changes only the
     # phase of the reflection coefficient.
@@ -353,7 +353,7 @@ def spectrum_A(struct, incidence, polarization, wl_min, wl_max, len_wl, absorb=F
         T = np.absolute(t) ** 2 * np.real(gf[:,g - 1] / gf[:,0])
 
         return wavelengths, r, t, R, T
-    
+
     if (absorb):
         # Compute absorption in addition to r, t, R, T
         A = np.empty((T.shape[0], 2, 2, len_wl), dtype=np.clongdouble)
@@ -619,4 +619,3 @@ def angular(structure, wavelength, polarization, theta_min, theta_max,
 #     # First layer is always supposed non absorbing
 
 #     return absorb, r, t, R, T
-
