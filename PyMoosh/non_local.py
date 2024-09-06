@@ -64,21 +64,26 @@ class NLMaterial(Material):
     """
 
     def __init__(self, mat, verbose=False):
-        #super.init()
         self.specialType = "NonLocal"
-        # Non local material defined as a function for the parameters
-        # The function must follow the following workings:
-        # returns beta2, chi_b, chi_f and omega_p (in this order)
-        if  mat[0].__class__.__name__ != "function" :
-            print("Please provide a function for the model")
-        else:
+        # If mat is a function then
+        if callable(mat):
+            self.type = "NonLocalModel"
+            self.name = "NonLocalModel : " + str(mat)
+            self.NL_function = mat
+            self.params = []  # Pas de paramètres supplémentaires
+            if verbose:
+                print("Custom non-local dispersive material defined by function ", str(self.NL_function))
+        # Else, mat should be a list with a function as a first element
+        elif isinstance(mat, list) and len(mat) > 0 and callable(mat[0]):
             self.type = "NonLocalModel"
             self.name = "NonLocalModel : " + str(mat[0])
             self.NL_function = mat[0]
-            self.params = [mat[i+1] for i in range(len(mat)-1)]
-            if verbose :
-                print("Custom non local dispersive material defined by function ", str(self.NL_function))
-
+            self.params = [mat[i + 1] for i in range(len(mat) - 1)]
+            if verbose:
+                print("Custom non-local dispersive material defined by function ", str(self.NL_function))
+        # Else, then it's not right
+        else:
+            print("Please provide a function or a list starting with a function for the model")
 
     def get_permittivity(self, wavelength):
         _, chi_b, chi_f, _ = self.get_values_nl(wavelength)
