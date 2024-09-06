@@ -4,12 +4,14 @@ import matplotlib.pyplot as plt
 import csv
 from PyMoosh.non_local import *
 
+# Lets read the external experimental data and the wavelength list.
+# This will be useful when we call the cost function.
 wavelength_list = np.linspace(5000, 8000, 3001)
 with open('nlplot.data', newline='') as csvfile:
-    plot = list(csv.reader(csvfile))[0]
-plot = [float(p.strip()) for p in plot]
-plot = np.array(plot)
-plt.plot(wavelength_list, plot, label="ref")
+    expdata = list(csv.reader(csvfile))[0]
+expdata = [float(p.strip()) for p in expdata]
+expdata = np.array(expdata)
+plt.plot(wavelength_list, expdata, label="ref")
 #plt.show()
 
 def dopedsc_basic(wavelength):
@@ -37,9 +39,8 @@ def dopedsc_basic(wavelength):
 
 # Now that we have defined the functions, we can instanciate (declare)
 # and create a material nSC (n-doped semiconductor) that is nonlocal.
-# Why put the function in a list ? Because it can be convenient to give
-# parameters to your function. We'll see that for optimization, later...
-nSC = NLMaterial([dopedsc_basic])
+# You juste have to provide a function that provides the parameters.
+nSC = NLMaterial(dopedsc_basic)
 # Now we define the materials we use
 materials = [15.6816, nSC, 14.2129]
 # And how we stack them.
@@ -56,7 +57,7 @@ for wl in wavelength_list:
     _,_,R,_ = NLcoefficient(simple_nl,wl,theta,pol)
     R_modelsimple.append(R)
 R=np.array(R_modelsimple)
-R = R/max(R)*max(plot)
+R = R/max(R)*max(expdata)
 plt.plot(wavelength_list,R,label="Simple NL")
 
 def sc_2ndviscosity(wavelength, chi_b, w_p, gamma, beta_0, tau):
@@ -88,11 +89,11 @@ for wl in wavelength_list:
     _,_,R,_ = NLcoefficient(advanced_nl,wl,theta,pol)
     R_advanced.append(R)
 R=np.array(R_advanced)
-R = R/max(R)*max(plot)
+R = R/max(R)*max(expdata)
 plt.plot(wavelength_list,R,label="Advanced NL")
 
 plt.legend()
-plt.show()
+#plt.show()
 
 def cost_function(X):
     chi_b, w_p, gamma, beta_0, tau, base, scale = X
@@ -101,20 +102,20 @@ def cost_function(X):
     materials = [15.6816, sc_nl, 14.2129]
     stack = [0, 1, 2]
     thickness = [0, 105, 0]
-    theta = np.pi * 37 / 180
-    pol = 1.0
-    thing = NLStructure(materials,stack,thickness, verbose=False)
-    wl, r, t, R, T = PM.spectrum(thing, theta, pol, 5000, 8000, nb_lam)
+    thing = NLStructure(materials,stack,thickness,verbose=False)
+    new_wl = np.linspace(5000,8000,nb_lam)
+    R=np.zeros(nb_lam)
+    for k in range(nb_lam):
+        _,_,R[k],_ = NLcoefficient(thing,new_wl[k],np.pi * 37 / 180,1.0)
     R = R*scale + base
-    new_wl = np.linspace(5000, 8000, nb_lam)
-    obj  = np.interp(new_wl, wavelength_list, plot)
+    obj  = np.interp(new_wl, wavelength_list, expdata)
     cost = np.mean(np.abs(R - obj))+10*np.mean(np.abs(np.diff(R)-np.diff(obj)))
     return cost/nb_lam
 
-X_min = np.array([11.4, 1e14, 1e12, 1e14, 5e14, 0, 0.01])
-X_max = np.array([11.8, 1e15, 1e13, 1.5e15, 1.2e15, 1, 2])
+X_min = np.array([11.4, 1e14, 1e12, 1e14, 6e14, 0, 0.01])
+X_max = np.array([11.8, 1e15, 1e13, 1e15, 1.2e15, 0.2, 2])
 
-best,convergence = PM.QODE(cost_function,2000,X_min,X_max,progression=10)
+best , convergence = PM.QODE(cost_function,10000,X_min,X_max,progression=10)
 chi_b, w_p, gamma, beta_0, tau, base, scale = best
 
 nSC_2nd = NLMaterial([sc_2ndviscosity,chi_b, w_p, gamma, beta_0, tau])
@@ -124,7 +125,7 @@ for wl in wavelength_list:
     _,_,R,_ = NLcoefficient(optimized_nl,wl,theta,pol)
     R_optim.append(R)
 R=np.array(R_optim)
-R = R/max(R)*max(plot)
+R = R/max(R)*max(expdata)
 plt.plot(wavelength_list,R,label="Optimized NL")
 
 plt.legend()
