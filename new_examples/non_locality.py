@@ -12,7 +12,7 @@ with open('nlplot.data', newline='') as csvfile:
     expdata = list(csv.reader(csvfile))[0]
 expdata = [float(p.strip()) for p in expdata]
 expdata = np.array(expdata)
-plt.plot(wavelength_list, expdata, label="ref")
+refplot, = plt.plot(wavelength_list, expdata, label="Reference")
 #plt.show()
 
 def dopedsc_basic(wavelength):
@@ -59,7 +59,7 @@ for wl in wavelength_list:
     R_modelsimple.append(R)
 R=np.array(R_modelsimple)
 R = R/max(R)*max(expdata)
-plt.plot(wavelength_list,R,label="Simple NL")
+simpleplot, = plt.plot(wavelength_list,R,label="Simple NL")
 
 def sc_2ndviscosity(wavelength, chi_b, w_p, gamma, beta_0, tau):
     """
@@ -95,12 +95,17 @@ for wl in wavelength_list:
     R_advanced.append(R)
 R=np.array(R_advanced)
 R = R/max(R)*max(expdata)
-plt.plot(wavelength_list,R,label="Advanced NL")
+advancedplot, = plt.plot(wavelength_list,R,label="Advanced NL")
 plt.xlabel("Wavelength (nm)")
 plt.ylabel("Reflectivity")
-plt.legend()
 
-#plt.show()
+plt.legend()
+plt.show()
+
+
+plt.clf()
+
+refplot, = plt.plot(wavelength_list, expdata, label="Reference")
 
 def cost_function(X):
     chi_b, w_p, gamma, beta_0, tau, base, scale = X
@@ -116,13 +121,13 @@ def cost_function(X):
         _,_,R[k],_ = NLcoefficient(thing,new_wl[k],np.pi * 37 / 180,1.0)
     R = R*scale + base
     obj  = np.interp(new_wl, wavelength_list, expdata)
-    cost = np.mean(np.abs(R - obj))+10*np.mean(np.abs(np.diff(R)-np.diff(obj)))
+    cost = np.mean(np.abs(R - obj))+20*np.mean(np.abs(np.diff(R)-np.diff(obj)))
     return cost/nb_lam
 
 X_min = np.array([11.4, 1e14, 1e12, 1e14, 6e14, 0, 0.01])
-X_max = np.array([11.8, 1e15, 1e13, 1e15, 1.2e15, 0.2, 2])
+X_max = np.array([11.8, 1e15, 1e13, 1.5e15, 1.2e15, 0.2, 2])
 
-best , convergence = PM.QODE(cost_function,10000,X_min,X_max,progression=10)
+best , convergence = PM.QODE(cost_function,2000,X_min,X_max,progression=10)
 chi_b, w_p, gamma, beta_0, tau, base, scale = best
 
 nSC_2nd = NLMaterial([sc_2ndviscosity,chi_b, w_p, gamma, beta_0, tau])
@@ -132,8 +137,8 @@ for wl in wavelength_list:
     _,_,R,_ = NLcoefficient(optimized_nl,wl,theta,pol)
     R_optim.append(R)
 R=np.array(R_optim)
-R = R/max(R)*max(expdata)
-plt.plot(wavelength_list,R,label="Optimized NL")
+R = R*scale+base
+optimizedplot, = plt.plot(wavelength_list,R,label="Optimized NL")
 plt.xlabel("Wavelength (nm)")
 plt.ylabel("Reflectivity")
 
