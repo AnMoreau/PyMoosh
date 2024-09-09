@@ -7,7 +7,7 @@ import re
 import matplotlib.pyplot as plt
 from scipy.special import wofz
 import json
-#from refractiveindex import RefractiveIndexMaterial
+from refractiveindex import RefractiveIndexMaterial
 
 
 
