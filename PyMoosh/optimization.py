@@ -8,6 +8,8 @@ import sys
 from sklearn.cluster import DBSCAN
 from sklearn import metrics
 
+#TODO: sort through all this
+
 plt.rcParams['figure.dpi'] = 150
 
 def norm(a: np.ndarray, b: np.ndarray, c: np.ndarray, ord=None):
