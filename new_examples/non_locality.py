@@ -1,5 +1,5 @@
 import numpy as np
-from context import PM
+import PyMoosh as PM
 import matplotlib.pyplot as plt
 import csv
 from PyMoosh.non_local import *
@@ -114,7 +114,7 @@ def cost_function(X):
         _,_,R[k],_ = NLcoefficient(thing,new_wl[k],np.pi * 37 / 180,1.0)
     R = R*scale + base
     obj  = np.interp(new_wl, wavelength_list, expdata)
-    cost = np.mean(np.abs(R - obj))+20*np.mean(np.abs(np.diff(R)-np.diff(obj)))
+    cost = np.mean(np.abs(R - obj))+nb_lam*np.mean(np.abs(np.diff(R)-np.diff(obj)))
     return cost/nb_lam
 
 X_min = np.array([11.4, 1e14, 1e12, 1e14, 6e14, 0, 0.01])
