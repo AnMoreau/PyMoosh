@@ -6,10 +6,9 @@ import copy
 from numpy import linalg as la_np
 from PyMoosh.classes import Material, Structure, conv_to_nm
 from refractiveindex import RefractiveIndexMaterial
-# TODO: create tests!
 
 
-def rotate_permittivity(eps, angle_rad, axis='z'): #AV#Aded
+def rotate_permittivity(eps, angle_rad, axis='z'):
     """
     This function calculates the rotated permittivity tensor of eps around the given axis about the required angle
 
@@ -541,7 +540,6 @@ def combine_scattering_matrices(S_ab, S_bc):
 
     S_ac = np.block([[S_ac00, S_ac01],
                      [S_ac10, S_ac11]])
-    # TODO: check that these matrices are not already 2x2 in shape
     return S_ac
 
 

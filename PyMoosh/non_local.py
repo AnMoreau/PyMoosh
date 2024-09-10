@@ -8,7 +8,6 @@ import copy
 from PyMoosh.core import conv_to_nm
 from PyMoosh.classes import Material, Structure
 
-# TODO: classes
 # TODO: add other functionalities (field/absorption, etc.)
 
 class NLStructure(Structure):
