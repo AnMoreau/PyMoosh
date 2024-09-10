@@ -43,10 +43,15 @@ best_b, cost_b = PM.bfgs(bragg, budget, start)
 
 print(cost_b)
 
-best, convergence = PM.differential_evolution(bragg, budget, X_min, X_max)
+best, convergence = PM.differential_evolution(bragg, budget, X_min, X_max, f1=0.9, f2=0.8, cr=0.7)
 
 print(convergence[-1])
 
-plt.plot(best_b)
-plt.plot(best)
+
+best_saqn, convergence = PM.SAQNDE(bragg, budget, X_min, X_max, f1=0.5, f2=[0.6, 0.8], cr=[0.5, 0.6, 0.7])
+
+plt.plot(best_b, label="bfgs solution")
+plt.plot(best, label="de solution")
+plt.plot(best_saqn, label="SAQNde solution")
+plt.legend()
 plt.show()
