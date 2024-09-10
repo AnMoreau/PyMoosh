@@ -25,7 +25,7 @@ material_list = [mat_1, mat_2] # The materials
 stack = [1, 0, 0, 1] # Which material when (as in the usual Structure function)
 thickness = [0, thickness_nm, 25, 0] # The thickness of each layer (as in the usual Structure function)
 ani_rot_angle = [0., 0.5,-0.2, 0.] # The rotation angle for each layer. MUST be provided for isotropic layers too, will simply be overlooked
-ani_rot_axis = ['z', 'x', 'y', 'z']  # The rotation axis for each layer. MUST be provided for isotropic layers too, will simply be overlooked
+ani_rot_axis = ['z', 'x', [0,1,1], 'z']  # The rotation axis for each layer. MUST be provided for isotropic layers too, will simply be overlooked
 
 
 structure1 = ani.AniStructure(material_list, stack, thickness, ani_rot_angle, ani_rot_axis, verbose=False)

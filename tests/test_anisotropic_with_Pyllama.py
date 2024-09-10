@@ -12,7 +12,7 @@ rot_axis = 'z'
 
 thickness_nm = 100
 
-theta_in_rad = np.pi/4 # angle d'incidence
+theta_in_rad = np.pi/6 # angle d'incidence
 
 perm_1 = 1.2
 
@@ -28,7 +28,7 @@ material_list = [mat_1, mat_2]
 stack = [1, 0, 0, 1]
 thickness = [0, thickness_nm, 25, 0]#LES EPAISSEUR DU MILIEU EXT A 0 nm
 ani_rot_angle = [0., 0.5,-0.2, 0.]
-ani_rot_axis = ['z', 'x', 'y', 'z']
+ani_rot_axis = ['z', 'x', [0,1,1], 'z']
 
 
 structure1 = ani.AniStructure(material_list, stack, thickness, ani_rot_angle, ani_rot_axis, verbose=False)
