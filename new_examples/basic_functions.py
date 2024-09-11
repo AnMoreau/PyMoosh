@@ -8,7 +8,6 @@ thickness = [300, 200, 500, 200]
 # the current way this works does weird thing with the path
 # there must be a better way, because this is sure to break once its an external
 # library
-# TODO: fix imports
 import PyMoosh as PM
 print(PM.__version__)
 
@@ -59,9 +58,10 @@ plt.legend()
 plt.show()
 
 
-# TODO: spectrum w/ dispersive material
 from PyMoosh.vectorized import spectrum
 
+
+interface = PM.Structure([1.,"Si"],[0, 1],[10*wavelength, 10*wavelength])
 # For TE polarization
 wavelength, r, t, R, T = spectrum(interface, 0, 0., 400., 800., 200)
 # For TM polarization, same incidence angles

@@ -6,10 +6,9 @@ import copy
 from numpy import linalg as la_np
 from PyMoosh.classes import Material, Structure, conv_to_nm
 from refractiveindex import RefractiveIndexMaterial
-# TODO: create tests!
 
 
-def rotate_permittivity(eps, angle_rad, axis='z'): #AV#Aded
+def rotate_permittivity(eps, angle_rad, axis='z'):
     """
     This function calculates the rotated permittivity tensor of eps around the given axis about the required angle
 
@@ -191,7 +190,7 @@ class AniStructure(Structure):
 
 
 
-class AniMaterial():
+class AniMaterial(Material):
     """
        Anisotropic material class
 
@@ -524,54 +523,23 @@ def combine_scattering_matrices(S_ab, S_bc):
     :return: partial scattering matrix from layer a to layer c, a 4x4 Numpy array
     """
     S_ab00 = S_ab[:2, :2]
-    # np.array([
-    #     [S_ab[0,  0],  S_ab[0,  1]], 
-    #     [S_ab[1,  0],  S_ab[1,  1]], 
-    # ])
     S_ab01 = S_ab[:2, 2:]
-    # np.array([
-    #     [S_ab[0,  2],  S_ab[0,  3]], 
-    #     [S_ab[1,  2],  S_ab[1,  3]], 
-    # ])
     S_ab10 = S_ab[2:, :2]
-    # np.array([
-    #     [S_ab[2,  0],  S_ab[2,  1]], 
-    #     [S_ab[3,  0],  S_ab[3,  1]], 
-    # ])
     S_ab11 = S_ab[2:, 2:]
-    # np.array([
-    #     [S_ab[2,  2],  S_ab[2,  3]], 
-    #     [S_ab[3,  2],  S_ab[3,  3]], 
-    # ])
+
     S_bc00 = S_bc[:2, :2]
-    # np.array([
-    #     [S_bc[0,  0],  S_bc[0,  1]], 
-    #     [S_bc[1,  0],  S_bc[1,  1]], 
-    # ])
     S_bc01 = S_bc[:2, 2:]
-    # np.array([
-    #     [S_bc[0,  2],  S_bc[0,  3]], 
-    #     [S_bc[1,  2],  S_bc[1,  3]], 
-    # ])
     S_bc10 = S_bc[2:,  :2]
-    # np.array([
-    #     [S_bc[2,  0],  S_bc[2,  1]], 
-    #     [S_bc[3,  0],  S_bc[3,  1]], 
-    # ])
     S_bc11 = S_bc[2:, 2:]
-    # np.array([
-    #     [S_bc[2, 2], S_bc[2, 3]],
-    #     [S_bc[3, 2], S_bc[3, 3]],
-    # ])
+
     C = la_np.inv(np.identity(2) - np.dot(S_ab01, S_bc10))
     S_ac00 = la_np.multi_dot((S_bc00, C, S_ab00))
     S_ac01 = S_bc01 + la_np.multi_dot((S_bc00, C, S_ab01, S_bc11))
     S_ac10 = S_ab10 + la_np.multi_dot((S_ab11, S_bc10, C, S_ab00))
     S_ac11 = la_np.multi_dot((S_ab11, (np.identity(2) + la_np.multi_dot((S_bc10, C, S_ab01))), S_bc11))
 
-    S_ac = np.stack([[S_ac00[:2, :2], S_ac01[:2, :2]],
-                     [S_ac10[:2, :2], S_ac11[:2, :2]]])
-    # TODO: check that these matrices are not already 2x2 in shape
+    S_ac = np.block([[S_ac00, S_ac01],
+                     [S_ac10, S_ac11]])
     return S_ac
 
 

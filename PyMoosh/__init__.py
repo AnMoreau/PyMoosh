@@ -35,4 +35,3 @@ from PyMoosh.classes import *
 from PyMoosh.vectorized import *
 from PyMoosh.optim_algo import *
 
-# TODO: what should be accessible from where?
