@@ -59,37 +59,29 @@ def polarizability_opti_angle(struct, wavelength, angles): #numpy friendly
     for k in range(len(struct.materials)):
         # Populate epsilon and mu arrays from the material.
         material = struct.materials[k]
-        material_get_permittivity = material.get_permittivity(wavelength)
-        material_get_permeability = material.get_permeability(wavelength)
-        try:
-            material_get_permittivity.shape = (len(wavelength),)
-            material_get_permeability.shape = (len(wavelength),)
-        except:
-            pass
-
-        epsilon[:,k] = material_get_permittivity
-        mu[:,k] = material_get_permeability
-
+        epsilon[:,k] = material.get_permittivity(wavelength)
+        mu[:,k] = material.get_permeability(wavelength)
     return epsilon, mu
 
 
 
 
-def cascade_opti_wavelength(A, B, len_wl): #numpy friendly
+def cascade_opti(A, B, nb): #numpy friendly
     """
-    ** Only used in coefficient_S_opti_wavelength definition **
-
-    This function takes two 2x2 matrixes A and B of (len_wl, 1) arrays, that are assumed to be scattering matrixes
+    This function takes two 2x2 matrixes A and B of (nb, 1) arrays, that are assumed to be scattering matrixes
     and combines them assuming A is the "upper" one, and B the "lower" one, physically.
-    The result is a 2x2 scattering matrix of (len_wl, 1) arrays.
+    The result is a 2x2 scattering matrix of (nb, 1) arrays.
 
     Args:
-        A (2x2 numpy array of (len_wl, 1) arrays):
-        B (2x2 numpy arrayof (len_wl, 1) arrays):
+        A (2x2 numpy array of (nb, 1) arrays): First S matrix
+        B (2x2 numpy array of (nb, 1) arrays):  Second S matrix
+    
+        Returns:
+        S (2x2 numpy arrayof (nb, 1) arrays): Combined S matrix
 
     """
     t = 1 / (1 - B[0, 0] * A[1, 1])
-    S = np.zeros((2, 2, len_wl, 1), dtype=complex)
+    S = np.zeros((2, 2, nb, 1), dtype=complex)
     S[0, 0] = A[0, 0] + A[0, 1] * B[0, 0] * A[1, 0] * t
     S[0, 1] = A[0, 1] * B[0, 1] * t
     S[1, 0] = B[1, 0] * A[1, 0] * t
@@ -226,7 +218,7 @@ def spectrum_S(struct, incidence, polarization, wl_min, wl_max, len_wl):
     A[0] = T[0]
 
     for j in range(len(T) - 2):
-        A[j + 1] = cascade_opti_wavelength(A[j], T[j + 1], len_wl)
+        A[j + 1] = cascade_opti(A[j], T[j + 1], len_wl)
     # reflection coefficient of the whole structure
     r = A[len(A) - 1][0, 0]
     # transmission coefficient of the whole structure
@@ -450,9 +442,9 @@ def angular(structure, wavelength, polarization, theta_min, theta_max, len_an, m
 
 
 def angular_S(structure, wavelength, polarization, theta_min, theta_max, len_an):
-    """Represents the reflexion coefficient (reflectance and phase) for a
-    multilayered structure. This is an automated call to the :coefficient:
-    function making the angle of incidence vary.
+    """
+    Represents the reflexion coefficient (reflectance and phase) for a
+    multilayered structure with varying angle.
 
     Args:
         structure (Structure): the object describing the multilayer
@@ -463,7 +455,7 @@ def angular_S(structure, wavelength, polarization, theta_min, theta_max, len_an)
         n_points (int): number of different angle of incidence
 
     Returns:
-        incidence (numpy array): angles of incidence considered
+        angles (numpy array): angles of incidence considered
         r (numpy complex array): reflexion coefficient for each angle
         t (numpy complex array): transmission coefficient
         R (numpy array): Reflectance
@@ -534,7 +526,7 @@ def angular_S(structure, wavelength, polarization, theta_min, theta_max, len_an)
     np.putmask(gamma[:,g-1], not_mask, gamma_last)
     # Take - gamma if negative permittivity and permeability
 
-    # Each layer has a (2, 2) matrix with (len_wl, 1) array as coefficient.
+    # Each layer has a (2, 2) matrix with (len_an, 1) array as coefficient.
     T = np.zeros(((2 * g, 2, 2, len_an, 1)), dtype=complex)
 
     # first S matrix
@@ -563,7 +555,7 @@ def angular_S(structure, wavelength, polarization, theta_min, theta_max, len_an)
     A[0] = T[0]
 
     for j in range(len(T) - 2):
-        A[j + 1] = cascade_opti_wavelength(A[j], T[j + 1], len_an)
+        A[j + 1] = cascade_opti(A[j], T[j + 1], len_an)
     # reflection coefficient of the whole structure
     r = A[len(A) - 1][0, 0]
     # transmission coefficient of the whole structure
@@ -579,29 +571,27 @@ def angular_S(structure, wavelength, polarization, theta_min, theta_max, len_an)
 
 def angular_A(structure, wavelength, polarization, theta_min, theta_max, len_an, absorb=False):
     """
-    This function computes the reflection and transmission coefficients
-    of the structure using the (true) Abeles matrix formalism.
-    If absorb is set to True, also returns the absorption in each layer
+    
+    Represents the reflexion coefficient (reflectance and phase) for a
+    multilayered structure with varying angle.
 
     Args:
-        struct (Structure): belongs to the Structure class
-        wavelength (float): wavelength of the incidence light (in nm)
-        incidence (float): incidence angle in radians
-        polarization (float): 0 for TE, 1 (or anything) for TM
+        structure (Structure): the object describing the multilayer
+        wavelength (float): the working wavelength in nm
+        polarization (float): 0 for TE, 1 for TM
+        theta_min (float): minimum angle of incidence in degrees
+        theta_max (float): maximum angle of incidence in degrees
+        n_points (int): number of different angle of incidence
 
-    returns:
-        wavelengths (numpy array): wavelengths considered
-        r (complex): reflection coefficient, phase origin at first interface
-        t (complex): transmission coefficient
-        R (float): Reflectance (energy reflection)
-        T (float): Transmittance (energie transmission)
-        if absorb is True, returns A (float): the absorption in each layer
+    Returns:
+        angles (numpy array): angles of incidence considered
+        r (numpy complex array): reflexion coefficient for each angle
+        t (numpy complex array): transmission coefficient
+        R (numpy array): Reflectance
+        T (numpy array): Transmittance
 
-
-    R and T are the energy coefficients (real quantities)
-
-    .. warning: The transmission coefficients have a meaning only if the lower medium
-    is lossless, or they have no true meaning.
+    .. warning: The incidence angle is in degrees here, contrarily to
+    other functions.
     """
     # In order to get a phase that corresponds to the expected reflected coefficient,
     # we make the height of the upper (lossless) medium vanish. It changes only the

@@ -99,7 +99,7 @@ class Structure:
             if issubclass(mat.__class__,Material):
                 materials_final.append(mat)
                 if verbose :
-                    print("Object:",mat.__class__.__name__)
+                    print("Material:",mat.type)
             else :
                 new_mat = Material(mat, verbose=verbose)
                 materials_final.append(new_mat)
