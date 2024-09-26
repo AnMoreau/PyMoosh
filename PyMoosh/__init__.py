@@ -24,8 +24,8 @@
 
 """
 __name__ = 'PyMoosh'
-__version__ = '3.9'
-__date__ = "30/07/2024"   # MM/DD/YYY
+__version__ = '3.91'
+__date__ = "27/09/2024"   # MM/DD/YYY
 __author__ = 'Antoine Moreau'
 
 
@@ -34,4 +34,3 @@ from PyMoosh.core import *
 from PyMoosh.classes import *
 from PyMoosh.vectorized import *
 from PyMoosh.optim_algo import *
-
