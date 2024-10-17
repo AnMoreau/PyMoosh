@@ -425,7 +425,10 @@ class Material:
             mu = mat[1]
             self.permeability_function = mu[0]
             self.mu_params = [mu[i+1] for i in range(len(mu)-1)]
-            self.name = "Customfunction with permeability: " + str(self.permittivity_function) + " " + str(self.permeability_function)
+            self.name = "CustomfunctionMu: " + str(self.permittivity_function) + " " + str(self.permeability_function)
+            if verbose :
+                print("CustomfunctionMu: " + str(self.permittivity_function.__name__) + " " + str(self.permeability_function.__name__))
+
 
         else:
             print(f'Warning: Unknown type : {specialType}')
