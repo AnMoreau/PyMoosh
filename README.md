@@ -4,13 +4,17 @@
 
 PyMoosh is a open source, user-friendly library for the optical study of multilayered structures, written in Python. 
 
-PyMoosh is now much more advanced than Moosh, the original octave/matlab program we used in the past. Importantly, the use of PyMoosh is illustrated by many Jupyter notebooks, and more are planned. PyMoosh can be used for teaching or research purposes. It is especially written to be stable and quick, for its use in an optimization framework for instance.
+PyMoosh is now much more advanced than Moosh, the original octave/matlab program we used in the past. Importantly, the use of PyMoosh is illustrated by many Jupyter notebooks, and more are planned. PyMoosh can be used for teaching or research purposes. It is specifically written to be stable and quick, for its use in an optimization framework for instance.
+
+It has also been thoroughly described in this [preprint on ArXiV since published in JOSA-B](https://arxiv.org/abs/2309.00654).
 
 ![What PyMoosh (green functions) can do...](field.png)
 
 ## Installation
 
 **Python >3.10 is necessary for the inclusion of the RefractiveIndex library**
+
+If this is an issue for you, tell us! We'll make a RefractiveIndex-less version.
 
 **If you are using Python <3.11:**
 You can do something as simple as 
@@ -35,11 +39,11 @@ PyMoosh allows you to compute most **properties of multilayered structures**, fo
 - PV efficiency
 - resonant modes and zeros of the scattering matrix (and thus guided modes)
 - field profiles
-- green function for dipolar emitters
+- green functions for dipolar emitters
 
 **Material properties** (permittivities and permeabilities) can be either defined:
 - with simple, non dispersive values
-- through access to the RefractiveIndex database
+- through access to the [RefractiveIndex database](https://refractiveindex.info/)
 - with a user-defined model, many common examples of which are predefined (Drude, Lorentz, Brendel&Bormann, Experimental Data interpolation)
 
 More **advanced materials** are also available, to compute reflection and transmission coefficients (and hopefully, soon, the other properties too):
@@ -53,12 +57,12 @@ More **advanced materials** are also available, to compute reflection and transm
 - The *PyMoosh* folder contains all the code
 - The *notebooks* folder contains the **Jupyter Notebooks** that explain how to use each functionality
 - The *new_examples* folder contains directly usable and more easily modified versions of the jupyter notebook, for you to copy and adapt to your needs
-- The *tests* folder contains a lot of stuff, mostly here for testing/historical reasons
+- The *tests* folder contains a lot of stuff, mostly here for testing/historical reasons, and we don't particularly recommend reading through it
 
 ## For specialists
 
 ### Matrix formalisms
-PyMoosh has been used to benchmark the speed and stability of all known optical formalisms:
+PyMoosh has been used to benchmark the speed and stability of all known optical formalisms at interfaces:
 - Scattering matrices
 - Transfer matrices
 - Abélès formalism
