@@ -6,7 +6,7 @@ PyMoosh is a open source, user-friendly library for the optical study of multila
 
 PyMoosh is now much more advanced than Moosh, the original octave/matlab program we used in the past. Importantly, the use of PyMoosh is illustrated by many Jupyter notebooks, and more are planned. PyMoosh can be used for teaching or research purposes. It is specifically written to be stable and quick, for its use in an optimization framework for instance.
 
-It has also been thoroughly described in this [preprint on ArXiV since published in JOSA-B](https://arxiv.org/abs/2309.00654).
+It has also been thoroughly described in this [tutorial published in JOSA-B](https://opg.optica.org/josab/fulltext.cfm?uri=josab-41-2-A67&id=545746).
 
 ![What PyMoosh (green functions) can do...](field.png)
 
@@ -50,7 +50,7 @@ More **advanced materials** are also available, to compute reflection and transm
 - Anisotropic materials
 - Non-local (spatially-dispersive) materials
 
-**Optimization algorithms** are also available, in the Differential Evolution framework.
+**Optimization algorithms** are also available, in the Differential Evolution framework. We also published [a tutorial in optimization on JOSA B](https://opg.optica.org/josab/fulltext.cfm?uri=josab-41-2-A126&id=546050).
 
 ## What's inside
 
@@ -69,7 +69,7 @@ PyMoosh has been used to benchmark the speed and stability of all known optical 
 - Dirichlet-to-Neumann maps
 - Impedance formalism
 
-The detail can be found in the article below, but the TL;DR is: use the S-matrices if time is not an issue, otherwise use the Abélès formalism (with care).
+The detail can be found in the article [below](https://opg.optica.org/josab/fulltext.cfm?uri=josab-41-2-A67&id=545746), but the short version is: use the S-matrices if time is not an issue, otherwise use the Abélès formalism (with care).
 
 ### Vectorized computations
 
@@ -87,7 +87,7 @@ Found anything missing? You want to help? You're a student in optics and would l
 
 ## References
 
-PyMoosh is described in detail in this [preprint on ArXiV since published in JOSA-B](https://arxiv.org/abs/2309.00654).
+PyMoosh is described in detail in this [tutorial published in JOSA-B](https://opg.optica.org/josab/fulltext.cfm?uri=josab-41-2-A67&id=545746).
 
 You may cite it:
 ```
@@ -107,9 +107,9 @@ doi = {10.1364/JOSAB.506175},
 }
 ```
 
-If you want to cite the repository, the 3.1 version of PyMoosh has been given a DOI :
+If you want to cite the repository, the 3.91 version of PyMoosh has been given a DOI :
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.8341954.svg)](https://doi.org/10.5281/zenodo.8341954)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13845630.svg)](https://doi.org/10.5281/zenodo.13845630)
 
 
 Even if PyMoosh is quite simple, this is a research-grade program. We actually do research with it. We've done cool things, like [comparing evolutionary algorithms and real evolution for the first time in history](https://www.nature.com/articles/s41598-020-68719-3).
