@@ -83,7 +83,7 @@ Mode finding uses a gradient descent of the reflection coefficient in the comple
 
 Found anything missing? You want to help? You're a student in optics and would like to work with us?
 
-[Send us an email!](mailto:denis.langevin@uca.fr,antoine.moreau@uca.fr)
+[Send us an email!](mailto:denis.langevin_at_uca.fr,antoine.moreau_at_uca.fr)
 
 ## References
 
