@@ -25,7 +25,7 @@ def BrendelBormann(wav, f0, omega_p, Gamma0, f, omega, gamma, sigma):
         f0, Gamma0 and omega_p are the chi_f parameters (eps_inf, plasma frequency)
         f, gamma, omega, sigma are the chi_b parameters (Lorentz resonances)
         f, gamma, omega, sigma must be lists (np arrays) of the same lengths
-        They are given in unit [TODO: check unit]
+        They are given in eV (wav in nm)
     """
     # Brendel-Bormann model with n resonances
     w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wav
@@ -45,7 +45,7 @@ def Drude(wav, omega_p, Gamma0):
     """
         Drude model, with only the plasma frequency omega_p
         and damping Gamma0 and omega_p
-        They are given in unit [TODO: check/decide unit]
+        They are given in eV (wav in nm)
     """
     w = 2*np.pi*299792458*1e9 / wav
     chi_f = - omega_p ** 2 / (w * (w + 1j * Gamma0))
@@ -58,7 +58,7 @@ def Lorentz(wav, f, omega, gamma, eps):
         eps is eps_inf, the background permittivity
         f, gamma, omega, sigma are the chi_b parameters (Lorentz resonances)
         f, gamma, omega, sigma must be lists (np arrays) of the same lengths
-        They are given in unit [TODO: check unit]
+        They are given in eV (wav in nm)
     """
     w = 2*np.pi*299792458*1e9 / wav
     chi = np.sum(f/(omega**2 - w**2 - 1.0j*gamma*w))
@@ -71,7 +71,7 @@ def DrudeLorentz(wav, omega_p, Gamma0, f, omega, gamma):
         f0, Gamma0 and omega_p are the chi_f parameters (eps_inf, plasma frequency)
         f, gamma, omega, sigma are the chi_b parameters (Lorentz resonances)
         f, gamma, omega, sigma must be lists (np arrays) of the same lengths
-        They are given in unit [TODO: check unit]
+        They are given in eV (wav in nm)
     """
     w = 2*np.pi*299792458*1e9 / wav
     chi_f = - omega_p ** 2 / (w * (w + 1j * Gamma0))
