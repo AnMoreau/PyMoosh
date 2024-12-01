@@ -5,9 +5,6 @@ material_list = [1.,[2.,1.2],"Si","Water"]
 stack = [0,2,3,2]
 thickness = [300, 200, 500, 200]
 
-# the current way this works does weird thing with the path
-# there must be a better way, because this is sure to break once its an external
-# library
 import PyMoosh as PM
 print(PM.__version__)
 

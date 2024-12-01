@@ -284,17 +284,20 @@ class Material:
             - material               / Material object
             - CustomFunction         / function (wav)
             - simple_perm            / complex
-            - magnetic               / list(complex, float)
+            - magnetic               / list(complex, float) of size 2
             - Database               / string
                   Database types can take many special types
 
-            There are two special types:
+            There are three special types:
             -> when importing from the Refractive Index Database
                 Then the specialType variable should be set to "RII"
                 - RefractiveIndexInfo    / list(shelf, book, page)
             -> when using a function with custom parameters
                 Then the specialType variable should be set to "Model"
                 - Model                  / list(function(wav, params), params)
+            -> when using two functions with custom parameters for permittivity + permeability
+                Then the specialType variable should be set to "ModelMu"
+                - ModelMu                / [list(function(wav, params), params), list(function(wav, params), params)]
 
             And these materials have to be processed through the Material constructor first
             before being fed to Structure as Material objects
@@ -412,6 +415,21 @@ class Material:
             self.params = [mat[i+1] for i in range(len(mat)-1)]
             self.name = "Customfunction: " + str(mat[0])
 
+        elif specialType == "ModelMu":
+            # Two custom functions that take more parameters than simply the wavelength
+            self.type = 'ModelMu'
+            self.specialType = specialType
+            eps = mat[0]
+            self.permittivity_function = eps[0]
+            self.eps_params = [eps[i+1] for i in range(len(eps)-1)]
+            mu = mat[1]
+            self.permeability_function = mu[0]
+            self.mu_params = [mu[i+1] for i in range(len(mu)-1)]
+            self.name = "CustomfunctionMu: " + str(self.permittivity_function) + " " + str(self.permeability_function)
+            if verbose :
+                print("CustomfunctionMu: " + str(self.permittivity_function.__name__) + " " + str(self.permeability_function.__name__))
+
+
         else:
             print(f'Warning: Unknown type : {specialType}')
 
@@ -432,6 +450,9 @@ class Material:
 
         elif self.type == "Model":
             return self.permittivity_function(wavelength, *self.params)
+        
+        elif self.type == "ModelMu":
+            return self.permittivity_function(wavelength, *self.eps_params)
 
         elif self.type == "BrendelBormann":
             w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wavelength
@@ -461,6 +482,8 @@ class Material:
     def get_permeability(self,wavelength, verbose=False):
         if self.type == "magnetic":
             return self.permeability
+        if self.type == "ModelMu":
+            return self.permeability_function(wavelength, *self.mu_params)
         elif self.type == "RefractiveIndexInfo":
             if verbose:
                 print('Warning: Magnetic parameters from RefractiveIndex Database are not implemented. Default permeability is set to 1.0 .')

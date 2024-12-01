@@ -199,6 +199,8 @@ class AniMaterial(Material):
                                  mat should be shelf, book, page
        - Given by hand -> special Type should be ANI
                           mat should be a list of 2 (uniaxial) or 3 (biaxial) permittivities
+       - Given by hand and dispersive -> special Type should be Model_ANI
+                          mat should be a list of 2 (uniaxial) or 3 (biaxial) [permittivity functions, params]
     """
 
     def __init__(self, mat, specialType="ANI", verbose=False):
@@ -212,19 +214,29 @@ class AniMaterial(Material):
             if (len(mat) == 2):
                 # Uniaxial, only two values given, no and ne
                 self.material_list = [mat[0], mat[0], mat[1]]
-                self.material_x = mat[0]
-                self.material_y = mat[0]
-                self.material_z = mat[1]
             elif (len(mat) == 3):
                 # Biaxial, three values given,
                 self.material_list = [mat[0], mat[1], mat[2]]
-                self.material_x = mat[0]
-                self.material_y = mat[1]
-                self.material_z = mat[2]
 
             self.name = "Anisotropic material" + str(mat)
             if verbose :
                 print("Anisotropic material of indices ", str(mat))
+
+        if specialType == "Model_ANI" :
+            # User defined Anisotropic material defined with functions
+            if len(mat) < 2 or len(mat) > 3:
+                print(f'Warning: Anisotropic material is expected to be a list of 2 or 3 index values, but {len(mat)} were given.')
+            self.specialType = specialType
+            if (len(mat) == 2):
+                # Uniaxial, only two values given, no and ne
+                self.material_list = [mat[0], mat[0], mat[1]]
+            elif (len(mat) == 3):
+                # Biaxial, three values given,
+                self.material_list = [mat[0], mat[1], mat[2]]
+
+            self.name = "Anisotropic dispersive material" + str(mat)
+            if verbose :
+                print("Anisotropic dispersive material of functions ", str(mat))
                 
         elif specialType == "ANI_RII" :
             # Anisotropic material from the refractive index database
@@ -235,9 +247,6 @@ class AniMaterial(Material):
             self.path = "shelf: {}, book: {}, page: {}".format(shelf, book, page) # not necessary ?
             material_list = wrapper_anisotropy(shelf, book, page) # A list of three materials
             self.material_list = material_list
-            self.material_x = material_list[0]
-            self.material_y = material_list[1]
-            self.material_z = material_list[2]
             self.name = "Anisotropic material from Refractiveindex.info: " + str(mat)
             if verbose :
                 print("Material from Refractiveindex Database")
@@ -263,6 +272,10 @@ class AniMaterial(Material):
                     n = material.get_refractive_index(wavelength)
                     epsilon_medium.append(n**2)
                     print('n =',n)
+            elif (self.specialType == "Model_ANI"):
+                function = material[0]
+                params = material[1:]
+                epsilon_medium.append(complex(function(wavelength, *params)))
             else:
                 # Was directly given
                 epsilon_medium.append(complex(material))
