@@ -211,7 +211,7 @@ def follow_guided_modes(struct, wavelength_list, polarization,
 #        print(solution)
         if (len(first_modes) == 0):
             first_modes.append(solution)
-        elif (min(abs(first_modes-solution))>1e-5*k_0):
+        elif (min(abs(first_modes-solution))>1e-5):
             first_modes.append(solution)
     modes = [first_modes]
 
@@ -226,14 +226,14 @@ def follow_guided_modes(struct, wavelength_list, polarization,
                 solution = steepest(neff, tolerance, 1000, struct, wavelength, polarization)
                 if (len(new_modes) == 0):
                     new_modes.append(solution)
-                elif (min(abs(new_modes-solution))>1e-5*k_0):
+                elif (min(abs(new_modes-solution))>1e-5):
                     new_modes.append(solution)
         else:
             neff = neff_start
             solution = steepest(neff, tolerance, 1000, struct, wavelength, polarization)
             if (len(new_modes) == 0):
                 new_modes.append(solution)
-            elif (min(abs(new_modes-solution))>1e-5*k_0):
+            elif (min(abs(new_modes-solution))>1e-5):
                 new_modes.append(solution)
 
         modes.append(np.array(new_modes).flatten())
@@ -377,7 +377,7 @@ def steepest(start,tol,step_max,struct,wl,pol):
 
     #print("End of the loop")
     if step == step_max:
-        print("Warning: maximum number of steps reached. Final z:", z)
+        print("Warning: maximum number of steps reached. Final n_eff:", z/k0)
 
     return z/k_0
 

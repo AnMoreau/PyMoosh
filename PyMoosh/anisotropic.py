@@ -102,7 +102,7 @@ class AniStructure(Structure):
                 # NOTE 2: should not be an non local material
                 materials_final.append(mat)
                 if verbose :
-                    print("Object:",mat.__class__.__name__)
+                    print("Material:",mat.__class__.__name__)
             else :
                 new_mat = Material(mat, verbose=verbose)
                 materials_final.append(new_mat)
