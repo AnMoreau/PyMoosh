@@ -395,6 +395,10 @@ def coefficient_I(struct, wavelength, incidence, polarization):
     # Computation of the vertical wavevectors k_z
     gamma = np.sqrt(
         Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g) * alpha ** 2)
+    if polarization == 0:
+        f = Mu
+    else:
+        f = Epsilon
     # Be cautious if the upper medium is a negative index one.
     if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
         gamma[0] = -gamma[0]
@@ -413,40 +417,39 @@ def coefficient_I(struct, wavelength, incidence, polarization):
         gamma[g - 1] = np.sqrt(
             Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
 
-    cos_theta = np.zeros(g,dtype=complex)
-    sin_theta = np.zeros(g,dtype=complex)
     n_s = np.zeros(g,dtype=complex)
 
-    sin_theta[0] = np.sin(incidence)
+    n_layer = np.sqrt(Epsilon[Type]*Mu[Type])
+    cos_theta = gamma/(k0*n_layer)
 
-    n = np.sqrt(Epsilon*Mu)
-
-    n_s[0] = n[Type[0]] * np.cos(incidence)
-    n_s[1:] = np.sqrt(n[Type[1:]]**2 - n[Type[0]]**2 * sin_theta[0]**2)
+    n_s = gamma / Mu[Type]
     opp = np.imag(n_s) > 0
-    n_s = n_s - 2* n_s * (opp)
-    n_p = n[Type]**2 / n_s
+    n_s = (n_s - 2* n_s * (opp))
 
-    delta = np.array(2*np.pi*thickness*n_s/wavelength)
-    #cos_theta = np.cos(np.arcsin(sin_theta))
+    n_p = Epsilon[Type] / gamma
+    opp = np.imag(n_p) > 0
+    n_p = (n_p - 2* n_p * (opp))
+
+    delta = np.array(2*np.pi*thickness*n_layer*cos_theta/wavelength)
     temp = -1.j*np.tan(delta)
 
     if polarization == 0:
-        admittance = n_s
+        n_eff = n_s
     else:
-        admittance = n_p
+        n_eff = n_p
 
-    Y = admittance[-1]
+    Y = n_eff[-1]
 
     PR = 1
     for m in np.arange(g-2,-1,-1):
-        Y = (Y + admittance[m+1]*temp[m+1])/(1 + Y*temp[m+1]/admittance[m+1])
+        Y = (Y + n_eff[m+1]*temp[m+1])/(1 + Y*temp[m+1]/n_eff[m+1])
         if (m>0):
-            PR *= (np.cos(delta[m]) - 1.0j * Y * np.sin(delta[m])/admittance[m])
+            PR *= (np.cos(delta[m]) - 1.0j * Y * np.sin(delta[m])/n_eff[m])
 
-    r = (admittance[0]-Y) / (admittance[0]+Y)
+    r = (n_eff[0]-Y) / (n_eff[0]+Y)
+
     if polarization == 1:
-        t = (admittance[-1].real / admittance[0].real)  * (r+1) / PR
+        t = (n_eff[-1].real / n_eff[0].real)  * (r+1) / PR
     else:
         t = (1+r)/PR
 
@@ -571,7 +574,6 @@ def absorption_A(struct, wavelength, incidence, polarization):
              # Contains Ey and dzEy in layer k
     I[-1] = [t, -1.j*gf[-1]*t]
 
-    w = 0
     poynting = np.zeros(A.shape[0]+1, dtype=complex)
     if polarization == 0:  # TE
         for k in range(A.shape[0]+1):
@@ -580,7 +582,7 @@ def absorption_A(struct, wavelength, incidence, polarization):
         for k in range(A.shape[0]+1):
             poynting[k] = np.real(1.j * np.conj(I[k, 0]) * I[k, 1] / gf[0])
     # Absorption in each layer
-    absorb = np.concatenate(([0],abs(-np.diff(poynting))))
+    absorb = np.concatenate(([0],-np.diff(poynting)))
     # First layer is always supposed non absorbing
 
     return absorb, r, t, R, T

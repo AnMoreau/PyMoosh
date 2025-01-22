@@ -330,7 +330,8 @@ class Material:
                 if verbose :
                     print("Simple, non dispersive: epsilon=",self.permittivity)
 
-            elif isinstance(mat, list) and isinstance(mat[0], float) and isinstance(mat[1], float): # magnetic == [float, float]
+            elif isinstance(mat, list) and (isinstance(mat[0], float) or isinstance(mat[0], complex)) and (isinstance(mat[1], float) or isinstance(mat[1], complex)):
+                # magnetic == [complex, complex]
             # iterable: if list or similar --> magnetic
                 self.type = "magnetic"
                 self.permittivity = mat[0]

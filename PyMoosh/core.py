@@ -557,95 +557,76 @@ def absorption_S(struct, wavelength, incidence, polarization, layers=[]):
     t = np.exp((1j) * gamma[g - 1] * thickness[g - 1])
     T[2 * g - 1] = [[0, t], [t, 0]]
     # Once the scattering matrixes have been prepared, now let us combine them
-    H = np.zeros(((2 * g - 1, 2, 2)), dtype=complex)
-    A = np.zeros(((2 * g - 1, 2, 2)), dtype=complex)
-    H[0] = T[2 * g - 1]
-    A[0] = T[0]
+    D = np.zeros(((2 * g - 1, 2, 2)), dtype=complex)
+    U = np.zeros(((2 * g - 1, 2, 2)), dtype=complex) 
+    D[0] = T[2 * g - 1]
+    U[0] = T[0]
     for k in range(len(T) - 2):
-        A[k + 1] = cascade(A[k], T[k + 1])
-        H[k + 1] = cascade(T[2 * g - 2 - k], H[k])
+        U[k + 1] = cascade(U[k], T[k + 1])
+        D[k + 1] = cascade(T[2 * g - 2 - k], D[k])
 
 
     if len(layers) == 0:
-        I = np.zeros(((2 * g, 2, 2)), dtype=complex)
+        I = np.zeros(((2 * g, 2)), dtype=complex)
         for k in range(len(T) - 1):
-            I[k] = np.array(
-                [[A[k][1, 0], A[k][1, 1] * H[len(T) - k - 2][0, 1]],
-                 [A[k][1, 0] * H[len(T) - k - 2][0, 0],
-                  H[len(T) - k - 2][0, 1]]] / (
-                        1 - A[k][1, 1] * H[len(T) - k - 2][0, 0]))
+            I[k] = np.array([1,  D[len(T) - k - 2][0, 0]], dtype=complex) * U[k][1, 0] / (1 - U[k][1, 1] * D[len(T) - k - 2][0, 0])
 
-        I[2 * g - 1][0, 0] = I[2 * g - 2][0, 0] * np.exp(
-            1j * gamma[g - 1] * thickness[g - 1])
-        I[2 * g - 1][0, 1] = I[2 * g - 2][0, 1] * np.exp(
-            1j * gamma[g - 1] * thickness[g - 1])
-        I[2 * g - 1][1, 0] = 0
-        I[2 * g - 1][1, 1] = 0
+        I[2 * g - 1][0] = I[2 * g - 2][0] * np.exp(1j * gamma[g - 1] * thickness[g - 1])
+        I[2 * g - 1][1] = 0
 
-        poynting = np.zeros(2 * g, dtype=complex)
+        poynting = np.zeros(g, dtype=complex)
         if polarization == 0:  # TE
-            for k in range(2 * g):
-                poynting[k] = np.real((I[k][0, 0] + I[k][1, 0]) * np.conj(
-                    (I[k][0, 0] - I[k][1, 0]) * gf[k//2] / gf[0]))
+            for k in range(g):
+                poynting[k] = np.real((I[2*k+1][0] + I[2*k+1][1])
+                                      * np.conj((I[2*k+1][0] - I[2*k+1][1]) * gf[k] / gf[0]))
         else:  # TM
-            for k in range(2 * g):
-                poynting[k] = np.real((I[k][0, 0] - I[k][1, 0]) * np.conj(
-                    (I[k][0, 0] + I[k][1, 0])) * gf[k//2] / gf[0])
+            for k in range(g):
+                poynting[k] = np.real((I[2*k+1][0] - I[2*k+1][1])
+                                      * np.conj((I[2*k+1][0] + I[2*k+1][1])) * gf[k] / gf[0])
         # Absorption in each layer
 
-        tmp = abs(-np.diff(poynting))
+        absorb = np.concatenate(([0],-np.diff(poynting)))
         # absorb=np.zeros(g,dtype=complex)
-        absorb = tmp[np.arange(0, 2 * g, 2)]
+        # absorb = tmp[np.arange(0, 2 * g, 2)]
 
     else:
         # Specific layers are given for the absorption
 
         nb_lay = len(layers)
         layers = np.sort(layers)
-        I = np.zeros(((2 * nb_lay, 2, 2)), dtype=complex)
+        I = np.zeros(((2 * nb_lay, 2)), dtype=complex)
         i = 0
         for k in layers:
             if (k != g-1):
-                I[2*i] = np.array(
-                    [[A[2*k][1, 0], A[2*k][1, 1] * H[len(T) - 2*k - 2][0, 1]],
-                     [A[2*k][1, 0] * H[len(T) - 2*k - 2][0, 0], H[len(T) - 2*k - 2][0, 1]]]
-                     / (1 - A[2*k][1, 1] * H[len(T) - 2*k - 2][0, 0]))
-                I[2*i+1] = np.array(
-                    [[A[2*k+1][1, 0], A[2*k+1][1, 1] * H[len(T) - 2*k - 3][0, 1]],
-                     [A[2*k+1][1, 0] * H[len(T) - 2*k - 3][0, 0],H[len(T) - 2*k - 3][0, 1]]]
-                     / (1 - A[2*k+1][1, 1] * H[len(T) - 2*k - 3][0, 0]))
+                I[2*i] = np.array([1,  D[len(T) - 2*k - 2][0, 0]], dtype=complex) * U[2*k][1, 0] / (1 - U[2*k][1, 1] * D[len(T) - 2*k - 2][0, 0])
+                I[2*i+1] = np.array([1, D[len(T) - 2*k - 3][0, 0]], dtype=complex) *U[2*k+1][1, 0] / (1 - U[2*k+1][1, 1] * D[len(T) - 2*k - 3][0, 0])
                 i += 1
         if g-1 in layers:
-            I[-2] = np.array(
-                [[A[2*g-2][1, 0], A[2*g-2][1, 1] * H[len(T) - 2*g][0, 1]],
-                 [A[2*g-2][1, 0] * H[len(T) - 2*g][0, 0],
-                  H[len(T) - 2*g][0, 1]]] / (
-                        1 - A[2*g-2][1, 1] * H[len(T) - 2*g][0, 0]))
-            I[-1][0, 0] = I[-2][0, 0] * np.exp(1j * gamma[g-1] * thickness[g-1])
-            I[-1][0, 1] = I[-2][0, 1] * np.exp(1j * gamma[g-1] * thickness[g-1])
-            I[-1][1, 0] = 0
-            I[-1][1, 1] = 0
+            I[-2] = np.array([1, D[len(T) - 2*g][0, 0]], dtype=complex) * U[2*g-2][1, 0] / (1 - U[2*g-2][1, 1] * D[len(T) - 2*g][0, 0])
+            I[-1][0] = I[-2][0] * np.exp(1j * gamma[g-1] * thickness[g-1])
+            I[-1][1] = 0
 
-        poynting = np.zeros(2 * nb_lay, dtype=complex)
+        poynting = np.zeros(nb_lay, dtype=complex)
         if polarization == 0:  # TE
-            for k in range(2*nb_lay):
-                poynting[k] = np.real((I[k][0, 0] + I[k][1, 0]) * np.conj(
-                    (I[k][0, 0] - I[k][1, 0]) * gf[layers[k//2]] / gf[0]))
+            for k in range(nb_lay):
+                poynting[k] = np.real((I[2*k+1][0] + I[2*k+1][1]) * np.conj(
+                    (I[2*k+1][0] - I[2*k+1][1]) * gf[layers[k]] / gf[0]))
         else:  # TM
-            for k in range(2*nb_lay):
-                poynting[k] = np.real((I[k][0, 0] + I[k][1, 0]) * np.conj(
-                    (I[k][0, 0] - I[k][1, 0]) * gf[layers[k//2]]) / gf[0])
+            for k in range(nb_lay):
+                poynting[k] = np.real((I[2*k+1][0] + I[2*k+1][1]) * np.conj(
+                    (I[2*k+1][0] - I[2*k+1][1]) * gf[layers[k]]) / gf[0])
         # Absorption in each layer
 
-        tmp = abs(-np.diff(poynting))
-        # absorb = abs(poynting[1::]-poynting[::-1])[::2]
-        # absorb=np.zeros(g,dtype=complex)
-        absorb = tmp[np.arange(0, 2 * nb_lay, 2)]
-
+        
+        absorb = -np.diff(poynting)
+        if 0 in layers:
+            absorb = np.concatenate(([0], absorb))
+        # Remove abs value in case there is a material with gain
+        # absorb = tmp[np.arange(0, 2 * nb_lay, 2)]
     # reflection coefficient of the whole structure
-    r = A[len(A) - 1][0, 0]
+    r = U[len(U) - 1][0, 0]
     # transmission coefficient of the whole structure
-    t = A[len(A) - 1][1, 0]
+    t = U[len(U) - 1][1, 0]
     # Energy reflexion coefficient;
     R = np.real(abs(r) ** 2)
     # Energy transmission coefficient;
