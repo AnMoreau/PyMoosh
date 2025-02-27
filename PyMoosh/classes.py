@@ -456,7 +456,7 @@ class Material:
             return self.permittivity_function(wavelength, *self.eps_params)
 
         elif self.type == "BrendelBormann":
-            w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wavelength
+            w = 6.62607015e-25 * 299792458 / 1.602176634e-19 / wavelength
             a = np.sqrt(w * (w + 1j * self.gamma))
             x = (a - self.omega) / (np.sqrt(2) * self.sigma)
             y = (a + self.omega) / (np.sqrt(2) * self.sigma)
