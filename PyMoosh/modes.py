@@ -401,7 +401,7 @@ def steepest(start, tol, step_max, struct, wl, pol):
 
     # print("End of the loop")
     if step == step_max:
-        print("Warning: maximum number of steps reached. Final n_eff:", z / k0)
+        print("Warning: maximum number of steps reached. Final n_eff:", z / k_0)
 
     return z / k_0
 
