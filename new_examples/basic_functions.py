@@ -35,12 +35,11 @@ print(R)
 
 
 # More complex use case
-from PyMoosh.vectorized import angular
 
 # For TE polarization
-incidence, r, t, R, T = angular(interface, wavelength, 0., 0., 89., 200)
+incidence, r, t, R, T = PM.angular(interface, wavelength, 0., 0., 89., 200)
 # For TM polarization, same incidence angles
-incidence, r_p, t_p, R_p, T_p = angular(interface, wavelength, 1., 0., 89., 200)
+incidence, r_p, t_p, R_p, T_p = PM.angular(interface, wavelength, 1., 0., 89., 200)
 
 # Visualization of the result
 import matplotlib.pyplot as plt
@@ -55,14 +54,13 @@ plt.legend()
 plt.show()
 
 
-from PyMoosh.vectorized import spectrum
 
 
 interface = PM.Structure([1.,"Si"],[0, 1],[10*wavelength, 10*wavelength])
 # For TE polarization
-wavelength, r, t, R, T = spectrum(interface, 0, 0., 400., 800., 200)
+wavelength, r, t, R, T = PM.spectrum(interface, 0, 0., 400., 800., 200)
 # For TM polarization, same incidence angles
-wavelength, r_p, t_p, R_p, T_p = spectrum(interface, 0, 1., 400., 800., 200)
+wavelength, r_p, t_p, R_p, T_p = PM.spectrum(interface, 0, 1., 400., 800., 200)
 
 # Visualization of the result
 import matplotlib.pyplot as plt

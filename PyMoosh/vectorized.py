@@ -28,17 +28,20 @@ def polarizability_opti_wavelength(struct, wavelengths):  # numpy friendly
     for k in range(len(struct.materials)):
         # Populate epsilon and mu arrays from the material.
         material = struct.materials[k]
-        material_get_permittivity = material.get_permittivity(wavelengths)
-        material_get_permeability = material.get_permeability(wavelengths)
-        try:
-            material_get_permittivity.shape = (len(wavelengths),)
-            material_get_permeability.shape = (len(wavelengths),)
-        except:
-            pass
-
-        epsilon[:, k] = material_get_permittivity
-        mu[:, k] = material_get_permeability
-
+        eps_r = material.get_permittivity(wavelengths)
+        mu_r = material.get_permeability(wavelengths)
+        if hasattr(eps_r, "__iter__"):
+            eps_r.shape = (len(wavelengths),)
+            epsilon[:, k] = eps_r
+        else:
+            for i, lamb in enumerate(wavelengths):
+                epsilon[i, k] = material.get_permittivity(lamb)
+        if hasattr(mu_r, "__iter__"):
+            mu_r.shape = (len(wavelengths),)
+            mu[:, k] = mu_r
+        else:
+            for i, lamb in enumerate(wavelengths):
+                mu[i, k] = material.get_permeability(lamb)
     return epsilon, mu
 
 
