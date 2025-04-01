@@ -446,23 +446,23 @@ def spectrum_A(struct, incidence, polarization, wl_min, wl_max, len_wl, absorb=F
 
 
 def angular(
-    structure, wavelength, polarization, theta_min, theta_max, len_an, method="S"
+    structure, wavelength, polarization, theta_min, theta_max, len_an, method="S", in_unit="deg", out_unit="rad"
 ):
     """
     Wrapper to choose between S matrices (stability) and Abélès (speeeed)
     """
     if method == "S":
         return angular_S(
-            structure, wavelength, polarization, theta_min, theta_max, len_an
+            structure, wavelength, polarization, theta_min, theta_max, len_an, in_unit=in_unit, out_unit=out_unit
         )
     elif method == "A":
         return angular_A(
-            structure, wavelength, polarization, theta_min, theta_max, len_an
+            structure, wavelength, polarization, theta_min, theta_max, len_an, in_unit=in_unit, out_unit=out_unit
         )
     # theta min and max in degrees this time !
 
 
-def angular_S(structure, wavelength, polarization, theta_min, theta_max, len_an):
+def angular_S(structure, wavelength, polarization, theta_min, theta_max, len_an, in_unit="deg", out_unit="rad"):
     """
     Represents the reflexion coefficient (reflectance and phase) for a
     multilayered structure with varying angle.
@@ -471,12 +471,14 @@ def angular_S(structure, wavelength, polarization, theta_min, theta_max, len_an)
         structure (Structure): the object describing the multilayer
         wavelength (float): the working wavelength in nm
         polarization (float): 0 for TE, 1 for TM
-        theta_min (float): minimum angle of incidence in degrees
-        theta_max (float): maximum angle of incidence in degrees
+        theta_min (float): minimum angle of incidence in in_unit
+        theta_max (float): maximum angle of incidence in in_unit
         n_points (int): number of different angle of incidence
+        in_unit (str): deg or rad
+        out_unit (str) deg or rad
 
     Returns:
-        angles (numpy array): angles of incidence considered
+        angles (numpy array): angles of incidence considered in out_unit
         r (numpy complex array): reflexion coefficient for each angle
         t (numpy complex array): transmission coefficient
         R (numpy array): Reflectance
@@ -486,7 +488,9 @@ def angular_S(structure, wavelength, polarization, theta_min, theta_max, len_an)
     other functions.
 
     """
-    angles = np.linspace(theta_min, theta_max, len_an) * np.pi / 180
+    angles = np.linspace(theta_min, theta_max, len_an)
+    if in_unit == "deg":
+        angles = angles * np.pi / 180
     len_mat = len(structure.materials)
     angles.shape = (len_an, 1)
 
@@ -592,11 +596,13 @@ def angular_S(structure, wavelength, polarization, theta_min, theta_max, len_an)
     temp.shape = (len_an, 1)
     T = np.absolute(t) ** 2 * np.real(temp)
 
+    if out_unit == "deg":
+        angles = angles * 180 / np.pi
     return angles, r, t, R, T
 
 
 def angular_A(
-    structure, wavelength, polarization, theta_min, theta_max, len_an, absorb=False
+    structure, wavelength, polarization, theta_min, theta_max, len_an, absorb=False, in_unit="deg", out_unit="rad"
 ):
     """
 
@@ -627,7 +633,10 @@ def angular_A(
 
     # The medium may be dispersive. The permittivity and permability of each
     # layer has to be computed each time.
-    angles = np.linspace(theta_min, theta_max, len_an) * np.pi / 180
+    
+    angles = np.linspace(theta_min, theta_max, len_an)
+    if in_unit == "deg":
+        angles = angles * np.pi / 180
     len_mat = len(structure.materials)
     angles.shape = (len_an, 1)
 
@@ -735,6 +744,8 @@ def angular_A(
         # Energy transmission coefficient;
         T = np.absolute(t) ** 2 * np.real(gf[:, g - 1] / gf[:, 0])
 
+        if out_unit == "deg":
+            angles = angles * 180 / np.pi
         return angles, r, t, R, T
 
     if absorb:
@@ -799,4 +810,6 @@ def angular_A(
         absorb = np.transpose(absorb)
         # First layer is always supposed non absorbing
 
+        if out_unit == "deg":
+            angles = angles * 180 / np.pi
         return angles, r, t, R, T, absorb
