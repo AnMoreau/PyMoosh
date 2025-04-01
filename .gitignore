@@ -16,4 +16,4 @@ mine_PyMoosh/*
 Fig/*
 *.svg
 TODO.txt
-
+tests/*
