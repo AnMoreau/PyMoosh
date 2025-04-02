@@ -123,37 +123,35 @@ def field(struct, beam, window):
     nmodvect = np.arange(-nmod, nmod + 1)
     # First factor makes the gaussian beam, the second one the shift
     # a constant phase is missing, it's just a change in the time origin.
-    X = np.exp(-(w ** 2) * pi ** 2 * nmodvect ** 2) * np.exp(
-        -2 * 1j * pi * nmodvect * C
-    )
+    gauss = np.exp(-(w ** 2) * pi ** 2 * nmodvect ** 2)
+    phase = np.exp(-2 * 1j * pi * nmodvect * C)
+    X = gauss * phase
+
+    layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k0 ** 2)
 
     # Scattering matrix corresponding to no interface.
     T = np.zeros((2 * g + 2, 2, 2), dtype=complex)
     T[0] = [[0, 1], [1, 0]]
     for nm in np.arange(2 * nmod + 1):
 
-        alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k0 * sin(theta) + 2 * pi * (
-            nm - nmod
-        )
-        gamma = np.sqrt(
-            Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g + 1) * alpha ** 2
-        )
+        n_0 = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]])
+        alpha = n_0 * k0 * sin(theta) + 2 * pi * (nm - nmod)
+        gamma = np.sqrt(layer_k ** 2 - np.ones(g + 1) * alpha ** 2)
 
         if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
             gamma[0] = -gamma[0]
 
         if g > 2:
-            gamma[1 : g - 1] = gamma[1 : g - 1] * (
-                1 - 2 * (np.imag(gamma[1 : g - 1]) < 0)
-            )
+            im_sign = np.imag(gamma[1 : g - 1]) < 0
+            gamma[1 : g - 1] = gamma[1 : g - 1] * (1 - 2 * im_sign)
         if (
             np.real(Epsilon[Type[g]]) < 0
             and np.real(Mu[Type[g]]) < 0
-            and np.real(np.sqrt(Epsilon[Type[g]] * k0 ** 2 - alpha ** 2)) != 0
+            and np.real(np.sqrt(layer_k[g] ** 2 - alpha ** 2)) != 0
         ):
-            gamma[g] = -np.sqrt(Epsilon[Type[g]] * Mu[Type[g]] * k0 ** 2 - alpha ** 2)
+            gamma[g] = -np.sqrt(layer_k[g] ** 2 - alpha ** 2)
         else:
-            gamma[g] = np.sqrt(Epsilon[Type[g]] * Mu[Type[g]] * k0 ** 2 - alpha ** 2)
+            gamma[g] = np.sqrt(layer_k[g] ** 2 - alpha ** 2)
 
         gf = gamma / f[Type]
         for k in range(g):
@@ -272,37 +270,37 @@ def fields(struct, beam, window):
     nmodvect = np.arange(-nmod, nmod + 1)
     # First factor makes the gaussian beam, the second one the shift
     # a constant phase is missing, it's just a change in the time origin.
-    X = np.exp(-(w ** 2) * pi ** 2 * nmodvect ** 2) * np.exp(
-        -2 * 1j * pi * nmodvect * C
-    )
+    gauss = np.exp(-(w ** 2) * pi ** 2 * nmodvect ** 2)
+    phase = np.exp(-2 * 1j * pi * nmodvect * C)
+    X = gauss * phase
 
     # Scattering matrix corresponding to no interface.
     T = np.zeros((2 * g + 2, 2, 2), dtype=complex)
     T[0] = [[0, 1], [1, 0]]
+
+    layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k0 ** 2)
     for nm in np.arange(2 * nmod + 1):
 
-        alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k0 * sin(theta) + 2 * pi * (
-            nm - nmod
-        )
-        gamma = np.sqrt(
-            Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g + 1) * alpha ** 2
-        )
+        n_0 = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]])
+        alpha = n_0 * k0 * sin(theta) + 2 * pi * (nm - nmod)
+        gamma = [
+            np.sqrt(layer_k[i] ** 2 - np.ones(g + 1) * alpha ** 2) for i in range(g + 1)
+        ]
 
         if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
             gamma[0] = -gamma[0]
 
         if g > 2:
-            gamma[1 : g - 1] = gamma[1 : g - 1] * (
-                1 - 2 * (np.imag(gamma[1 : g - 1]) < 0)
-            )
+            im_sign = np.imag(gamma[1 : g - 1]) < 0
+            gamma[1 : g - 1] = gamma[1 : g - 1] * (1 - 2 * im_sign)
         if (
             np.real(Epsilon[Type[g]]) < 0
             and np.real(Mu[Type[g]]) < 0
-            and np.real(np.sqrt(Epsilon[Type[g]] * k0 ** 2 - alpha ** 2)) != 0
+            and np.real(np.sqrt(layer_k[g] ** 2 - alpha ** 2)) != 0
         ):
-            gamma[g] = -np.sqrt(Epsilon[Type[g]] * Mu[Type[g]] * k0 ** 2 - alpha ** 2)
-        else:
-            gamma[g] = np.sqrt(Epsilon[Type[g]] * Mu[Type[g]] * k0 ** 2 - alpha ** 2)
+            gamma[g] = -gamma[g]
+        # else:
+        #     gamma[g] = np.sqrt(layer_k[g] ** 2 - alpha ** 2)
 
         gf = gamma / f[Type]
         for k in range(g):
@@ -434,23 +432,18 @@ def coefficient_S(struct, wavelength, incidence, polarization):
 
     # Changing the determination of the square root to achieve perfect stability
     if g > 2:
-        gamma[1 : g - 2] = gamma[1 : g - 2] * (1 - 2 * (np.imag(gamma[1 : g - 2]) < 0))
+        gamma[1 : g - 1] = gamma[1 : g - 1] * (1 - 2 * (np.imag(gamma[1 : g - 1]) < 0))
     # Outgoing wave condition for the last medium
     if (
         np.real(Epsilon[Type[g - 1]]) < 0
         and np.real(Mu[Type[g - 1]]) < 0
-        and np.real(
-            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
-        )
-        != 0
+        and np.real(gamma[g - 1]) != 0
     ):
-        gamma[g - 1] = -np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2
-        )
-    else:
-        gamma[g - 1] = np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2
-        )
+        gamma[g - 1] = -gamma[g - 1]
+    # else:
+    #     gamma[g - 1] = np.sqrt(
+    #         Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2
+    #     )
     T = np.zeros(((2 * g, 2, 2)), dtype=complex)
 
     # first S matrix
@@ -544,18 +537,13 @@ def absorption_S(struct, wavelength, incidence, polarization, layers=[]):
     if (
         np.real(Epsilon[Type[g - 1]]) < 0
         and np.real(Mu[Type[g - 1]]) < 0
-        and np.real(
-            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
-        )
-        != 0
+        and np.real(gamma[g - 1]) != 0
     ):
-        gamma[g - 1] = -np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2
-        )
-    else:
-        gamma[g - 1] = np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2
-        )
+        gamma[g - 1] = -gamma[g - 1]
+    # else:
+    #     gamma[g - 1] = np.sqrt(
+    #         Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2
+    #     )
     T = np.zeros(((2 * g, 2, 2)), dtype=complex)
 
     # first S matrix
@@ -610,8 +598,6 @@ def absorption_S(struct, wavelength, incidence, polarization, layers=[]):
         # Absorption in each layer
 
         absorb = np.concatenate(([0], -np.diff(poynting)))
-        # absorb=np.zeros(g,dtype=complex)
-        # absorb = tmp[np.arange(0, 2 * g, 2)]
 
     else:
         # Specific layers are given for the absorption
