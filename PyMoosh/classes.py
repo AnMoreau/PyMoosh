@@ -5,7 +5,7 @@ This file contains all the basic structures necessary for PyMoosh to run
 import numpy as np
 import re
 import matplotlib.pyplot as plt
-from scipy.special import wofz
+from scipy.special import erfc
 import json
 from refractiveindex import RefractiveIndexMaterial
 
@@ -438,7 +438,6 @@ class Material:
             material = RefractiveIndexMaterial(shelf, book, page)  # create object
             self.material = material
             if verbose:
-                # print("Hello there ;)")
                 print("Material from Refractiveindex Database")
             if len(mat) != 3:
                 print(
@@ -501,20 +500,24 @@ class Material:
 
         elif self.type == "BrendelBormann":
             w = 6.62607015e-25 * 299792458 / 1.602176634e-19 / wavelength
-            a = np.sqrt(w * (w + 1j * self.gamma))
-            x = (a - self.omega) / (np.sqrt(2) * self.sigma)
-            y = (a + self.omega) / (np.sqrt(2) * self.sigma)
-            # Polarizability due to bound electrons
-            chi_b = np.sum(
-                1j
-                * np.sqrt(np.pi)
-                * self.f
-                * self.omega_p**2
-                / (2 * np.sqrt(2) * a * self.sigma)
-                * (wofz(x) + wofz(y))
-            )
+            chi_b = 0
+            for i in range(len(self.f)):
+                a = np.sqrt(w * (w + 1j * self.gamma[i]))
+                x = (a - self.omega[i]) / (np.sqrt(2) * self.sigma[i])
+                y = (a + self.omega[i]) / (np.sqrt(2) * self.sigma[i])
+                # Polarizability due to bound electrons
+                erx = np.exp(-(x ** 2)) * erfc(-1.0j * x)
+                ery = np.exp(-(y ** 2)) * erfc(-1.0j * y)
+                oscill_strength = (
+                    1j
+                    * np.sqrt(np.pi)
+                    * self.f[i]
+                    * self.omega_p ** 2
+                    / (2 * np.sqrt(2) * a * self.sigma[i])
+                )
+                chi_b += oscill_strength * (erx + ery)
             # Equivalent polarizability linked to free electrons (Drude model)
-            chi_f = -self.omega_p**2 * self.f0 / (w * (w + 1j * self.Gamma0))
+            chi_f = -self.omega_p ** 2 * self.f0 / (w * (w + 1j * self.Gamma0))
             epsilon = 1 + chi_f + chi_b
             return epsilon
 
@@ -527,7 +530,7 @@ class Material:
                 return self.material.get_epsilon(wavelength)
             except:
                 n = self.material.get_refractive_index(wavelength)
-                return n**2
+                return n ** 2
 
     def get_permeability(self, wavelength, verbose=False):
         if self.type == "magnetic":

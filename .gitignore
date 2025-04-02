@@ -12,7 +12,8 @@ code/*
 code
 mine
 mine/*
+mine_PyMoosh/*
 Fig/*
 *.svg
 TODO.txt
-
+tests/*

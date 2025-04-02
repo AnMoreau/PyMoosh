@@ -28,17 +28,20 @@ def polarizability_opti_wavelength(struct, wavelengths):  # numpy friendly
     for k in range(len(struct.materials)):
         # Populate epsilon and mu arrays from the material.
         material = struct.materials[k]
-        material_get_permittivity = material.get_permittivity(wavelengths)
-        material_get_permeability = material.get_permeability(wavelengths)
-        try:
-            material_get_permittivity.shape = (len(wavelengths),)
-            material_get_permeability.shape = (len(wavelengths),)
-        except:
-            pass
-
-        epsilon[:, k] = material_get_permittivity
-        mu[:, k] = material_get_permeability
-
+        eps_r = material.get_permittivity(wavelengths)
+        mu_r = material.get_permeability(wavelengths)
+        if hasattr(eps_r, "__iter__"):
+            eps_r.shape = (len(wavelengths),)
+            epsilon[:, k] = eps_r
+        else:
+            for i, lamb in enumerate(wavelengths):
+                epsilon[i, k] = material.get_permittivity(lamb)
+        if hasattr(mu_r, "__iter__"):
+            mu_r.shape = (len(wavelengths),)
+            mu[:, k] = mu_r
+        else:
+            for i, lamb in enumerate(wavelengths):
+                mu[i, k] = material.get_permeability(lamb)
     return epsilon, mu
 
 
@@ -164,7 +167,7 @@ def spectrum_S(struct, incidence, polarization, wl_min, wl_max, len_wl):
 
     # Computation of the vertical wavevectors k_z. Array of shape (len_wl, len_mat).
     gamma = np.sqrt(
-        Epsilon[:, Type] * Mu[:, Type] * k0**2 - np.ones((len_wl, g)) * alpha**2
+        Epsilon[:, Type] * Mu[:, Type] * k0 ** 2 - np.ones((len_wl, g)) * alpha ** 2
     )
 
     # Be cautious if the upper medium is a negative index one.
@@ -181,7 +184,7 @@ def spectrum_S(struct, incidence, polarization, wl_min, wl_max, len_wl):
     # Outgoing wave condition for the last medium.
     Epsilon_last, Mu_last = Epsilon[:, Type[g - 1]], Mu[:, Type[g - 1]]
     Epsilon_last.shape, Mu_last.shape = (len_wl, 1), (len_wl, 1)
-    gamma_last = np.sqrt(Epsilon_last * Mu_last * k0**2 - alpha**2)
+    gamma_last = np.sqrt(Epsilon_last * Mu_last * k0 ** 2 - alpha ** 2)
     mask = np.logical_and.reduce(
         (np.real(Epsilon_last) < 0, np.real(Mu_last) < 0, np.real(gamma_last) != 0)
     )
@@ -304,7 +307,7 @@ def spectrum_A(struct, incidence, polarization, wl_min, wl_max, len_wl, absorb=F
     alpha = np.sqrt(Epsilon_first * Mu_first) * k0 * np.sin(incidence)
     # Computation of the vertical wavevectors k_z. Array of shape (len_wl, len_mat).
     gamma = np.sqrt(
-        Epsilon[:, Type] * Mu[:, Type] * k0**2 - np.ones((len_wl, g)) * alpha**2
+        Epsilon[:, Type] * Mu[:, Type] * k0 ** 2 - np.ones((len_wl, g)) * alpha ** 2
     )
 
     # Be cautious if the upper medium is a negative index one.
@@ -320,7 +323,7 @@ def spectrum_A(struct, incidence, polarization, wl_min, wl_max, len_wl, absorb=F
     # Outgoing wave condition for the last medium.
     Epsilon_last, Mu_last = Epsilon[:, Type[g - 1]], Mu[:, Type[g - 1]]
     Epsilon_last.shape, Mu_last.shape = (len_wl, 1), (len_wl, 1)
-    gamma_last = np.sqrt(Epsilon_last * Mu_last * k0**2 - alpha**2)
+    gamma_last = np.sqrt(Epsilon_last * Mu_last * k0 ** 2 - alpha ** 2)
     mask = np.logical_and.reduce(
         (np.real(Epsilon_last) < 0, np.real(Mu_last) < 0, np.real(gamma_last) != 0)
     )
@@ -473,7 +476,7 @@ def angular_S(structure, wavelength, polarization, theta_min, theta_max, len_an)
         n_points (int): number of different angle of incidence
 
     Returns:
-        angles (numpy array): angles of incidence considered
+        angles (numpy array): angles of incidence considered in degrees
         r (numpy complex array): reflexion coefficient for each angle
         t (numpy complex array): transmission coefficient
         R (numpy array): Reflectance
@@ -521,7 +524,7 @@ def angular_S(structure, wavelength, polarization, theta_min, theta_max, len_an)
 
     # Computation of the vertical wavevectors k_z. Array of shape (len_wl, len_mat).
     gamma = np.sqrt(
-        Epsilon[:, Type] * Mu[:, Type] * k0**2 - np.ones((len_an, g)) * alpha**2
+        Epsilon[:, Type] * Mu[:, Type] * k0 ** 2 - np.ones((len_an, g)) * alpha ** 2
     )
 
     # Be cautious if the upper medium is a negative index one.
@@ -538,7 +541,7 @@ def angular_S(structure, wavelength, polarization, theta_min, theta_max, len_an)
     # Outgoing wave condition for the last medium.
     Epsilon_last, Mu_last = Epsilon[:, Type[g - 1]], Mu[:, Type[g - 1]]
     Epsilon_last.shape, Mu_last.shape = (len_an, 1), (len_an, 1)
-    gamma_last = np.sqrt(Epsilon_last * Mu_last * k0**2 - alpha**2)
+    gamma_last = np.sqrt(Epsilon_last * Mu_last * k0 ** 2 - alpha ** 2)
     mask = np.logical_and.reduce(
         (np.real(Epsilon_last) < 0, np.real(Mu_last) < 0, np.real(gamma_last) != 0)
     )
@@ -589,6 +592,7 @@ def angular_S(structure, wavelength, polarization, theta_min, theta_max, len_an)
     temp.shape = (len_an, 1)
     T = np.absolute(t) ** 2 * np.real(temp)
 
+    angles = angles * 180 / np.pi
     return angles, r, t, R, T
 
 
@@ -624,6 +628,7 @@ def angular_A(
 
     # The medium may be dispersive. The permittivity and permability of each
     # layer has to be computed each time.
+
     angles = np.linspace(theta_min, theta_max, len_an) * np.pi / 180
     len_mat = len(structure.materials)
     angles.shape = (len_an, 1)
@@ -661,7 +666,7 @@ def angular_A(
     alpha = np.sqrt(Epsilon_first * Mu_first) * k0 * np.sin(angles)
     # Computation of the vertical wavevectors k_z. Array of shape (len_an, len_mat).
     gamma = np.sqrt(
-        Epsilon[:, Type] * Mu[:, Type] * k0**2 - np.ones((len_an, g)) * alpha**2
+        Epsilon[:, Type] * Mu[:, Type] * k0 ** 2 - np.ones((len_an, g)) * alpha ** 2
     )
 
     # Be cautious if the upper medium is a negative index one.
@@ -677,7 +682,7 @@ def angular_A(
     # Outgoing wave condition for the last medium.
     Epsilon_last, Mu_last = Epsilon[:, Type[g - 1]], Mu[:, Type[g - 1]]
     Epsilon_last.shape, Mu_last.shape = (len_an, 1), (len_an, 1)
-    gamma_last = np.sqrt(Epsilon_last * Mu_last * k0**2 - alpha**2)
+    gamma_last = np.sqrt(Epsilon_last * Mu_last * k0 ** 2 - alpha ** 2)
     mask = np.logical_and.reduce(
         (np.real(Epsilon_last) < 0, np.real(Mu_last) < 0, np.real(gamma_last) != 0)
     )
@@ -732,6 +737,7 @@ def angular_A(
         # Energy transmission coefficient;
         T = np.absolute(t) ** 2 * np.real(gf[:, g - 1] / gf[:, 0])
 
+        angles = angles * 180 / np.pi
         return angles, r, t, R, T
 
     if absorb:
@@ -796,4 +802,5 @@ def angular_A(
         absorb = np.transpose(absorb)
         # First layer is always supposed non absorbing
 
+        angles = angles * 180 / np.pi
         return angles, r, t, R, T, absorb
