@@ -72,9 +72,9 @@ nb_angle = 200
 pol = 1.
 
 # For TE polarization
-incidence, r, t, R, T = PM.angular(interface, wavelength, 0., angle_beg, angle_end, nb_angle, in_unit="rad")
+incidence, r, t, R, T = PM.angular(interface, wavelength, 0., angle_beg, angle_end, nb_angle)
 # For TM polarization, same incidence angles
-incidence, r_p, t_p, R_p, T_p = PM.angular(interface, wavelength, 1., angle_beg, angle_end, nb_angle, in_unit="rad")
+incidence, r_p, t_p, R_p, T_p = PM.angular(interface, wavelength, 1., angle_beg, angle_end, nb_angle)
 
 # Visualization of the result
 import matplotlib.pyplot as plt

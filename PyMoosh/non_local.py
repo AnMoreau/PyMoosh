@@ -212,7 +212,7 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
 
     alpha = np.sqrt(Epsilon[0]) * k0 * np.sin(incidence)
     gamma = np.array(
-        np.sqrt([(1 + 0j) * Epsilon[i] * k0**2 - alpha**2 for i in range(g)]),
+        np.sqrt([(1 + 0j) * Epsilon[i] * k0 ** 2 - alpha ** 2 for i in range(g)]),
         dtype=complex,
     )
     # print(f"Données \nEpsilon vaut {Epsilon} \nMu vaut {Mu} \nType vaut {Type} \nthickness vaut {thickness} \nalpha vaut {alpha}  \ngamma vaut {gamma} \nbeta vaut {beta}")
@@ -248,11 +248,13 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
             else:
                 # local non-local interface
                 Kl = np.sqrt(
-                    alpha**2
+                    alpha ** 2
                     + (omega_p[k + 1] ** 2 / beta2[k + 1])
                     * (1 / chi_f[k + 1] + 1 / (1 + chi_b[k + 1]))
                 )
-                omega = (alpha**2 / Kl) * (1 / Epsilon[k + 1] - 1 / (1 + chi_b[k + 1]))
+                omega = (alpha ** 2 / Kl) * (
+                    1 / Epsilon[k + 1] - 1 / (1 + chi_b[k + 1])
+                )
 
                 T.append(
                     np.array(
@@ -273,10 +275,10 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
 
         else:  # if beta[k] != 0 :
             Kl = np.sqrt(
-                alpha**2
+                alpha ** 2
                 + (omega_p[k] ** 2 / beta2[k]) * (1 / chi_f[k] + 1 / (1 + chi_b[k]))
             )
-            omega = (alpha**2 / Kl) * (1 / Epsilon[k] - 1 / (1 + chi_b[k]))
+            omega = (alpha ** 2 / Kl) * (1 / Epsilon[k] - 1 / (1 + chi_b[k]))
             t = np.exp(1j * gamma[k] * thickness[k])
             l = np.exp(-Kl * thickness[k])
             T.append(
