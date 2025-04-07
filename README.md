@@ -140,7 +140,9 @@ A punctual source inside a dielectric layer :
 
 ![A punctual source inside a dielectric layer](field.png)
 
-![Excitation of a surface plasmon](spr.png), a wave at the surface of metals, very often used for biosensing. 
+![Excitation of a surface plasmon](spr.png)
+
+Excitation of a surface plasmon using a prism coupler in the Kretschman Raether configuration. 
 
 ## Contributors
 
