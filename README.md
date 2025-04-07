@@ -1,12 +1,12 @@
 # PyMoosh
 
-A Python-based Multilayer Optics Optimization and Simulation Hub
+A Python-based Multilayer Optics Optimization and Simulation Hub !
 
 ## A versatile tool for teaching and research in optics
 
 PyMoosh is a versatile numerical tool written in Python that simulates light interaction with multilayered structures.
 
-Much like a Swiss Army knife, PyMoosh offers a comprehensive set of functionalities while maintaining code that is easy to understand and modify. Its user-friendly design makes it accessible to first-year students who can quickly compute basic properties like reflection coefficients, while advanced users benefit from sophisticated features including complex material models and optimization tools.
+Much like a Swiss Army knife, PyMoosh offers a comprehensive set of functionalities while its code remains easy to understand and modify. Its user-friendly design makes it accessible to first-year students who can quickly compute basic properties like reflection coefficients, while advanced users (researchers) benefit from sophisticated features including complex material models and optimization tools.
 
 PyMoosh is particularly valuable for research in fields such as plasmonics, photovoltaics, and ellipsometry. The library comes with extensive Jupyter Notebooks that demonstrate all its capabilities and facilitate learning.
 
@@ -98,7 +98,7 @@ With just these few lines, you can calculate and visualize electromagnetic field
 ## References and Scientific Publications
 
 ### Technical Documentation
-For a detailed technical description of PyMoosh, see our [arXiv paper](https://arxiv.org/abs/2309.00654).
+For a detailed and regularly updated technical description of PyMoosh, see our [arXiv paper](https://arxiv.org/abs/2309.00654).
 
 ### Tutorial Papers
 PyMoosh has been released with a trilogy of tutorial papers, that are open access:
@@ -122,7 +122,7 @@ PyMoosh has been released with a trilogy of tutorial papers, that are open acces
 
 2. **Global Optimization in Nanophotonics Tutorial**  
    [Journal of the Optical Society of America B, 41(2), A126 (2024)](https://opg.optica.org/josab/fulltext.cfm?uri=josab-41-2-A126)  
-   [Tutorial Repository](https://github.com/Ellawin/tuto_global_optimization_photonics)
+   And a bunch of informative Jupyter notebooks can be found in this [repository](https://github.com/Ellawin/tuto_global_optimization_photonics)
 
 3. **Challenges of Deep Learning for Inverse Design**  
    [Nanophotonics (2023)](https://www.degruyterbrill.com/document/doi/10.1515/nanoph-2023-0527/pdf?licenseType=open-access)
@@ -139,6 +139,8 @@ PyMoosh is a research-grade program. PyMoosh and its predecessor Moosh have been
 A punctual source inside a dielectric layer :
 
 ![A punctual source inside a dielectric layer](field.png)
+
+![Excitation of a surface plasmon](spr.png), a wave at the surface of metals, very often used for biosensing. 
 
 ## Contributors
 
