@@ -22,11 +22,13 @@ We are continuously developing PyMoosh, adding new features while prioritizing b
 ### Basic Installation
 
 **For Python 3.10:**
+
 ```bash
 pip install pymoosh
 ```
 
 **For Python 3.11+:**
+
 Python 3.11+ requires using virtual environments:
 ```bash
 # Create and activate a virtual environment
@@ -142,7 +144,7 @@ A punctual source inside a dielectric layer :
 
 ![Excitation of a surface plasmon](spr.png)
 
-Excitation of a surface plasmon using a prism coupler in the Kretschman Raether configuration. 
+Excitation of a surface plasmon using a prism coupler in the Kretschman Raether configuration.
 
 ## Contributors
 
