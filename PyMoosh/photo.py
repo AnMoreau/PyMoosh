@@ -4,7 +4,8 @@ solar panel efficiency computations
 """
 
 from PyMoosh.classes import conv_to_nm
-from PyMoosh.core import absorption
+from PyMoosh.core import absorption, cascade
+import copy
 import numpy as np
 
 
@@ -8145,3 +8146,95 @@ def opti_photo(
         photon_density,
         total_absorbed,
     )
+
+
+def gx(struct, wavelength, incidence, polarization, pixel_size=3):
+    if struct.unit != "nm":
+        wavelength = conv_to_nm(wavelength, struct.unit)
+    # Wavevector in vacuum.
+    k_0 = 2 * np.pi / wavelength
+    # Wavevector of the mode considered here.
+    alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k_0 * np.sin(incidence)
+    # About the structure:
+    Epsilon, Mu = struct.polarizability(wavelength)
+    thickness = copy.deepcopy(struct.thickness)
+    Type = struct.layer_type
+    g = len(Type) - 1
+    # The boundary conditions will change when the polarization changes.
+    if polarization == 0:
+        f = Mu
+    else:
+        f = Epsilon
+    # Computation of the vertical wavevectors k_z
+    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g + 1) * alpha ** 2)
+    # Changing the determination of the square root to achieve perfect stability
+    if g > 2:
+        gamma[1 : g - 2] = gamma[1 : g - 2] * (1 - 2 * (np.imag(gamma[1 : g - 2]) < 0))
+    # Don't forget the square root has to change
+    # when the wavevector is complex (same as with
+    # dispersion and Map)
+    gamma[0] = gamma[0] * (1 - 2 * (np.angle(gamma[0]) < -np.pi / 5))
+    gamma[g] = gamma[g] * (1 - 2 * (np.angle(gamma[g]) < -np.pi / 5))
+    # We compute all the scattering matrixes starting with the second layer
+    T = np.zeros((2 * g, 2, 2), dtype=complex)
+    T[0] = [[0, 1], [1, 0]]
+    gf = gamma / f[Type]
+    for k in range(1, g):
+        t = np.exp(1j * gamma[k] * thickness[k])
+        T[2 * k - 1] = np.array([[0, t], [t, 0]])
+        b1 = gf[k]
+        b2 = gf[k + 1]
+        T[2 * k] = np.array([[b1 - b2, 2 * b2], [2 * b1, b2 - b1]]) / (b1 + b2)
+    t = np.exp(1j * gamma[g] * thickness[g])
+    T[2 * g - 1] = np.array([[0, t], [t, 0]])
+
+    H = np.zeros((len(T) - 1, 2, 2), dtype=complex)
+    A = np.zeros((len(T) - 1, 2, 2), dtype=complex)
+    H[0] = T[2 * g - 1]
+    A[0] = T[0]
+
+    for k in range(len(T) - 2):
+        A[k + 1] = cascade(A[k], T[k + 1])
+        H[k + 1] = cascade(T[len(T) - k - 2], H[k])
+
+    I = np.zeros((len(T), 2, 2), dtype=complex)
+    for k in range(len(T) - 1):
+        I[k] = np.array(
+            [
+                [A[k][1, 0], A[k][1, 1] * H[len(T) - k - 2][0, 1]],
+                [A[k][1, 0] * H[len(T) - k - 2][0, 0], H[len(T) - k - 2][0, 1]],
+            ]
+            / (1 - A[k][1, 1] * H[len(T) - k - 2][0, 0])
+        )
+
+    # Coefficients, in each layer
+    Coeffs = np.zeros((g + 1, 2), dtype=complex)
+    Coeffs[0] = np.array([0, 1.0])
+    # Value of the first down propagating plane wave below
+    # the first interface, entering the scattering matrix
+    # for the rest of the structure. The amplitude of the
+    # incident wave is thus not 1.
+    b1 = gamma[0] / f[Type[0]]
+    b2 = gamma[1] / f[Type[1]]
+    tmp = (b2 - b1) / (2 * b2)
+    for k in range(g):
+        Coeffs[k + 1] = tmp * np.array([I[2 * k][0, 0], I[2 * k + 1][1, 0]])
+
+    n_pixels = np.floor(np.array(thickness) / pixel_size)
+    n_pixels.astype(int)
+    n_total = int(np.sum(n_pixels))
+    E = np.zeros(n_total, dtype=complex)
+    h = 0.0
+    t = 0
+
+    for k in range(g + 1):
+        for m in range(int(n_pixels[k])):
+            h = h + pixel_size
+            E[t] = Coeffs[k, 0] * np.exp(1j * gamma[k] * h) + Coeffs[k, 1] * np.exp(
+                1j * gamma[k] * (thickness[k] - h)
+            )
+            t += 1
+        h = 0
+
+    x = np.linspace(0, sum(thickness), len(E))
+    return x, E

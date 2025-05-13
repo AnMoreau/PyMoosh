@@ -155,7 +155,7 @@ def spectrum_S(struct, incidence, polarization, wl_min, wl_max, len_wl):
         f = Epsilon
 
     # Wavevector in vacuum. Array of shape (len_wl, 1).
-    k0 = 2 * np.pi / wavelengths
+    k_0 = 2 * np.pi / wavelengths
 
     # Number of layers
     g = len(struct.layer_type)
@@ -163,11 +163,11 @@ def spectrum_S(struct, incidence, polarization, wl_min, wl_max, len_wl):
     # Wavevector k_x, horizontal. Array of shape (len_wl, 1).
     Epsilon_first, Mu_first = Epsilon[:, Type[0]], Mu[:, Type[0]]
     Epsilon_first.shape, Mu_first.shape = (len_wl, 1), (len_wl, 1)
-    alpha = np.sqrt(Epsilon_first * Mu_first) * k0 * np.sin(incidence)
+    alpha = np.sqrt(Epsilon_first * Mu_first) * k_0 * np.sin(incidence)
 
     # Computation of the vertical wavevectors k_z. Array of shape (len_wl, len_mat).
     gamma = np.sqrt(
-        Epsilon[:, Type] * Mu[:, Type] * k0 ** 2 - np.ones((len_wl, g)) * alpha ** 2
+        Epsilon[:, Type] * Mu[:, Type] * k_0 ** 2 - np.ones((len_wl, g)) * alpha ** 2
     )
 
     # Be cautious if the upper medium is a negative index one.
@@ -184,7 +184,7 @@ def spectrum_S(struct, incidence, polarization, wl_min, wl_max, len_wl):
     # Outgoing wave condition for the last medium.
     Epsilon_last, Mu_last = Epsilon[:, Type[g - 1]], Mu[:, Type[g - 1]]
     Epsilon_last.shape, Mu_last.shape = (len_wl, 1), (len_wl, 1)
-    gamma_last = np.sqrt(Epsilon_last * Mu_last * k0 ** 2 - alpha ** 2)
+    gamma_last = np.sqrt(Epsilon_last * Mu_last * k_0 ** 2 - alpha ** 2)
     mask = np.logical_and.reduce(
         (np.real(Epsilon_last) < 0, np.real(Mu_last) < 0, np.real(gamma_last) != 0)
     )
@@ -296,7 +296,7 @@ def spectrum_A(struct, incidence, polarization, wl_min, wl_max, len_wl, absorb=F
         f = Epsilon
 
     # Wavevector in vacuum. Array of shape (len_wl, 1).
-    k0 = 2 * np.pi / wavelengths
+    k_0 = 2 * np.pi / wavelengths
 
     # Number of layers.
     g = len(struct.layer_type)
@@ -304,10 +304,10 @@ def spectrum_A(struct, incidence, polarization, wl_min, wl_max, len_wl, absorb=F
     # Wavevector k_x, horizontal. Array of shape (len_wl, 1).
     Epsilon_first, Mu_first = Epsilon[:, Type[0]], Mu[:, Type[0]]
     Epsilon_first.shape, Mu_first.shape = (len_wl, 1), (len_wl, 1)
-    alpha = np.sqrt(Epsilon_first * Mu_first) * k0 * np.sin(incidence)
+    alpha = np.sqrt(Epsilon_first * Mu_first) * k_0 * np.sin(incidence)
     # Computation of the vertical wavevectors k_z. Array of shape (len_wl, len_mat).
     gamma = np.sqrt(
-        Epsilon[:, Type] * Mu[:, Type] * k0 ** 2 - np.ones((len_wl, g)) * alpha ** 2
+        Epsilon[:, Type] * Mu[:, Type] * k_0 ** 2 - np.ones((len_wl, g)) * alpha ** 2
     )
 
     # Be cautious if the upper medium is a negative index one.
@@ -323,7 +323,7 @@ def spectrum_A(struct, incidence, polarization, wl_min, wl_max, len_wl, absorb=F
     # Outgoing wave condition for the last medium.
     Epsilon_last, Mu_last = Epsilon[:, Type[g - 1]], Mu[:, Type[g - 1]]
     Epsilon_last.shape, Mu_last.shape = (len_wl, 1), (len_wl, 1)
-    gamma_last = np.sqrt(Epsilon_last * Mu_last * k0 ** 2 - alpha ** 2)
+    gamma_last = np.sqrt(Epsilon_last * Mu_last * k_0 ** 2 - alpha ** 2)
     mask = np.logical_and.reduce(
         (np.real(Epsilon_last) < 0, np.real(Mu_last) < 0, np.real(gamma_last) != 0)
     )
@@ -512,7 +512,7 @@ def angular_S(structure, wavelength, polarization, theta_min, theta_max, len_an)
         f = Epsilon
 
     # Wavevector in vacuum. Array of shape (len_wl, 1).
-    k0 = 2 * np.pi / wavelength
+    k_0 = 2 * np.pi / wavelength
 
     # Number of layers
     g = len(structure.layer_type)
@@ -520,11 +520,11 @@ def angular_S(structure, wavelength, polarization, theta_min, theta_max, len_an)
     # Wavevector k_x, horizontal. Array of shape (len_wl, 1).
     Epsilon_first, Mu_first = Epsilon[:, Type[0]], Mu[:, Type[0]]
     Epsilon_first.shape, Mu_first.shape = (len_an, 1), (len_an, 1)
-    alpha = np.sqrt(Epsilon_first * Mu_first) * k0 * np.sin(angles)
+    alpha = np.sqrt(Epsilon_first * Mu_first) * k_0 * np.sin(angles)
 
     # Computation of the vertical wavevectors k_z. Array of shape (len_wl, len_mat).
     gamma = np.sqrt(
-        Epsilon[:, Type] * Mu[:, Type] * k0 ** 2 - np.ones((len_an, g)) * alpha ** 2
+        Epsilon[:, Type] * Mu[:, Type] * k_0 ** 2 - np.ones((len_an, g)) * alpha ** 2
     )
 
     # Be cautious if the upper medium is a negative index one.
@@ -541,7 +541,7 @@ def angular_S(structure, wavelength, polarization, theta_min, theta_max, len_an)
     # Outgoing wave condition for the last medium.
     Epsilon_last, Mu_last = Epsilon[:, Type[g - 1]], Mu[:, Type[g - 1]]
     Epsilon_last.shape, Mu_last.shape = (len_an, 1), (len_an, 1)
-    gamma_last = np.sqrt(Epsilon_last * Mu_last * k0 ** 2 - alpha ** 2)
+    gamma_last = np.sqrt(Epsilon_last * Mu_last * k_0 ** 2 - alpha ** 2)
     mask = np.logical_and.reduce(
         (np.real(Epsilon_last) < 0, np.real(Mu_last) < 0, np.real(gamma_last) != 0)
     )
@@ -655,7 +655,7 @@ def angular_A(
         f = Epsilon
 
     # Wavevector in vacuum. Array of shape (len_an, 1).
-    k0 = 2 * np.pi / wavelength
+    k_0 = 2 * np.pi / wavelength
 
     # Number of layers.
     g = len(structure.layer_type)
@@ -663,10 +663,10 @@ def angular_A(
     # Wavevector k_x, horizontal. Array of shape (len_an, 1).
     Epsilon_first, Mu_first = Epsilon[:, Type[0]], Mu[:, Type[0]]
     Epsilon_first.shape, Mu_first.shape = (len_an, 1), (len_an, 1)
-    alpha = np.sqrt(Epsilon_first * Mu_first) * k0 * np.sin(angles)
+    alpha = np.sqrt(Epsilon_first * Mu_first) * k_0 * np.sin(angles)
     # Computation of the vertical wavevectors k_z. Array of shape (len_an, len_mat).
     gamma = np.sqrt(
-        Epsilon[:, Type] * Mu[:, Type] * k0 ** 2 - np.ones((len_an, g)) * alpha ** 2
+        Epsilon[:, Type] * Mu[:, Type] * k_0 ** 2 - np.ones((len_an, g)) * alpha ** 2
     )
 
     # Be cautious if the upper medium is a negative index one.
@@ -682,7 +682,7 @@ def angular_A(
     # Outgoing wave condition for the last medium.
     Epsilon_last, Mu_last = Epsilon[:, Type[g - 1]], Mu[:, Type[g - 1]]
     Epsilon_last.shape, Mu_last.shape = (len_an, 1), (len_an, 1)
-    gamma_last = np.sqrt(Epsilon_last * Mu_last * k0 ** 2 - alpha ** 2)
+    gamma_last = np.sqrt(Epsilon_last * Mu_last * k_0 ** 2 - alpha ** 2)
     mask = np.logical_and.reduce(
         (np.real(Epsilon_last) < 0, np.real(Mu_last) < 0, np.real(gamma_last) != 0)
     )

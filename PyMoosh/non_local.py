@@ -198,7 +198,7 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
     else:
         f = Epsilon
 
-    k0 = 2 * np.pi / wavelength
+    k_0 = 2 * np.pi / wavelength
     g = len(Type)
     omega_p = [0] * (g - 1)
     chi_b = [0] * (g - 1)
@@ -210,9 +210,9 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
                 Type[k]
             ].get_values_nl(wavelength)
 
-    alpha = np.sqrt(Epsilon[0]) * k0 * np.sin(incidence)
+    alpha = np.sqrt(Epsilon[0]) * k_0 * np.sin(incidence)
     gamma = np.array(
-        np.sqrt([(1 + 0j) * Epsilon[i] * k0 ** 2 - alpha ** 2 for i in range(g)]),
+        np.sqrt([(1 + 0j) * Epsilon[i] * k_0 ** 2 - alpha ** 2 for i in range(g)]),
         dtype=complex,
     )
     # print(f"Données \nEpsilon vaut {Epsilon} \nMu vaut {Mu} \nType vaut {Type} \nthickness vaut {thickness} \nalpha vaut {alpha}  \ngamma vaut {gamma} \nbeta vaut {beta}")
