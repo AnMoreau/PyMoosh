@@ -8223,7 +8223,8 @@ def gx(struct, wavelength, incidence, polarization, pixel_size=3):
     n_pixels = np.floor(np.array(thickness) / pixel_size)
     n_pixels.astype(int)
     n_total = int(np.sum(n_pixels))
-    E = np.zeros(n_total, dtype=complex)
+    E = np.zeros(n_total, dtype=complex) # E in TE, H in TM
+    I = np.zeros(n_total, dtype=complex) # E in TE, H in TM
     h = 0.0
     t = 0
 
@@ -8233,6 +8234,7 @@ def gx(struct, wavelength, incidence, polarization, pixel_size=3):
             E[t] = Coeffs[k, 0] * np.exp(1j * gamma[k] * h) + Coeffs[k, 1] * np.exp(
                 1j * gamma[k] * (thickness[k] - h)
             )
+            I[t] = # WIP
             t += 1
         h = 0
 
