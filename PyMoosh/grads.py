@@ -71,13 +71,13 @@ def coefficient_with_grad_A(
     else:
         f = Epsilon
     # Wavevector in vacuum.
-    k0 = 2 * np.pi / wavelength
+    k_0 = 2 * np.pi / wavelength
     # Number of layers
     g = len(struct.layer_type)
     # Wavevector k_x, horizontal
-    alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k0 * np.sin(incidence)
+    alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k_0 * np.sin(incidence)
     # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g) * alpha ** 2)
+    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g) * alpha ** 2)
     # Be cautious if the upper medium is a negative index one.
     if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
         gamma[0] = -gamma[0]
@@ -90,16 +90,16 @@ def coefficient_with_grad_A(
         np.real(Epsilon[Type[g - 1]]) < 0
         and np.real(Mu[Type[g - 1]]) < 0
         and np.real(
-            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
+            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2)
         )
         != 0
     ):
         gamma[g - 1] = -np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2
         )
     else:
         gamma[g - 1] = np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2
         )
 
     if mode == "value":
@@ -249,13 +249,13 @@ def coefficient_with_grad_T(
     else:
         f = Epsilon
     # Wavevector in vacuum.
-    k0 = 2 * np.pi / wavelength
+    k_0 = 2 * np.pi / wavelength
     # Number of layers
     g = len(struct.layer_type)
     # Wavevector k_x, horizontal
-    alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k0 * np.sin(incidence)
+    alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k_0 * np.sin(incidence)
     # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g) * alpha ** 2)
+    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g) * alpha ** 2)
     # Be cautious if the upper medium is a negative index one.
     if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
         gamma[0] = -gamma[0]
@@ -268,16 +268,16 @@ def coefficient_with_grad_T(
         np.real(Epsilon[Type[g - 1]]) < 0
         and np.real(Mu[Type[g - 1]]) < 0
         and np.real(
-            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2)
+            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2)
         )
         != 0
     ):
         gamma[g - 1] = -np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2
         )
     else:
         gamma[g - 1] = np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2
         )
 
     if mode == "value":

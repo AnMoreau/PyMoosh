@@ -66,7 +66,7 @@ def green(struct, window, lam, source_interface):
     else:
         f = Epsilon
     # Wavevector in vacuum, no dimension
-    k0 = 2 * np.pi / l
+    k_0 = 2 * np.pi / l
     # Initialization of the field component
     En = np.zeros((int(sum(ny)), int(nx)))
     # Total number of layers
@@ -80,7 +80,7 @@ def green(struct, window, lam, source_interface):
         # horizontal wavevector
         alpha = 2 * np.pi * (nm - nmod)
         gamma = np.sqrt(
-            Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g + 1) * alpha ** 2
+            Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g + 1) * alpha ** 2
         )
 
         if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
@@ -93,11 +93,11 @@ def green(struct, window, lam, source_interface):
         if (
             np.real(Epsilon[Type[g]]) < 0
             and np.real(Mu[Type[g]]) < 0
-            and np.real(np.sqrt(Epsilon[Type[g]] * k0 ** 2 - alpha ** 2)) != 0
+            and np.real(np.sqrt(Epsilon[Type[g]] * k_0 ** 2 - alpha ** 2)) != 0
         ):
-            gamma[g] = -np.sqrt(Epsilon[Type[g]] * Mu[Type[g]] * k0 ** 2 - alpha ** 2)
+            gamma[g] = -np.sqrt(Epsilon[Type[g]] * Mu[Type[g]] * k_0 ** 2 - alpha ** 2)
         else:
-            gamma[g] = np.sqrt(Epsilon[Type[g]] * Mu[Type[g]] * k0 ** 2 - alpha ** 2)
+            gamma[g] = np.sqrt(Epsilon[Type[g]] * Mu[Type[g]] * k_0 ** 2 - alpha ** 2)
 
         gf = gamma / f[Type]
         for k in range(g):

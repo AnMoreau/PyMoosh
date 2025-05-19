@@ -52,7 +52,7 @@ def Drude(wav, omega_p, Gamma0):
     and damping Gamma0 and omega_p
     They are given in eV (wav in nm)
     """
-    w = 2 * np.pi * 299792458 * 1e9 / wav
+    w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wav
     chi_f = -(omega_p ** 2) / (w * (w + 1j * Gamma0))
     return 1 + chi_f
 
@@ -65,7 +65,7 @@ def Lorentz(wav, f, omega, gamma, eps):
     f, gamma, omega, sigma must be lists (np arrays) of the same lengths
     They are given in eV (wav in nm)
     """
-    w = 2 * np.pi * 299792458 * 1e9 / wav
+    w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wav
     chi = 0
     for i in range(len(f)):
         chi += f[i] / (omega[i] ** 2 - w ** 2 - 1.0j * gamma[i] * w)
@@ -80,7 +80,7 @@ def DrudeLorentz(wav, omega_p, Gamma0, f, omega, gamma):
     f, gamma, omega, sigma must be lists (np arrays) of the same lengths
     They are given in eV (wav in nm)
     """
-    w = 2 * np.pi * 299792458 * 1e9 / wav
+    w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wav
     chi_f = -(omega_p ** 2) / (w * (w + 1j * Gamma0))
     chi_b = 0
     for i in range(len(f)):
