@@ -5,7 +5,7 @@ This file contains all the basic structures necessary for PyMoosh to run
 import numpy as np
 import re
 import matplotlib.pyplot as plt
-from scipy.special import erfc
+from scipy.special import wofz
 import json
 from refractiveindex import RefractiveIndexMaterial
 
@@ -506,8 +506,8 @@ class Material:
                 x = (a - self.omega[i]) / (np.sqrt(2) * self.sigma[i])
                 y = (a + self.omega[i]) / (np.sqrt(2) * self.sigma[i])
                 # Polarizability due to bound electrons
-                erx = np.exp(-(x ** 2)) * erfc(-1.0j * x)
-                ery = np.exp(-(y ** 2)) * erfc(-1.0j * y)
+                erx = wofz(x)
+                ery = wofz(y)
                 oscill_strength = (
                     1j
                     * np.sqrt(np.pi)
