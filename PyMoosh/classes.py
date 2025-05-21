@@ -305,7 +305,7 @@ class Material:
               Database types can take many special types
 
         There are four special types:
-        -> when importing from a text file (lambda, n, k format), 
+        -> when importing from a text file (lambda, n, k format),
             Then the specialType variable should be set to 'File'
             - File                   / file name
         -> when importing from the Refractive Index Database
@@ -436,12 +436,12 @@ class Material:
             file = mat
             data = np.loadtxt(file, dtype=float)
 
-            wl = data[:,0]
-            n = data[:,1]
-            k = data[:,2]
+            wl = data[:, 0]
+            n = data[:, 1]
+            k = data[:, 2]
 
             self.wavelength_list = np.array(wl, dtype=float)
-            self.permittivities = np.array((n + 1.0j*k)**2, dtype=complex)
+            self.permittivities = np.array((n + 1.0j * k) ** 2, dtype=complex)
 
         elif specialType == "RII":
             # Refractive index material

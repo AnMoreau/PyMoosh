@@ -4025,8 +4025,8 @@ def solar(wavelength, unit="nm"):
 
 def am1_5(wavelength, unit="nm"):
     """
-        The solar irradiance spectrum, converted to A/cm2
-        (assuming a conversion efficiency of 1)
+    The solar irradiance spectrum, converted to A/cm2
+    (assuming a conversion efficiency of 1)
     """
     if unit != "nm":
         wavelength = conv_to_nm(wavelength, unit)
@@ -8152,22 +8152,20 @@ def opti_photo(
     )
 
 
-
 def gx(struct, incidence, polarization, wl_min, wl_max, number_points, pixel_size=3):
     """
-        Computing the g(x), i.e. density of photon absorption
-        WARNING: normal incidence is necessary
+    Computing the g(x), i.e. density of photon absorption
+    WARNING: normal incidence is necessary
     """
     wavelength_list = np.linspace(wl_min, wl_max, number_points)
     if struct.unit != "nm":
         wavelength_list = conv_to_nm(wavelength_list, struct.unit)
-    
-    
+
     photon_density = solar(wavelength_list, unit=struct.unit) * 1e4 / 1.6e-19
 
     thickness = np.array(struct.thickness)
     pol = polarization
-    theta = 0 # No non normal incidence
+    theta = 0  # No non normal incidence
     ny = np.floor(thickness / pixel_size)
 
     E = np.zeros((len(wavelength_list), int(np.sum(ny))), dtype=complex)
@@ -8253,10 +8251,10 @@ def gx(struct, incidence, polarization, wl_min, wl_max, number_points, pixel_siz
                 # that the structure is illuminated from above only, with an Amplitude
                 # of 1 for the incident wave. If you want only the reflected
                 # field, take off the second term.
-                E[i,t] = I[2 * k][0, 0] * np.exp(1j * gamma[k] * h) + I[2 * k + 1][
+                E[i, t] = I[2 * k][0, 0] * np.exp(1j * gamma[k] * h) + I[2 * k + 1][
                     1, 0
                 ] * np.exp(1j * gamma[k] * (thickness[k] - h))
-                Q[i,t] = np.real(index) * np.imag(index) * k_0 * np.abs(E[i, t]**2)
+                Q[i, t] = np.real(index) * np.imag(index) * k_0 * np.abs(E[i, t] ** 2)
                 t += 1
             h = 0
         Q[i] *= photon_density[i]
