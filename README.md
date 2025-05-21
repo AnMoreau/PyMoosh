@@ -1,118 +1,150 @@
 # PyMoosh
 
-## About PyMoosh
+A Python-based Multilayer Optics Optimization and Simulation Hub !
 
-PyMoosh is a open source, user-friendly library for the optical study of multilayered structures, written in Python. 
+## A versatile tool for teaching and research in optics
 
-PyMoosh is now much more advanced than Moosh, the original octave/matlab program we used in the past. Importantly, the use of PyMoosh is illustrated by many Jupyter notebooks, and more are planned. PyMoosh can be used for teaching or research purposes. It is specifically written to be stable and quick, for its use in an optimization framework for instance.
+PyMoosh is a versatile numerical tool written in Python that simulates light interaction with multilayered structures.
 
-It has also been thoroughly described in this [tutorial published in JOSA-B](https://opg.optica.org/josab/fulltext.cfm?uri=josab-41-2-A67&id=545746).
+Much like a Swiss Army knife, PyMoosh offers a comprehensive set of functionalities while its code remains easy to understand and modify. Its user-friendly design makes it accessible to first-year students who can quickly compute basic properties like reflection coefficients, while advanced users (researchers) benefit from sophisticated features including complex material models and optimization tools.
 
-![What PyMoosh (green functions) can do...](field.png)
+PyMoosh is particularly valuable for research in fields such as plasmonics, photovoltaics, and ellipsometry. The library comes with extensive Jupyter Notebooks that demonstrate all its capabilities and facilitate learning.
 
-## Installation
+We are continuously developing PyMoosh, adding new features while prioritizing backward compatibility. Our team provides support and welcomes suggestions for improvement from the user community.
 
-**Python >3.10 is necessary for the inclusion of the RefractiveIndex library**
 
-If this is an issue for you, tell us! We'll make a RefractiveIndex-less version.
+## Installation and Setup
 
-**If you are using Python <3.11:**
-You can do something as simple as 
+### Requirements
+- **Python 3.10 or higher** is required for RefractiveIndex library integration
+- If Python 3.10+ is problematic, contact us for a version without RefractiveIndex
 
-``` pip install pymoosh ```
+### Basic Installation
 
-**As of Python >3.11:**
-It is now a requirement to install external libraries (=libraries not managed by the Python team) in virtual environments. To do so:
+**For Python 3.10:**
 
-``` python -m venv <venv_name> ```
-
-``` source myvenv/bin/activate ```
-
-``` pip install pymoosh ```
-
-Now any time you need to use PyMoosh, make sure you have activated the corresponding virtual environment.
-
-## Functionalities
-PyMoosh allows you to compute most **properties of multilayered structures**, for any wavelength, incidence angle and polarization:
-- reflection, transmission coefficients
-- absorption in any layers
-- PV efficiency
-- resonant modes and zeros of the scattering matrix (and thus guided modes)
-- field profiles
-- green functions for dipolar emitters
-
-**Material properties** (permittivities and permeabilities) can be either defined:
-- with simple, non dispersive values
-- through access to the [RefractiveIndex database](https://refractiveindex.info/)
-- with a user-defined model, many common examples of which are predefined (Drude, Lorentz, Brendel&Bormann, Experimental Data interpolation)
-
-More **advanced materials** are also available, to compute reflection and transmission coefficients (and hopefully, soon, the other properties too):
-- Anisotropic materials
-- Non-local (spatially-dispersive) materials
-
-**Optimization algorithms** are also available, in the Differential Evolution framework. We also published [a tutorial in optimization on JOSA B](https://opg.optica.org/josab/fulltext.cfm?uri=josab-41-2-A126&id=546050).
-
-## What's inside
-
-- The *PyMoosh* folder contains all the code
-- The *notebooks* folder contains the **Jupyter Notebooks** that explain how to use each functionality
-- The *new_examples* folder contains directly usable and more easily modified versions of the jupyter notebook, for you to copy and adapt to your needs
-- The *tests* folder contains a lot of stuff, mostly here for testing/historical reasons, and we don't particularly recommend reading through it
-
-## For specialists
-
-### Matrix formalisms
-PyMoosh has been used to benchmark the speed and stability of all known optical formalisms at interfaces:
-- Scattering matrices
-- Transfer matrices
-- Abélès formalism
-- Dirichlet-to-Neumann maps
-- Impedance formalism
-
-The detail can be found in the article [below](https://opg.optica.org/josab/fulltext.cfm?uri=josab-41-2-A67&id=545746), but the short version is: use the S-matrices if time is not an issue, otherwise use the Abélès formalism (with care).
-
-### Vectorized computations
-
-Need faster computations? We have vectorized versions of wavelength/angular dependent plots in the ```vectorized.py``` script, to take advantage of efficient numpy computations.
-
-### Mode finding
-
-Mode finding uses a gradient descent of the reflection coefficient in the complex plane. We don't use complex integrals or fancy, efficient techniques (mostly because we don't have the time/expertise). If *you're* an expert, though, get in touch!
-
-### Contribute
-
-Found anything missing? You want to help? You're a student in optics and would like to work with us?
-
-[Send us an email!](mailto:denis.langevin_at_uca.fr,antoine.moreau_at_uca.fr)
-
-## References
-
-PyMoosh is described in detail in this [tutorial published in JOSA-B](https://opg.optica.org/josab/fulltext.cfm?uri=josab-41-2-A67&id=545746).
-
-You may cite it:
-```
-@article{Langevin:24,
-author = {Denis Langevin and Pauline Bennet and Abdourahman Khaireh-Walieh and Peter Wiecha and Olivier Teytaud and Antoine Moreau},
-journal = {J. Opt. Soc. Am. B},
-keywords = {Deep learning; Optical computing; Optical filters; Optical properties; Resonant modes; Wavelength division multiplexing},
-number = {2},
-pages = {A67--A78},
-publisher = {Optica Publishing Group},
-title = {PyMoosh: a comprehensive numerical toolkit for computing the optical properties of multilayered structures},
-volume = {41},
-month = {Feb},
-year = {2024},
-url = {https://opg.optica.org/josab/abstract.cfm?URI=josab-41-2-A67},
-doi = {10.1364/JOSAB.506175},
-}
+```bash
+pip install pymoosh
 ```
 
-If you want to cite the repository, the 3.91 version of PyMoosh has been given a DOI :
+**For Python 3.11+:**
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13845630.svg)](https://doi.org/10.5281/zenodo.13845630)
+Python 3.11+ requires using virtual environments:
+```bash
+# Create and activate a virtual environment
+python -m venv pymoosh-env
+# On Linux/macOS:
+source pymoosh-env/bin/activate
+# On Windows:
+pymoosh-env\Scripts\activate
 
+# Install PyMoosh
+pip install pymoosh
+```
 
-Even if PyMoosh is quite simple, this is a research-grade program. We actually do research with it. We've done cool things, like [comparing evolutionary algorithms and real evolution for the first time in history](https://www.nature.com/articles/s41598-020-68719-3).
+### Conda Installation (Windows)
+```bash
+# Create and activate environment
+conda create -n pymoosh python=3.10
+conda activate pymoosh
+
+# Install dependencies first, then PyMoosh
+conda install -c conda-forge numpy scipy matplotlib jupyter
+pip install pymoosh
+```
+
+Remember to activate your environment each time you use PyMoosh.
+
+## Quick Start Example
+
+PyMoosh is designed to be simple and intuitive. Here's a minimal working example to get you started:
+
+```python
+from PyMoosh import *
+import matplotlib.pyplot as plt
+# Define a simple interface (air/glass)
+wl = 600  # wavelength in nm
+interface = Structure([1., 2.25], [0, 1], [20*wl, 20*wl])
+# Compute and represent its reflection coefficient
+incidence, r, t, R, T = angular(interface, wl, 0, 0., 80., 400)
+plt.plot(incidence, R)
+plt.savefig('fresnel.png')
+# Define the window and the incident beam of light
+# Arguments : width, relative position of the beam, resolution in x and y
+domain = Window(100*wl, 0.2, 10., 10.)
+# Define the incident Beam
+# Wavelength, incidence angle, polarization,
+beam = Beam(wl, 56.3/180*np.pi, 0, 10*wl)
+# Compute the field
+E_field = field(interface, beam, domain)
+# Visualize the result
+plt.figure()
+plt.imshow(np.abs(E_field), cmap='jet', extent=[0, domain.width, 0, sum(interface.thickness)])
+plt.axis('off')
+plt.savefig('refraction.png')
+plt.show()
+```
+
+The code above produces these results:
+
+**Reflection coefficient vs. incidence angle:**
+
+![Fresnel reflection coefficient](fresnel.png)
+
+**Light refraction at an air/glass interface:**
+
+![Refraction field visualization](refraction.png)
+
+With just these few lines, you can calculate and visualize electromagnetic fields and reflection coefficients for multilayered structures. The examples above demonstrate a simple air/glass interface, but PyMoosh can handle complex stacks with many materials and layers.
+
+## References and Scientific Publications
+
+### Technical Documentation
+For a detailed and regularly updated technical description of PyMoosh, see our [arXiv paper](https://arxiv.org/abs/2309.00654).
+
+### Tutorial Papers
+PyMoosh has been released with a trilogy of tutorial papers, that are open access:
+
+1. **Official PyMoosh Presentation Paper**  
+   [Journal of the Optical Society of America B, 41(2), A67-A78 (2024)](https://opg.optica.org/josab/fulltext.cfm?uri=josab-41-2-A67)
+
+   If you use PyMoosh in your research, please cite:
+   ```bibtex
+   @article{langevin2024pymoosh,
+     title={PyMoosh: a comprehensive numerical toolkit for computing the optical properties of multilayered structures},
+     author={Langevin, Denis and Bennet, Pauline and Khaireh-Walieh, Abdourahman and Wiecha, Peter and Teytaud, Olivier and Moreau, Antoine},
+     journal={Journal of the Optical Society of America B},
+     volume={41},
+     number={2},
+     pages={A67--A78},
+     year={2024},
+     publisher={Optica Publishing Group}
+   }
+   ```
+
+2. **Global Optimization in Nanophotonics Tutorial**  
+   [Journal of the Optical Society of America B, 41(2), A126 (2024)](https://opg.optica.org/josab/fulltext.cfm?uri=josab-41-2-A126)  
+   And a bunch of informative Jupyter notebooks can be found in this [repository](https://github.com/Ellawin/tuto_global_optimization_photonics)
+
+3. **Challenges of Deep Learning for Inverse Design**  
+   [Nanophotonics (2023)](https://www.degruyterbrill.com/document/doi/10.1515/nanoph-2023-0527/pdf?licenseType=open-access)
+
+### Research Applications
+PyMoosh is a research-grade program. PyMoosh and its predecessor Moosh have been used in various research projects:
+
+- [Comparing evolutionary algorithms and real evolution](https://www.nature.com/articles/s41598-020-68719-3) - The first direct comparison of its kind
+- [Universal features of beam reflection by multilayers](https://arxiv.org/abs/1609.08473) - Demonstrating unintuitive optical phenomena
+- [Simulating exotic "non-specular" phenomena](https://jeos.edpsciences.org/articles/jeos/pdf/2010/01/jeos20100510025.pdf)
+
+## Illustrations
+
+A punctual source inside a dielectric layer :
+
+![A punctual source inside a dielectric layer](field.png)
+
+![Excitation of a surface plasmon](spr.png)
+
+Excitation of a surface plasmon using a prism coupler in the Kretschman Raether configuration.
 
 ## Contributors
 
