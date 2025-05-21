@@ -304,7 +304,10 @@ class Material:
         - Database               / string
               Database types can take many special types
 
-        There are three special types:
+        There are four special types:
+        -> when importing from a text file (lambda, n, k format), 
+            Then the specialType variable should be set to 'File'
+            - File                   / file name
         -> when importing from the Refractive Index Database
             Then the specialType variable should be set to "RII"
             - RefractiveIndexInfo    / list(shelf, book, page)
@@ -424,6 +427,21 @@ class Material:
                     f"Warning: Given data is not in the right format for a 'Default' specialType. You should check the data format or specify a specialType. You can refer to the following table:"
                 )
                 print(self.__doc__)
+
+        elif specialType == "File":
+            # Importing from file
+            self.type = "ExpData"
+            self.name = "ExpData: " + str(mat)
+
+            file = mat
+            data = np.loadtxt(file, dtype=float)
+
+            wl = data[:,0]
+            n = data[:,1]
+            k = data[:,2]
+
+            self.wavelength_list = np.array(wl, dtype=float)
+            self.permittivities = np.array((n + 1.0j*k)**2, dtype=complex)
 
         elif specialType == "RII":
             # Refractive index material

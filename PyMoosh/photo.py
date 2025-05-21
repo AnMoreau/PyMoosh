@@ -4024,6 +4024,10 @@ def solar(wavelength, unit="nm"):
 
 
 def am1_5(wavelength, unit="nm"):
+    """
+        The solar irradiance spectrum, converted to A/cm2
+        (assuming a conversion efficiency of 1)
+    """
     if unit != "nm":
         wavelength = conv_to_nm(wavelength, unit)
     wavelength_list = [
@@ -8148,95 +8152,115 @@ def opti_photo(
     )
 
 
-def gx(struct, wavelength, incidence, polarization, pixel_size=3):
+
+def gx(struct, incidence, polarization, wl_min, wl_max, number_points, pixel_size=3):
+    """
+        Computing the g(x), i.e. density of photon absorption
+        WARNING: normal incidence is necessary
+    """
+    wavelength_list = np.linspace(wl_min, wl_max, number_points)
     if struct.unit != "nm":
-        wavelength = conv_to_nm(wavelength, struct.unit)
-    # Wavevector in vacuum.
-    k_0 = 2 * np.pi / wavelength
-    # Wavevector of the mode considered here.
-    alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k_0 * np.sin(incidence)
-    # About the structure:
-    Epsilon, Mu = struct.polarizability(wavelength)
-    thickness = copy.deepcopy(struct.thickness)
-    Type = struct.layer_type
-    g = len(Type) - 1
-    # The boundary conditions will change when the polarization changes.
-    if polarization == 0:
-        f = Mu
-    else:
-        f = Epsilon
-    # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g + 1) * alpha ** 2)
-    # Changing the determination of the square root to achieve perfect stability
-    if g > 2:
-        gamma[1 : g - 2] = gamma[1 : g - 2] * (1 - 2 * (np.imag(gamma[1 : g - 2]) < 0))
-    # Don't forget the square root has to change
-    # when the wavevector is complex (same as with
-    # dispersion and Map)
-    gamma[0] = gamma[0] * (1 - 2 * (np.angle(gamma[0]) < -np.pi / 5))
-    gamma[g] = gamma[g] * (1 - 2 * (np.angle(gamma[g]) < -np.pi / 5))
-    # We compute all the scattering matrixes starting with the second layer
-    T = np.zeros((2 * g, 2, 2), dtype=complex)
-    T[0] = [[0, 1], [1, 0]]
-    gf = gamma / f[Type]
-    for k in range(1, g):
-        t = np.exp(1j * gamma[k] * thickness[k])
-        T[2 * k - 1] = np.array([[0, t], [t, 0]])
-        b1 = gf[k]
-        b2 = gf[k + 1]
-        T[2 * k] = np.array([[b1 - b2, 2 * b2], [2 * b1, b2 - b1]]) / (b1 + b2)
-    t = np.exp(1j * gamma[g] * thickness[g])
-    T[2 * g - 1] = np.array([[0, t], [t, 0]])
+        wavelength_list = conv_to_nm(wavelength_list, struct.unit)
+    
+    
+    photon_density = solar(wavelength_list, unit=struct.unit) * 1e4 / 1.6e-19
 
-    H = np.zeros((len(T) - 1, 2, 2), dtype=complex)
-    A = np.zeros((len(T) - 1, 2, 2), dtype=complex)
-    H[0] = T[2 * g - 1]
-    A[0] = T[0]
+    thickness = np.array(struct.thickness)
+    pol = polarization
+    theta = 0 # No non normal incidence
+    ny = np.floor(thickness / pixel_size)
 
-    for k in range(len(T) - 2):
-        A[k + 1] = cascade(A[k], T[k + 1])
-        H[k + 1] = cascade(T[len(T) - k - 2], H[k])
+    E = np.zeros((len(wavelength_list), int(np.sum(ny))), dtype=complex)
+    Q = np.zeros((len(wavelength_list), int(np.sum(ny))), dtype=float)
 
-    I = np.zeros((len(T), 2, 2), dtype=complex)
-    for k in range(len(T) - 1):
-        I[k] = np.array(
-            [
-                [A[k][1, 0], A[k][1, 1] * H[len(T) - k - 2][0, 1]],
-                [A[k][1, 0] * H[len(T) - k - 2][0, 0], H[len(T) - k - 2][0, 1]],
-            ]
-            / (1 - A[k][1, 1] * H[len(T) - k - 2][0, 0])
-        )
+    for i, lam in enumerate(wavelength_list):
+        # Computation of all the permittivities/permeabilities
+        Epsilon, Mu = struct.polarizability(lam)
+        Type = struct.layer_type
 
-    # Coefficients, in each layer
-    Coeffs = np.zeros((g + 1, 2), dtype=complex)
-    Coeffs[0] = np.array([0, 1.0])
-    # Value of the first down propagating plane wave below
-    # the first interface, entering the scattering matrix
-    # for the rest of the structure. The amplitude of the
-    # incident wave is thus not 1.
-    b1 = gamma[0] / f[Type[0]]
-    b2 = gamma[1] / f[Type[1]]
-    tmp = (b2 - b1) / (2 * b2)
-    for k in range(g):
-        Coeffs[k + 1] = tmp * np.array([I[2 * k][0, 0], I[2 * k + 1][1, 0]])
+        if pol == 0:
+            f = Mu
+        else:
+            f = Epsilon
+        # Wavevector in vacuum, no dimension
+        k_0 = 2 * np.pi / lam
+        # Total number of layers
+        # g=Type.size-1
+        g = len(struct.layer_type) - 1
+        layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2)
 
-    n_pixels = np.floor(np.array(thickness) / pixel_size)
-    n_pixels.astype(int)
-    n_total = int(np.sum(n_pixels))
-    E = np.zeros(n_total, dtype=complex) # E in TE, H in TM
-    I = np.zeros(n_total, dtype=complex) # E in TE, H in TM
-    h = 0.0
-    t = 0
+        # Scattering matrix corresponding to no interface.
+        T = np.zeros((2 * g + 2, 2, 2), dtype=complex)
+        T[0] = [[0, 1], [1, 0]]
 
-    for k in range(g + 1):
-        for m in range(int(n_pixels[k])):
-            h = h + pixel_size
-            E[t] = Coeffs[k, 0] * np.exp(1j * gamma[k] * h) + Coeffs[k, 1] * np.exp(
-                1j * gamma[k] * (thickness[k] - h)
+        n_0 = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]])
+        alpha = n_0 * k_0 * np.sin(theta)
+        gamma = np.sqrt(layer_k ** 2 - np.ones(g + 1) * alpha ** 2)
+
+        if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
+            gamma[0] = -gamma[0]
+
+        if g > 2:
+            im_sign = np.imag(gamma[1 : g - 1]) < 0
+            gamma[1 : g - 1] = gamma[1 : g - 1] * (1 - 2 * im_sign)
+        if (
+            np.real(Epsilon[Type[g]]) < 0
+            and np.real(Mu[Type[g]]) < 0
+            and np.real(np.sqrt(layer_k[g] ** 2 - alpha ** 2)) != 0
+        ):
+            gamma[g] = -np.sqrt(layer_k[g] ** 2 - alpha ** 2)
+        else:
+            gamma[g] = np.sqrt(layer_k[g] ** 2 - alpha ** 2)
+
+        gf = gamma / f[Type]
+        for k in range(g):
+            t = np.exp(1j * gamma[k] * thickness[k])
+            T[2 * k + 1] = np.array([[0, t], [t, 0]])
+            b1 = gf[k]
+            b2 = gf[k + 1]
+            T[2 * k + 2] = np.array([[b1 - b2, 2 * b2], [2 * b1, b2 - b1]]) / (b1 + b2)
+        t = np.exp(1j * gamma[g] * thickness[g])
+        T[2 * g + 1] = np.array([[0, t], [t, 0]])
+
+        H = np.zeros((len(T) - 1, 2, 2), dtype=complex)
+        A = np.zeros((len(T) - 1, 2, 2), dtype=complex)
+
+        H[0] = T[2 * g + 1]
+        A[0] = T[0]
+
+        for k in range(len(T) - 2):
+            A[k + 1] = cascade(A[k], T[k + 1])
+            H[k + 1] = cascade(T[len(T) - k - 2], H[k])
+
+        I = np.zeros((len(T), 2, 2), dtype=complex)
+        for k in range(len(T) - 1):
+            I[k] = np.array(
+                [
+                    [A[k][1, 0], A[k][1, 1] * H[len(T) - k - 2][0, 1]],
+                    [A[k][1, 0] * H[len(T) - k - 2][0, 0], H[len(T) - k - 2][0, 1]],
+                ]
+                / (1 - A[k][1, 1] * H[len(T) - k - 2][0, 0])
             )
-            I[t] = # WIP
-            t += 1
-        h = 0
 
-    x = np.linspace(0, sum(thickness), len(E))
-    return x, E
+        h = 0
+        t = 0
+
+        for k in range(g + 1):
+            index = np.sqrt(Epsilon[Type[k]] * Mu[Type[k]])
+            for m in range(int(ny[k])):
+                h = h + float(thickness[k]) / ny[k]
+                # The expression for the field used here is based on the assumption
+                # that the structure is illuminated from above only, with an Amplitude
+                # of 1 for the incident wave. If you want only the reflected
+                # field, take off the second term.
+                E[i,t] = I[2 * k][0, 0] * np.exp(1j * gamma[k] * h) + I[2 * k + 1][
+                    1, 0
+                ] * np.exp(1j * gamma[k] * (thickness[k] - h))
+                Q[i,t] = np.real(index) * np.imag(index) * k_0 * np.abs(E[i, t]**2)
+                t += 1
+            h = 0
+        Q[i] *= photon_density[i]
+
+    g = np.trapz(Q, wavelength_list, axis=0)
+    x = np.linspace(0, sum(thickness), len(g))
+    return x, g
