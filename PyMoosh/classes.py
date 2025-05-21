@@ -11,8 +11,8 @@ from refractiveindex import RefractiveIndexMaterial
 
 
 def conv_to_nm(length, unit):
-    """Converts a length from "unit"to nm, because everything has been coded
-    in nm...
+    """Converts a length from "unit" to nm, because everything has been coded
+    in nm
     """
     if unit == "m":
         return np.array(length) * 1e9
@@ -30,7 +30,8 @@ def conv_to_nm(length, unit):
 
 
 class Structure:
-    """Each instance of Structure describes a multilayer completely.
+    """
+    Each instance of Structure describes a multilayer completely.
     This includes the materials the multilayer is made of and the
     thickness of each layer.
 

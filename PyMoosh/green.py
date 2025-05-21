@@ -8,7 +8,8 @@ import numpy as np
 
 
 def green(struct, window, lam, source_interface):
-    """Computes the electric (TE polarization) field inside
+    """
+    Computes the electric (TE polarization) field inside
     a multilayered structure illuminated by punctual source placed inside
     the structure.
 

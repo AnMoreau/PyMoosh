@@ -11,7 +11,8 @@ import matplotlib.pyplot as plt
 
 
 def dispersion(alpha, struct, wavelength, polarization):
-    """It would probably be better to compute the dispersion relation of a
+    """
+    It would probably be better to compute the dispersion relation of a
     multilayered structure, like the determinant of the inverse of the
     scattering matrix. However, strangely enough, for a single interface, it
     just does not work. Even though the coefficients of the scattering matrix
@@ -98,7 +99,8 @@ def dispersion(alpha, struct, wavelength, polarization):
 def complex_map(
     struct, wavelength, polarization, real_bounds, imag_bounds, n_real, n_imag
 ):
-    """Maps the function `dispersion` supposed to vanish when the dispersion
+    """
+    Maps the function `dispersion` supposed to vanish when the dispersion
     relation is satisfied.
 
     Args:
@@ -141,7 +143,8 @@ def complex_map(
 def guided_modes(
     struct, wavelength, polarization, neff_min, neff_max, initial_points=40
 ):
-    """This function explores the complex plane, looking for zeros of the
+    """
+    This function explores the complex plane, looking for zeros of the
     dispersion relation. It does so by launching a steepest descent for a number
     `initial_points` of points on the real axis between neff_min and neff_max.
 
@@ -187,7 +190,8 @@ def follow_guided_modes(
     initial_points=40,
     plot=True,
 ):
-    """This function explores the complex plane, looking for zeros of the
+    """
+    This function explores the complex plane, looking for zeros of the
     dispersion relation. It does so by launching a steepest descent for a number
     `initial_points` of points on the real axis between neff_min and neff_max.
 
@@ -339,7 +343,8 @@ def follow_guided_modes(
 
 
 def steepest(start, tol, step_max, struct, wl, pol):
-    """Steepest descent to find a zero of the `dispersion`
+    """
+    Steepest descent to find a zero of the `dispersion`
     function. The advantage of looking for a zero is that you
     know when the algorithm can stop (when the value of the function
     is smaller than `tol`).
@@ -407,7 +412,21 @@ def steepest(start, tol, step_max, struct, wl, pol):
 
 
 def profile(struct, n_eff, wavelength, polarization, pixel_size=3):
+    """
+    This function computes the profile of the main field (Ey in TE, Hy in TM)
+    for a mode defined by (wavelength, n_eff)
 
+    Args:
+        struct (Structure): object describing the multilayer
+        n_eff (float): Effective index (k / k_0) of the mode
+        wavelength (float): Wavelength (nm) in vacuum corresponding to this mode's frequency
+        polarization (int): 0 for TE, 1 for TM
+        pixel_size (int, optional): vertical resolution. Defaults to 3 nm.
+
+    Returns:
+        x (array(float)): positions at which the profile is computed
+        E (array(complex)): value of the field
+    """
     if struct.unit != "nm":
         wavelength = conv_to_nm(wavelength, struct.unit)
     # Wavevector in vacuum.

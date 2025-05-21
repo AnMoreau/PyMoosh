@@ -91,5 +91,6 @@ def DrudeLorentz(wav, omega_p, Gamma0, f, omega, gamma):
 def ExpData(wav, wav_list, permittivities):
     """
     Interpolation from experimental data
+    Wavelenght must be in nm
     """
     return np.interp(wav, wav_list, permittivities)

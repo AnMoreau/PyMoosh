@@ -10,6 +10,17 @@ import numpy as np
 
 
 def solar(wavelength, unit="nm"):
+    """
+    The solar irradiance spectrum value at :wavelength:, converted to A/cm^2
+    (assuming a conversion efficiency of 1)
+
+    Args:
+        wavelength (float): Wavelength of interest. Can be a list too
+        unit (str, optional): The unit in which the wavelength is provided. Defaults to "nm".
+
+    Returns:
+        float (or array(float)): Solar irradiance in A/cm^2, at wavelengh(s) of interest
+    """    
     if unit != "nm":
         wavelength = conv_to_nm(wavelength, unit)
     wavelength_list = [
@@ -4025,8 +4036,7 @@ def solar(wavelength, unit="nm"):
 
 def am1_5(wavelength, unit="nm"):
     """
-    The solar irradiance spectrum, converted to A/cm2
-    (assuming a conversion efficiency of 1)
+        The solar irradiance spectrum
     """
     if unit != "nm":
         wavelength = conv_to_nm(wavelength, unit)
@@ -8154,9 +8164,25 @@ def opti_photo(
 
 def gx(struct, incidence, polarization, wl_min, wl_max, number_points, pixel_size=3):
     """
-    Computing the g(x), i.e. density of photon absorption
-    WARNING: normal incidence is necessary
-    """
+    Computing the g(x), i.e. density of absorbed photons, as a function of the position inside the stack
+    Unit is photons / s / m^2 / nm
+    Assumes AM1.5 irradiance
+
+    Args:
+        struct (Structure object): the object describing the multilayer
+        incidence (float): incidence angle in degrees
+        .. warning: not meant/tested for non-normal incidence, actually.
+        polarization (float): 0 for TE, 1 for TM
+        .. warning: meaningless in normal incidence
+        wl_min (_type_): beginning wavelength of the spectrum
+        wl_max (_type_): end wavelength of the spectrum
+        number_points (_type_): number of wavelength on the spetrum
+        pixel_size (int, optional): the vertical resolution. Defaults to 3 nm.
+
+    Returns:
+        x (array(float)): list of positions at which the photon density has been computed
+        g (array(float)): g(x), absorbed photon density
+    """    
     wavelength_list = np.linspace(wl_min, wl_max, number_points)
     if struct.unit != "nm":
         wavelength_list = conv_to_nm(wavelength_list, struct.unit)

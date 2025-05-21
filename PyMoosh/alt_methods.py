@@ -477,7 +477,7 @@ def coefficient_I(struct, wavelength, incidence, polarization):
 
 def absorption_A(struct, wavelength, incidence, polarization):
     """
-    This function computes the percentage of the incoming energy
+    This function computes the proportion of the incoming energy
     that is absorbed in each layer when the structure is illuminated
     by a plane wave.
 
