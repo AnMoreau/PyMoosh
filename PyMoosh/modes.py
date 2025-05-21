@@ -51,11 +51,11 @@ def dispersion(alpha, struct, wavelength, polarization):
     else:
         f = Epsilon
     # Wavevector in vacuum.
-    k0 = 2 * np.pi / wavelength
+    k_0 = 2 * np.pi / wavelength
     # Number of layers
     g = len(struct.layer_type)
     # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k0**2 - np.ones(g) * alpha**2)
+    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g) * alpha ** 2)
 
     # Changing the determination of the square root to achieve perfect stability
     if g > 2:
@@ -401,7 +401,7 @@ def steepest(start, tol, step_max, struct, wl, pol):
 
     # print("End of the loop")
     if step == step_max:
-        print("Warning: maximum number of steps reached. Final n_eff:", z / k0)
+        print("Warning: maximum number of steps reached. Final n_eff:", z / k_0)
 
     return z / k_0
 
@@ -425,7 +425,7 @@ def profile(struct, n_eff, wavelength, polarization, pixel_size=3):
     else:
         f = Epsilon
     # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0**2 - np.ones(g + 1) * alpha**2)
+    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g + 1) * alpha ** 2)
     # Changing the determination of the square root to achieve perfect stability
     if g > 2:
         gamma[1 : g - 2] = gamma[1 : g - 2] * (1 - 2 * (np.imag(gamma[1 : g - 2]) < 0))

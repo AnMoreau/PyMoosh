@@ -36,12 +36,12 @@ def BrendelBormann(wav, f0, omega_p, Gamma0, f, omega, gamma, sigma):
         1j
         * np.sqrt(np.pi)
         * f
-        * omega_p**2
+        * omega_p ** 2
         / (2 * np.sqrt(2) * a * sigma)
         * (wofz(x) + wofz(y))
     )
     # Equivalent polarizability linked to free electrons (Drude model)
-    chi_f = -(omega_p**2) * f0 / (w * (w + 1j * Gamma0))
+    chi_f = -(omega_p ** 2) * f0 / (w * (w + 1j * Gamma0))
     epsilon = 1 + chi_f + chi_b
     return epsilon
 
@@ -53,7 +53,7 @@ def Drude(wav, omega_p, Gamma0):
     They are given in eV (wav in nm)
     """
     w = 2 * np.pi * 299792458 * 1e9 / wav
-    chi_f = -(omega_p**2) / (w * (w + 1j * Gamma0))
+    chi_f = -(omega_p ** 2) / (w * (w + 1j * Gamma0))
     return 1 + chi_f
 
 
@@ -66,7 +66,7 @@ def Lorentz(wav, f, omega, gamma, eps):
     They are given in eV (wav in nm)
     """
     w = 2 * np.pi * 299792458 * 1e9 / wav
-    chi = np.sum(f / (omega**2 - w**2 - 1.0j * gamma * w))
+    chi = np.sum(f / (omega ** 2 - w ** 2 - 1.0j * gamma * w))
     return eps + chi
 
 
@@ -79,8 +79,8 @@ def DrudeLorentz(wav, omega_p, Gamma0, f, omega, gamma):
     They are given in eV (wav in nm)
     """
     w = 2 * np.pi * 299792458 * 1e9 / wav
-    chi_f = -(omega_p**2) / (w * (w + 1j * Gamma0))
-    chi_b = np.sum(f / (omega**2 - w**2 - 1.0j * gamma * w))
+    chi_f = -(omega_p ** 2) / (w * (w + 1j * Gamma0))
+    chi_b = np.sum(f / (omega ** 2 - w ** 2 - 1.0j * gamma * w))
     return 1 + chi_f + chi_b
 
 
