@@ -97,7 +97,13 @@ The code above produces these results:
 
 With just these few lines, you can calculate and visualize electromagnetic fields and reflection coefficients for multilayered structures. The examples above demonstrate a simple air/glass interface, but PyMoosh can handle complex stacks with many materials and layers.
 
+
+
 ## References and Scientific Publications
+
+### List of functions
+
+For a quick and handy list of all functions defined in PyMoosh, with their inputs and outputs, have a look at the `PyMoosh_function_list` pdf on this repository.
 
 ### Technical Documentation
 For a detailed and regularly updated technical description of PyMoosh, see our [arXiv paper](https://arxiv.org/abs/2309.00654).
