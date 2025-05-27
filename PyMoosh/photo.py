@@ -20,7 +20,7 @@ def solar(wavelength, unit="nm"):
 
     Returns:
         float (or array(float)): Solar irradiance in A/cm^2, at wavelengh(s) of interest
-    """    
+    """
     if unit != "nm":
         wavelength = conv_to_nm(wavelength, unit)
     wavelength_list = [
@@ -4036,7 +4036,7 @@ def solar(wavelength, unit="nm"):
 
 def am1_5(wavelength, unit="nm"):
     """
-        The solar irradiance spectrum
+    The solar irradiance spectrum
     """
     if unit != "nm":
         wavelength = conv_to_nm(wavelength, unit)
@@ -8182,7 +8182,7 @@ def gx(struct, incidence, polarization, wl_min, wl_max, number_points, pixel_siz
     Returns:
         x (array(float)): list of positions at which the photon density has been computed
         g (array(float)): g(x), absorbed photon density
-    """    
+    """
     wavelength_list = np.linspace(wl_min, wl_max, number_points)
     if struct.unit != "nm":
         wavelength_list = conv_to_nm(wavelength_list, struct.unit)
