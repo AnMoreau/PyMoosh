@@ -32,11 +32,6 @@ def cascade(A, B):
     S[1, 1] = B[1, 1] + A[1, 1] * B[0, 1] * B[1, 0] * t
     return S
 
-    if struct.NonLocal:
-        print("Non Local field not yet defined")
-    if struct.Anisotropic:
-        print("Anisotropic field not yet defined")
-
 
 def absorption(struct, wavelength, incidence, polarization):
     """
