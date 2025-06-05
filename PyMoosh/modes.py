@@ -51,11 +51,11 @@ def dispersion(alpha, struct, wavelength, polarization):
     else:
         f = Epsilon
     # Wavevector in vacuum.
-    k0 = 2 * np.pi / wavelength
+    k_0 = 2 * np.pi / wavelength
     # Number of layers
     g = len(struct.layer_type)
     # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g) * alpha ** 2)
+    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g) * alpha ** 2)
 
     # Changing the determination of the square root to achieve perfect stability
     if g > 2:

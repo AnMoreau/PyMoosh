@@ -113,7 +113,7 @@ def field(struct, beam, window):
     else:
         f = Epsilon
     # Wavevector in vacuum, no dimension
-    k0 = 2 * pi / l
+    k_0 = 2 * pi / l
     # Initialization of the field component
     En = np.zeros((int(sum(ny)), int(nx)))
     # Total number of layers
@@ -127,7 +127,7 @@ def field(struct, beam, window):
     phase = np.exp(-2 * 1j * pi * nmodvect * C)
     X = gauss * phase
 
-    layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k0 ** 2)
+    layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2)
 
     # Scattering matrix corresponding to no interface.
     T = np.zeros((2 * g + 2, 2, 2), dtype=complex)
@@ -135,7 +135,7 @@ def field(struct, beam, window):
     for nm in np.arange(2 * nmod + 1):
 
         n_0 = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]])
-        alpha = n_0 * k0 * sin(theta) + 2 * pi * (nm - nmod)
+        alpha = n_0 * k_0 * sin(theta) + 2 * pi * (nm - nmod)
         gamma = np.sqrt(layer_k ** 2 - np.ones(g + 1) * alpha ** 2)
 
         if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
@@ -258,7 +258,7 @@ def fields(struct, beam, window):
     else:
         f = Epsilon
     # Wavevector in vacuum, no dimension
-    k0 = 2 * pi / l
+    k_0 = 2 * pi / l
     # Initialization of the field component
     En = np.zeros((int(sum(ny)), int(nx)))
     Hxn = np.zeros((int(sum(ny)), int(nx)))
@@ -278,14 +278,12 @@ def fields(struct, beam, window):
     T = np.zeros((2 * g + 2, 2, 2), dtype=complex)
     T[0] = [[0, 1], [1, 0]]
 
-    layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k0 ** 2)
+    layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2)
     for nm in np.arange(2 * nmod + 1):
 
         n_0 = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]])
-        alpha = n_0 * k0 * sin(theta) + 2 * pi * (nm - nmod)
-        gamma = [
-            np.sqrt(layer_k[i] ** 2 - np.ones(g + 1) * alpha ** 2) for i in range(g + 1)
-        ]
+        alpha = n_0 * k_0 * sin(theta) + 2 * pi * (nm - nmod)
+        gamma = [np.sqrt(layer_k[i] ** 2 - alpha ** 2) for i in range(g + 1)]
 
         if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
             gamma[0] = -gamma[0]
@@ -419,13 +417,13 @@ def coefficient_S(struct, wavelength, incidence, polarization):
     else:
         f = Epsilon
     # Wavevector in vacuum.
-    k0 = 2 * np.pi / wavelength
+    k_0 = 2 * np.pi / wavelength
     # Number of layers
     g = len(struct.layer_type)
     # Wavevector k_x, horizontal
-    alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k0 * np.sin(incidence)
+    alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k_0 * np.sin(incidence)
     # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g) * alpha ** 2)
+    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g) * alpha ** 2)
     # Be cautious if the upper medium is a negative index one.
     if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
         gamma[0] = -gamma[0]
@@ -442,7 +440,7 @@ def coefficient_S(struct, wavelength, incidence, polarization):
         gamma[g - 1] = -gamma[g - 1]
     # else:
     #     gamma[g - 1] = np.sqrt(
-    #         Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2
+    #         Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2
     #     )
     T = np.zeros(((2 * g, 2, 2)), dtype=complex)
 
@@ -519,13 +517,13 @@ def absorption_S(struct, wavelength, incidence, polarization, layers=[]):
     else:
         f = Epsilon
     # Wavevector in vacuum.
-    k0 = 2 * np.pi / wavelength
+    k_0 = 2 * np.pi / wavelength
     # Number of layers
     g = len(struct.layer_type)
     # Wavevector k_x, horizontal
-    alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k0 * np.sin(incidence)
+    alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k_0 * np.sin(incidence)
     # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k0 ** 2 - np.ones(g) * alpha ** 2)
+    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g) * alpha ** 2)
     # Be cautious if the upper medium is a negative index one.
     if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
         gamma[0] = -gamma[0]
@@ -542,7 +540,7 @@ def absorption_S(struct, wavelength, incidence, polarization, layers=[]):
         gamma[g - 1] = -gamma[g - 1]
     # else:
     #     gamma[g - 1] = np.sqrt(
-    #         Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k0 ** 2 - alpha ** 2
+    #         Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2
     #     )
     T = np.zeros(((2 * g, 2, 2)), dtype=complex)
 
