@@ -3,9 +3,6 @@ This file contains all functions containing loops over a given variable
 that are optimized using numpy
 """
 
-# check absorption for spectrum_A works
-# parallelize absorption for spectrum_S
-# add absorb keyword in the wrapper ABSORPTION: might be some problems, wait for more info
 import numpy as np
 from PyMoosh.core import coefficient
 import copy

@@ -4,11 +4,23 @@ solar panel efficiency computations
 """
 
 from PyMoosh.classes import conv_to_nm
-from PyMoosh.core import absorption
+from PyMoosh.core import absorption, cascade
+import copy
 import numpy as np
 
 
 def solar(wavelength, unit="nm"):
+    """
+    The solar irradiance spectrum value at :wavelength:, converted to A/cm^2
+    (assuming a conversion efficiency of 1)
+
+    Args:
+        wavelength (float): Wavelength of interest. Can be a list too
+        unit (str, optional): The unit in which the wavelength is provided. Defaults to "nm".
+
+    Returns:
+        float (or array(float)): Solar irradiance in A/cm^2, at wavelengh(s) of interest
+    """
     if unit != "nm":
         wavelength = conv_to_nm(wavelength, unit)
     wavelength_list = [
@@ -4023,6 +4035,9 @@ def solar(wavelength, unit="nm"):
 
 
 def am1_5(wavelength, unit="nm"):
+    """
+    The solar irradiance spectrum
+    """
     if unit != "nm":
         wavelength = conv_to_nm(wavelength, unit)
     wavelength_list = [
@@ -8145,3 +8160,131 @@ def opti_photo(
         photon_density,
         total_absorbed,
     )
+
+
+def gx(struct, incidence, polarization, wl_min, wl_max, number_points, pixel_size=3):
+    """
+    Computing the g(x), i.e. density of absorbed photons, as a function of the position inside the stack
+    Unit is photons / s / m^2 / nm
+    Assumes AM1.5 irradiance
+
+    Args:
+        struct (Structure object): the object describing the multilayer
+        incidence (float): incidence angle in degrees
+        .. warning: not meant/tested for non-normal incidence, actually.
+        polarization (float): 0 for TE, 1 for TM
+        .. warning: meaningless in normal incidence
+        wl_min (_type_): beginning wavelength of the spectrum
+        wl_max (_type_): end wavelength of the spectrum
+        number_points (_type_): number of wavelength on the spetrum
+        pixel_size (int, optional): the vertical resolution. Defaults to 3 nm.
+
+    Returns:
+        x (array(float)): list of positions at which the photon density has been computed
+        g (array(float)): g(x), absorbed photon density
+    """
+    wavelength_list = np.linspace(wl_min, wl_max, number_points)
+    if struct.unit != "nm":
+        wavelength_list = conv_to_nm(wavelength_list, struct.unit)
+
+    photon_density = solar(wavelength_list, unit=struct.unit) * 1e4 / 1.6e-19
+
+    thickness = np.array(struct.thickness)
+    pol = polarization
+    theta = 0  # No non normal incidence
+    ny = np.floor(thickness / pixel_size)
+
+    E = np.zeros((len(wavelength_list), int(np.sum(ny))), dtype=complex)
+    Q = np.zeros((len(wavelength_list), int(np.sum(ny))), dtype=float)
+
+    for i, lam in enumerate(wavelength_list):
+        # Computation of all the permittivities/permeabilities
+        Epsilon, Mu = struct.polarizability(lam)
+        Type = struct.layer_type
+
+        if pol == 0:
+            f = Mu
+        else:
+            f = Epsilon
+        # Wavevector in vacuum, no dimension
+        k_0 = 2 * np.pi / lam
+        # Total number of layers
+        # g=Type.size-1
+        g = len(struct.layer_type) - 1
+        layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2)
+
+        # Scattering matrix corresponding to no interface.
+        T = np.zeros((2 * g + 2, 2, 2), dtype=complex)
+        T[0] = [[0, 1], [1, 0]]
+
+        n_0 = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]])
+        alpha = n_0 * k_0 * np.sin(theta)
+        gamma = np.sqrt(layer_k ** 2 - np.ones(g + 1) * alpha ** 2)
+
+        if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
+            gamma[0] = -gamma[0]
+
+        if g > 2:
+            im_sign = np.imag(gamma[1 : g - 1]) < 0
+            gamma[1 : g - 1] = gamma[1 : g - 1] * (1 - 2 * im_sign)
+        if (
+            np.real(Epsilon[Type[g]]) < 0
+            and np.real(Mu[Type[g]]) < 0
+            and np.real(np.sqrt(layer_k[g] ** 2 - alpha ** 2)) != 0
+        ):
+            gamma[g] = -np.sqrt(layer_k[g] ** 2 - alpha ** 2)
+        else:
+            gamma[g] = np.sqrt(layer_k[g] ** 2 - alpha ** 2)
+
+        gf = gamma / f[Type]
+        for k in range(g):
+            t = np.exp(1j * gamma[k] * thickness[k])
+            T[2 * k + 1] = np.array([[0, t], [t, 0]])
+            b1 = gf[k]
+            b2 = gf[k + 1]
+            T[2 * k + 2] = np.array([[b1 - b2, 2 * b2], [2 * b1, b2 - b1]]) / (b1 + b2)
+        t = np.exp(1j * gamma[g] * thickness[g])
+        T[2 * g + 1] = np.array([[0, t], [t, 0]])
+
+        H = np.zeros((len(T) - 1, 2, 2), dtype=complex)
+        A = np.zeros((len(T) - 1, 2, 2), dtype=complex)
+
+        H[0] = T[2 * g + 1]
+        A[0] = T[0]
+
+        for k in range(len(T) - 2):
+            A[k + 1] = cascade(A[k], T[k + 1])
+            H[k + 1] = cascade(T[len(T) - k - 2], H[k])
+
+        I = np.zeros((len(T), 2, 2), dtype=complex)
+        for k in range(len(T) - 1):
+            I[k] = np.array(
+                [
+                    [A[k][1, 0], A[k][1, 1] * H[len(T) - k - 2][0, 1]],
+                    [A[k][1, 0] * H[len(T) - k - 2][0, 0], H[len(T) - k - 2][0, 1]],
+                ]
+                / (1 - A[k][1, 1] * H[len(T) - k - 2][0, 0])
+            )
+
+        h = 0
+        t = 0
+
+        for k in range(g + 1):
+            index = np.sqrt(Epsilon[Type[k]] * Mu[Type[k]])
+            for m in range(int(ny[k])):
+                h = h + float(thickness[k]) / ny[k]
+                # The expression for the field used here is based on the assumption
+                # that the structure is illuminated from above only, with an Amplitude
+                # of 1 for the incident wave. If you want only the reflected
+                # field, take off the second term.
+                E[i, t] = I[2 * k][0, 0] * np.exp(1j * gamma[k] * h) + I[2 * k + 1][
+                    1, 0
+                ] * np.exp(1j * gamma[k] * (thickness[k] - h))
+                Q[i, t] = np.real(index) * np.imag(index) * k_0 * np.abs(E[i, t] ** 2)
+                t += 1
+            h = 0
+        Q[i] *= photon_density[i]
+
+    g = np.trapz(Q, wavelength_list, axis=0)
+    x = np.linspace(0, sum(thickness), len(g))
+    return x, g

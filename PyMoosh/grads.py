@@ -89,7 +89,9 @@ def coefficient_with_grad_A(
     if (
         np.real(Epsilon[Type[g - 1]]) < 0
         and np.real(Mu[Type[g - 1]]) < 0
-        and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2))
+        and np.real(
+            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2)
+        )
         != 0
     ):
         gamma[g - 1] = -np.sqrt(
@@ -265,7 +267,9 @@ def coefficient_with_grad_T(
     if (
         np.real(Epsilon[Type[g - 1]]) < 0
         and np.real(Mu[Type[g - 1]]) < 0
-        and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2))
+        and np.real(
+            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2)
+        )
         != 0
     ):
         gamma[g - 1] = -np.sqrt(

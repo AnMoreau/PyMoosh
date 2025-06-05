@@ -5,14 +5,14 @@ This file contains all the basic structures necessary for PyMoosh to run
 import numpy as np
 import re
 import matplotlib.pyplot as plt
-from scipy.special import erfc
+from scipy.special import wofz
 import json
 from refractiveindex import RefractiveIndexMaterial
 
 
 def conv_to_nm(length, unit):
-    """Converts a length from "unit"to nm, because everything has been coded
-    in nm...
+    """Converts a length from "unit" to nm, because everything has been coded
+    in nm
     """
     if unit == "m":
         return np.array(length) * 1e9
@@ -30,7 +30,8 @@ def conv_to_nm(length, unit):
 
 
 class Structure:
-    """Each instance of Structure describes a multilayer completely.
+    """
+    Each instance of Structure describes a multilayer completely.
     This includes the materials the multilayer is made of and the
     thickness of each layer.
 
@@ -304,7 +305,10 @@ class Material:
         - Database               / string
               Database types can take many special types
 
-        There are three special types:
+        There are four special types:
+        -> when importing from a text file (lambda, n, k format),
+            Then the specialType variable should be set to 'File'
+            - File                   / file name
         -> when importing from the Refractive Index Database
             Then the specialType variable should be set to "RII"
             - RefractiveIndexInfo    / list(shelf, book, page)
@@ -425,6 +429,21 @@ class Material:
                 )
                 print(self.__doc__)
 
+        elif specialType == "File":
+            # Importing from file
+            self.type = "ExpData"
+            self.name = "ExpData: " + str(mat)
+
+            file = mat
+            data = np.loadtxt(file, dtype=float)
+
+            wl = data[:, 0]
+            n = data[:, 1]
+            k = data[:, 2]
+
+            self.wavelength_list = np.array(wl, dtype=float)
+            self.permittivities = np.array((n + 1.0j * k) ** 2, dtype=complex)
+
         elif specialType == "RII":
             # Refractive index material
             if len(mat) != 3:
@@ -506,8 +525,8 @@ class Material:
                 x = (a - self.omega[i]) / (np.sqrt(2) * self.sigma[i])
                 y = (a + self.omega[i]) / (np.sqrt(2) * self.sigma[i])
                 # Polarizability due to bound electrons
-                erx = np.exp(-(x ** 2)) * erfc(-1.0j * x)
-                ery = np.exp(-(y ** 2)) * erfc(-1.0j * y)
+                erx = wofz(x)
+                ery = wofz(y)
                 oscill_strength = (
                     1j
                     * np.sqrt(np.pi)

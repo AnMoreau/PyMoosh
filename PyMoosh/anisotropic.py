@@ -451,6 +451,17 @@ def Halfspace_method(struct, layer_number, wl, theta_entry):  # AV_Added#
     return p_sorted_mat, Q
 
 
+def cutoff(S_array):
+    S_real = np.real(S_array)
+    S_imag = np.imag(S_array)
+    if S_real < 1e-12:
+        S_real = 0
+    if S_imag < 1e-12:
+        S_imag = 0
+    S_array = S_real + 1j * S_imag
+    return S_array
+
+
 def Berreman_method(struct, layer_number, wl, theta_entry):  # AV_Added#
     """
     This function computes Berreman's matrix D for a given layer "layer_number" in the stack and its associated eigenvalues q and associated eigenvectors for a given layer "layer_number" in the stack .
@@ -532,6 +543,9 @@ def Berreman_method(struct, layer_number, wl, theta_entry):  # AV_Added#
         Sx = Ey * Hz - Ez * Hy
         Sy = Ez * Hx - Ex * Hz
         Sz = Ex * Hy - Ey * Hx
+        Sx = cutoff(Sx)
+        Sy = cutoff(Sy)
+        Sz = cutoff(Sz)
         Ex_list.append(Ex)
         Ey_list.append(Ey)
         Sx_list.append(Sx)

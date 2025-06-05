@@ -8,7 +8,8 @@ import numpy as np
 
 
 def green(struct, window, lam, source_interface):
-    """Computes the electric (TE polarization) field inside
+    """
+    Computes the electric (TE polarization) field inside
     a multilayered structure illuminated by punctual source placed inside
     the structure.
 
@@ -79,7 +80,9 @@ def green(struct, window, lam, source_interface):
     for nm in np.arange(2 * nmod + 1):
         # horizontal wavevector
         alpha = 2 * np.pi * (nm - nmod)
-        gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g + 1) * alpha ** 2)
+        gamma = np.sqrt(
+            Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g + 1) * alpha ** 2
+        )
 
         if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
             gamma[0] = -gamma[0]

@@ -68,7 +68,9 @@ def coefficient_A(struct, wavelength, incidence, polarization):
     if (
         np.real(Epsilon[Type[g - 1]]) < 0
         and np.real(Mu[Type[g - 1]]) < 0
-        and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2))
+        and np.real(
+            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2)
+        )
         != 0
     ):
         gamma[g - 1] = -np.sqrt(
@@ -177,7 +179,9 @@ def coefficient_T(struct, wavelength, incidence, polarization):
     if (
         np.real(Epsilon[Type[g - 1]]) < 0
         and np.real(Mu[Type[g - 1]]) < 0
-        and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2))
+        and np.real(
+            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2)
+        )
         != 0
     ):
         gamma[g - 1] = -np.sqrt(
@@ -300,7 +304,9 @@ def coefficient_DN(struct, wavelength, incidence, polarization):
     if (
         np.real(Epsilon[Type[g - 1]]) < 0
         and np.real(Mu[Type[g - 1]]) < 0
-        and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2))
+        and np.real(
+            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2)
+        )
         != 0
     ):
         gamma[g - 1] = -np.sqrt(
@@ -413,7 +419,9 @@ def coefficient_I(struct, wavelength, incidence, polarization):
     if (
         np.real(Epsilon[Type[g - 1]]) < 0
         and np.real(Mu[Type[g - 1]]) < 0
-        and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2))
+        and np.real(
+            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2)
+        )
         != 0
     ):
         gamma[g - 1] = -np.sqrt(
@@ -469,7 +477,7 @@ def coefficient_I(struct, wavelength, incidence, polarization):
 
 def absorption_A(struct, wavelength, incidence, polarization):
     """
-    This function computes the percentage of the incoming energy
+    This function computes the proportion of the incoming energy
     that is absorbed in each layer when the structure is illuminated
     by a plane wave.
 
@@ -529,7 +537,9 @@ def absorption_A(struct, wavelength, incidence, polarization):
     if (
         np.real(Epsilon[Type[g - 1]]) < 0
         and np.real(Mu[Type[g - 1]]) < 0
-        and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2))
+        and np.real(
+            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2)
+        )
         != 0
     ):
         gamma[g - 1] = -np.sqrt(

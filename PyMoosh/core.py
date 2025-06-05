@@ -283,7 +283,9 @@ def fields(struct, beam, window):
 
         n_0 = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]])
         alpha = n_0 * k_0 * sin(theta) + 2 * pi * (nm - nmod)
-        gamma = [np.sqrt(layer_k[i] ** 2 - alpha ** 2) for i in range(g + 1)]
+        gamma = [
+            np.sqrt(layer_k[i] ** 2 - alpha ** 2) for i in range(g + 1)
+        ]
 
         if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
             gamma[0] = -gamma[0]
