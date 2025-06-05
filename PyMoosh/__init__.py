@@ -1,6 +1,6 @@
 # encoding: utf-8
 #
-# Copyright (C) 2022-2023, Antoine Moreau
+# Copyright (C) 2022-2023, Antoine Moreau and Denis Langevin
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -12,8 +12,8 @@
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
-# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+# You should have received a copy of the MIT License
+# along with this program.  If not, see <https://mit-license.org>.
 #
 """
 PyMoosh - a scattering matrix formalism to solve Maxwell's equations
@@ -24,8 +24,8 @@ and many other things...
 
 """
 __name__ = "PyMoosh"
-__version__ = "3.93"
-__date__ = "05/21/2025"  # MM/DD/YYY
+__version__ = "3.94"
+__date__ = "06/05/2025"  # MM/DD/YYY
 __author__ = "Antoine Moreau and Denis Langevin"
 
 
