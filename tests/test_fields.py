@@ -6,9 +6,9 @@ materials = []
 wavelength = 600
 kr = PM.Structure([1.,'Gold','Water',1.46**2,1.7**2],[4,1,0],[500,40,500])
 polarization = 1
-incidence,r,t,R,T=PM.Angular(kr,wavelength,polarization,0.,80.,400)
-plt.plot(incidence,R)
-plt.show()
+# incidence,r,t,R,T=PM.Angular(kr,wavelength,polarization,0.,80.,400)
+# plt.plot(incidence,R)
+# plt.show()
 
 window = PM.Window(70*wavelength,0.4,5.,5.)
 beam = PM.Beam(wavelength,38.7/180*np.pi,polarization,10*wavelength)
