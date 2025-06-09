@@ -50,19 +50,19 @@ def rotate_permittivity(eps, angle_rad, axis="z"):
     R = np.array(
         [
             [
-                costheta + (ux ** 2) * (1 - costheta),
+                costheta + (ux**2) * (1 - costheta),
                 ux * uy * (1 - costheta) - uz * sintheta,
                 ux * uz * (1 - costheta) + uy * sintheta,
             ],
             [
                 uy * ux * (1 - costheta) + uz * sintheta,
-                costheta + (uy ** 2) * (1 - costheta),
+                costheta + (uy**2) * (1 - costheta),
                 uy * uz * (1 - costheta) - ux * sintheta,
             ],
             [
                 uz * ux * (1 - costheta) - uy * sintheta,
                 uz * uy * (1 - costheta) + ux * sintheta,
-                costheta + (uz ** 2) * (1 - costheta),
+                costheta + (uz**2) * (1 - costheta),
             ],
         ]
     )
@@ -318,7 +318,7 @@ class AniMaterial(Material):
                     print("epsilon_medium =", material.get_epsilon(wavelength))
                 except:  # If k exist we use get_epsilon(wl)
                     n = material.get_refractive_index(wavelength)
-                    epsilon_medium.append(n ** 2)
+                    epsilon_medium.append(n**2)
                     print("n =", n)
             elif self.specialType == "Model_ANI":
                 function = material[0]
@@ -436,7 +436,7 @@ def Halfspace_method(struct, layer_number, wl, theta_entry):  # AV_Added#
 
     # Getting the angles necessary for the eigen vectors of the halfspac
     sin_phi = Kx / n
-    cos_phi = np.sqrt(1 - sin_phi ** 2 + 0j)
+    cos_phi = np.sqrt(1 - sin_phi**2 + 0j)
     # q_sorted = [n * cos_phi, n * cos_phi, -n * cos_phi, -n * cos_phi]
     p_sorted_mat = np.array(
         [
@@ -500,7 +500,7 @@ def Berreman_method(struct, layer_number, wl, theta_entry):  # AV_Added#
     eps_yz = eps_R[1, 2]
     Delta = np.array(
         [
-            [-Kx * eps_zx / eps_zz, 1 - Kx ** 2 / eps_zz, -Kx * eps_zy / eps_zz, 0],
+            [-Kx * eps_zx / eps_zz, 1 - Kx**2 / eps_zz, -Kx * eps_zy / eps_zz, 0],
             [
                 eps_xx - (eps_xz * eps_zx) / eps_zz,
                 -Kx * eps_xz / eps_zz,
@@ -511,7 +511,7 @@ def Berreman_method(struct, layer_number, wl, theta_entry):  # AV_Added#
             [
                 eps_yx - (eps_yz * eps_zx) / eps_zz,
                 -Kx * eps_yz / eps_zz,
-                -(Kx ** 2) + eps_yy - (eps_yz * eps_zy) / eps_zz,
+                -(Kx**2) + eps_yy - (eps_yz * eps_zy) / eps_zz,
                 0,
             ],
         ]

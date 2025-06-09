@@ -56,7 +56,7 @@ def coefficient_A(struct, wavelength, incidence, polarization):
     # Wavevector k_x, horizontal
     alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k_0 * np.sin(incidence)
     # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g) * alpha ** 2)
+    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0**2 - np.ones(g) * alpha**2)
     # Be cautious if the upper medium is a negative index one.
     if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
         gamma[0] = -gamma[0]
@@ -68,17 +68,15 @@ def coefficient_A(struct, wavelength, incidence, polarization):
     if (
         np.real(Epsilon[Type[g - 1]]) < 0
         and np.real(Mu[Type[g - 1]]) < 0
-        and np.real(
-            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2)
-        )
+        and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0**2 - alpha**2))
         != 0
     ):
         gamma[g - 1] = -np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0**2 - alpha**2
         )
     else:
         gamma[g - 1] = np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0**2 - alpha**2
         )
 
     T = np.zeros(((g - 1, 2, 2)), dtype=complex)
@@ -167,7 +165,7 @@ def coefficient_T(struct, wavelength, incidence, polarization):
     # Wavevector k_x, horizontal
     alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k_0 * np.sin(incidence)
     # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g) * alpha ** 2)
+    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0**2 - np.ones(g) * alpha**2)
     # Be cautious if the upper medium is a negative index one.
     if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
         gamma[0] = -gamma[0]
@@ -179,17 +177,15 @@ def coefficient_T(struct, wavelength, incidence, polarization):
     if (
         np.real(Epsilon[Type[g - 1]]) < 0
         and np.real(Mu[Type[g - 1]]) < 0
-        and np.real(
-            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2)
-        )
+        and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0**2 - alpha**2))
         != 0
     ):
         gamma[g - 1] = -np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0**2 - alpha**2
         )
     else:
         gamma[g - 1] = np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0**2 - alpha**2
         )
 
     T = np.zeros(((2 * g - 2, 2, 2)), dtype=complex)
@@ -292,7 +288,7 @@ def coefficient_DN(struct, wavelength, incidence, polarization):
     # Wavevector k_x, horizontal
     alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k_0 * np.sin(incidence)
     # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g) * alpha ** 2)
+    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0**2 - np.ones(g) * alpha**2)
     # Be cautious if the upper medium is a negative index one.
     if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
         gamma[0] = -gamma[0]
@@ -304,17 +300,15 @@ def coefficient_DN(struct, wavelength, incidence, polarization):
     if (
         np.real(Epsilon[Type[g - 1]]) < 0
         and np.real(Mu[Type[g - 1]]) < 0
-        and np.real(
-            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2)
-        )
+        and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0**2 - alpha**2))
         != 0
     ):
         gamma[g - 1] = -np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0**2 - alpha**2
         )
     else:
         gamma[g - 1] = np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0**2 - alpha**2
         )
 
     T = np.zeros(((g - 1, 2, 2)), dtype=complex)
@@ -403,7 +397,7 @@ def coefficient_I(struct, wavelength, incidence, polarization):
     # Wavevector k_x, horizontal
     alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k_0 * np.sin(incidence)
     # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g) * alpha ** 2)
+    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0**2 - np.ones(g) * alpha**2)
     if polarization == 0:
         f = Mu
     else:
@@ -419,17 +413,15 @@ def coefficient_I(struct, wavelength, incidence, polarization):
     if (
         np.real(Epsilon[Type[g - 1]]) < 0
         and np.real(Mu[Type[g - 1]]) < 0
-        and np.real(
-            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2)
-        )
+        and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0**2 - alpha**2))
         != 0
     ):
         gamma[g - 1] = -np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0**2 - alpha**2
         )
     else:
         gamma[g - 1] = np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0**2 - alpha**2
         )
 
     n_s = np.zeros(g, dtype=complex)
@@ -525,7 +517,7 @@ def absorption_A(struct, wavelength, incidence, polarization):
     # Wavevector k_x, horizontal
     alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k_0 * np.sin(incidence)
     # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g) * alpha ** 2)
+    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0**2 - np.ones(g) * alpha**2)
     # Be cautious if the upper medium is a negative index one.
     if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
         gamma[0] = -gamma[0]
@@ -537,17 +529,15 @@ def absorption_A(struct, wavelength, incidence, polarization):
     if (
         np.real(Epsilon[Type[g - 1]]) < 0
         and np.real(Mu[Type[g - 1]]) < 0
-        and np.real(
-            np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2)
-        )
+        and np.real(np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0**2 - alpha**2))
         != 0
     ):
         gamma[g - 1] = -np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0**2 - alpha**2
         )
     else:
         gamma[g - 1] = np.sqrt(
-            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0 ** 2 - alpha ** 2
+            Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0**2 - alpha**2
         )
 
     T = np.zeros(((g - 1, 2, 2)), dtype=complex)

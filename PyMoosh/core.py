@@ -118,11 +118,11 @@ def field(struct, beam, window):
     nmodvect = np.arange(-nmod, nmod + 1)
     # First factor makes the gaussian beam, the second one the shift
     # a constant phase is missing, it's just a change in the time origin.
-    gauss = np.exp(-(w ** 2) * pi ** 2 * nmodvect ** 2)
+    gauss = np.exp(-(w**2) * pi**2 * nmodvect**2)
     phase = np.exp(-2 * 1j * pi * nmodvect * C)
     X = gauss * phase
 
-    layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2)
+    layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k_0**2)
 
     # Scattering matrix corresponding to no interface.
     T = np.zeros((2 * g + 2, 2, 2), dtype=complex)
@@ -131,7 +131,7 @@ def field(struct, beam, window):
 
         n_0 = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]])
         alpha = n_0 * k_0 * sin(theta) + 2 * pi * (nm - nmod)
-        gamma = np.sqrt(layer_k ** 2 - np.ones(g + 1) * alpha ** 2)
+        gamma = np.sqrt(layer_k**2 - np.ones(g + 1) * alpha**2)
 
         if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
             gamma[0] = -gamma[0]
@@ -142,11 +142,11 @@ def field(struct, beam, window):
         if (
             np.real(Epsilon[Type[g]]) < 0
             and np.real(Mu[Type[g]]) < 0
-            and np.real(np.sqrt(layer_k[g] ** 2 - alpha ** 2)) != 0
+            and np.real(np.sqrt(layer_k[g] ** 2 - alpha**2)) != 0
         ):
-            gamma[g] = -np.sqrt(layer_k[g] ** 2 - alpha ** 2)
+            gamma[g] = -np.sqrt(layer_k[g] ** 2 - alpha**2)
         else:
-            gamma[g] = np.sqrt(layer_k[g] ** 2 - alpha ** 2)
+            gamma[g] = np.sqrt(layer_k[g] ** 2 - alpha**2)
 
         gf = gamma / f[Type]
         for k in range(g):
@@ -265,7 +265,7 @@ def fields(struct, beam, window):
     nmodvect = np.arange(-nmod, nmod + 1)
     # First factor makes the gaussian beam, the second one the shift
     # a constant phase is missing, it's just a change in the time origin.
-    gauss = np.exp(-(w ** 2) * pi ** 2 * nmodvect ** 2)
+    gauss = np.exp(-(w**2) * pi**2 * nmodvect**2)
     phase = np.exp(-2 * 1j * pi * nmodvect * C)
     X = gauss * phase
 
@@ -273,14 +273,12 @@ def fields(struct, beam, window):
     T = np.zeros((2 * g + 2, 2, 2), dtype=complex)
     T[0] = [[0, 1], [1, 0]]
 
-    layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2)
+    layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k_0**2)
     for nm in np.arange(2 * nmod + 1):
 
         n_0 = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]])
         alpha = n_0 * k_0 * sin(theta) + 2 * pi * (nm - nmod)
-        gamma = [
-            np.sqrt(layer_k[i] ** 2 - alpha ** 2) for i in range(g + 1)
-        ]
+        gamma = [np.sqrt(layer_k[i] ** 2 - alpha**2) for i in range(g + 1)]
 
         if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
             gamma[0] = -gamma[0]
@@ -291,7 +289,7 @@ def fields(struct, beam, window):
         if (
             np.real(Epsilon[Type[g]]) < 0
             and np.real(Mu[Type[g]]) < 0
-            and np.real(np.sqrt(layer_k[g] ** 2 - alpha ** 2)) != 0
+            and np.real(np.sqrt(layer_k[g] ** 2 - alpha**2)) != 0
         ):
             gamma[g] = -gamma[g]
         # else:
@@ -420,7 +418,7 @@ def coefficient_S(struct, wavelength, incidence, polarization):
     # Wavevector k_x, horizontal
     alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k_0 * np.sin(incidence)
     # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g) * alpha ** 2)
+    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0**2 - np.ones(g) * alpha**2)
     # Be cautious if the upper medium is a negative index one.
     if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
         gamma[0] = -gamma[0]
@@ -520,7 +518,7 @@ def absorption_S(struct, wavelength, incidence, polarization, layers=[]):
     # Wavevector k_x, horizontal
     alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k_0 * np.sin(incidence)
     # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g) * alpha ** 2)
+    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0**2 - np.ones(g) * alpha**2)
     # Be cautious if the upper medium is a negative index one.
     if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
         gamma[0] = -gamma[0]

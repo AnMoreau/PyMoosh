@@ -8211,7 +8211,7 @@ def gx(struct, incidence, polarization, wl_min, wl_max, number_points, pixel_siz
         # Total number of layers
         # g=Type.size-1
         g = len(struct.layer_type) - 1
-        layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2)
+        layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k_0**2)
 
         # Scattering matrix corresponding to no interface.
         T = np.zeros((2 * g + 2, 2, 2), dtype=complex)
@@ -8219,7 +8219,7 @@ def gx(struct, incidence, polarization, wl_min, wl_max, number_points, pixel_siz
 
         n_0 = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]])
         alpha = n_0 * k_0 * np.sin(theta)
-        gamma = np.sqrt(layer_k ** 2 - np.ones(g + 1) * alpha ** 2)
+        gamma = np.sqrt(layer_k**2 - np.ones(g + 1) * alpha**2)
 
         if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
             gamma[0] = -gamma[0]
@@ -8230,11 +8230,11 @@ def gx(struct, incidence, polarization, wl_min, wl_max, number_points, pixel_siz
         if (
             np.real(Epsilon[Type[g]]) < 0
             and np.real(Mu[Type[g]]) < 0
-            and np.real(np.sqrt(layer_k[g] ** 2 - alpha ** 2)) != 0
+            and np.real(np.sqrt(layer_k[g] ** 2 - alpha**2)) != 0
         ):
-            gamma[g] = -np.sqrt(layer_k[g] ** 2 - alpha ** 2)
+            gamma[g] = -np.sqrt(layer_k[g] ** 2 - alpha**2)
         else:
-            gamma[g] = np.sqrt(layer_k[g] ** 2 - alpha ** 2)
+            gamma[g] = np.sqrt(layer_k[g] ** 2 - alpha**2)
 
         gf = gamma / f[Type]
         for k in range(g):
