@@ -531,12 +531,12 @@ class Material:
                     1j
                     * np.sqrt(np.pi)
                     * self.f[i]
-                    * self.omega_p ** 2
+                    * self.omega_p**2
                     / (2 * np.sqrt(2) * a * self.sigma[i])
                 )
                 chi_b += oscill_strength * (erx + ery)
             # Equivalent polarizability linked to free electrons (Drude model)
-            chi_f = -self.omega_p ** 2 * self.f0 / (w * (w + 1j * self.Gamma0))
+            chi_f = -self.omega_p**2 * self.f0 / (w * (w + 1j * self.Gamma0))
             epsilon = 1 + chi_f + chi_b
             return epsilon
 
@@ -549,7 +549,7 @@ class Material:
                 return self.material.get_epsilon(wavelength)
             except:
                 n = self.material.get_refractive_index(wavelength)
-                return n ** 2
+                return n**2
 
     def get_permeability(self, wavelength, verbose=False):
         if self.type == "magnetic":

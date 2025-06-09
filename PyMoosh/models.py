@@ -34,14 +34,14 @@ def BrendelBormann(wav, f0, omega_p, Gamma0, f, omega, gamma, sigma):
         x = (a - omega[i]) / (np.sqrt(2) * sigma[i])
         y = (a + omega[i]) / (np.sqrt(2) * sigma[i])
         # Polarizability due to bound electrons
-        erx = np.exp(-(x ** 2)) * erfc(-1.0j * x)
-        ery = np.exp(-(y ** 2)) * erfc(-1.0j * y)
+        erx = np.exp(-(x**2)) * erfc(-1.0j * x)
+        ery = np.exp(-(y**2)) * erfc(-1.0j * y)
         oscill_strength = (
-            1j * np.sqrt(np.pi) * f[i] * omega_p ** 2 / (2 * np.sqrt(2) * a * sigma[i])
+            1j * np.sqrt(np.pi) * f[i] * omega_p**2 / (2 * np.sqrt(2) * a * sigma[i])
         )
         chi_b += oscill_strength * (erx + ery)
     # Equivalent polarizability linked to free electrons (Drude model)
-    chi_f = -(omega_p ** 2) * f0 / (w * (w + 1j * Gamma0))
+    chi_f = -(omega_p**2) * f0 / (w * (w + 1j * Gamma0))
     epsilon = 1 + chi_f + chi_b
     return epsilon
 
@@ -53,7 +53,7 @@ def Drude(wav, omega_p, Gamma0):
     They are given in eV (wav in nm)
     """
     w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wav
-    chi_f = -(omega_p ** 2) / (w * (w + 1j * Gamma0))
+    chi_f = -(omega_p**2) / (w * (w + 1j * Gamma0))
     return 1 + chi_f
 
 
@@ -68,7 +68,7 @@ def Lorentz(wav, f, omega, gamma, eps):
     w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wav
     chi = 0
     for i in range(len(f)):
-        chi += f[i] / (omega[i] ** 2 - w ** 2 - 1.0j * gamma[i] * w)
+        chi += f[i] / (omega[i] ** 2 - w**2 - 1.0j * gamma[i] * w)
     return eps + chi
 
 
@@ -81,10 +81,10 @@ def DrudeLorentz(wav, omega_p, Gamma0, f, omega, gamma):
     They are given in eV (wav in nm)
     """
     w = 6.62606957e-25 * 299792458 / 1.602176565e-19 / wav
-    chi_f = -(omega_p ** 2) / (w * (w + 1j * Gamma0))
+    chi_f = -(omega_p**2) / (w * (w + 1j * Gamma0))
     chi_b = 0
     for i in range(len(f)):
-        chi_b += f[i] / (omega[i] ** 2 - w ** 2 - 1.0j * gamma[i] * w)
+        chi_b += f[i] / (omega[i] ** 2 - w**2 - 1.0j * gamma[i] * w)
     return 1 + chi_f + chi_b
 
 
