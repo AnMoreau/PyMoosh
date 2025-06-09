@@ -184,6 +184,10 @@ def QODE(
 
     n = X_min.size
 
+    if progression is True:
+        # By default, show for every 10% of progress
+        progression = 10
+
     # Population initialization
     omega = np.zeros((population, n))
     cost = np.zeros(population)
@@ -230,7 +234,7 @@ def QODE(
                 evaluation = evaluation + 1
                 if progression and ((evaluation * progression) % budget == 0):
                     print(
-                        f"Progression : {np.round(evaluation*100/(budget - population), 2)}%. Current cost : {np.round(f_cout(best),6)}"
+                        f"Progression : {np.round(evaluation*100/(budget - population), 2)}%. Current best cost : {np.round(cost[who],6)}"
                     )
                 if tmp < cost[k]:
                     # If the new individual is better than the parent,
@@ -242,10 +246,10 @@ def QODE(
         who = np.argmin(cost)
         best = omega[who]
         convergence.append(cost[who])
-        if (evaluation % 50 == 0) and progression:
-            print(
-                f"Progression : {np.round(evaluation*100/(budget - population), 2)}%. Current cost : {np.round(f_cout(best),6)}"
-            )
+        # if (evaluation % 50 == 0) and progression:
+        #     print(
+        #         f"Progression : {np.round(evaluation*100/(budget - population), 2)}%. Current best cost : {np.round(cost[who],6)}"
+        #     )
 
     convergence = convergence[0 : generation + 1]
 
