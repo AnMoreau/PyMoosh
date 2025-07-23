@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from PyMoosh.core import conv_to_nm
 from PyMoosh.classes import Material, Structure
 
-# TODO: add other functionalities (field/absorption, etc.)
+# TODO: add absorption
 
 
 class NLStructure(Structure):
@@ -63,7 +63,7 @@ class NLMaterial(Material):
 
         All non local materials need: beta0, tau, omegap
         + all the parameters needed in their respective functions
-        custom function must return: beta2, chi_b, chi_f, omega_p
+        custom function must return: beta2 (m s-1), chi_b (non dim), chi_f (non dim), omega_p (Hz, or a different order of magnitude, to work with nm later, see NLcoefficient KL)
     """
 
     def __init__(self, mat, verbose=False):
@@ -244,7 +244,7 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
                 # local non-local interface
                 Kl = np.sqrt(
                     alpha**2
-                    + (omega_p[k + 1] ** 2 / beta2[k + 1])
+                    + (omega_p[k + 1]**2 / beta2[k + 1])
                     * (1 / chi_f[k + 1] + 1 / (1 + chi_b[k + 1]))
                 )
                 omega = (alpha**2 / Kl) * (1 / Epsilon[k + 1] - 1 / (1 + chi_b[k + 1]))
@@ -305,8 +305,6 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
     # Last layer
     t = np.exp(1j * gamma[g - 1] * thickness[g - 1])
     T.append(np.array([[0, t], [t, 0]], dtype=complex))
-    # print(f"Matrice {2 * g - 1} de couche locale, t vaut : {t} \n {T[2 * g - 1]}")
-    # print(f"kl vaut {Kl} \nomega vaut {omega}")
 
     # INITIALISATION
     A = T[0]  # np.array([[0, 1], [1, 0]], dtype = complex)
@@ -320,9 +318,9 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
     # Transmission coefficient
     t = A[1, 0]
     # Energy reflexion coefficient
-    R = np.real(abs(r) ** 2)
+    R = np.real(abs(r)**2)
     # Energy transmission coefficient
-    T = np.real(abs(t) ** 2 * gamma[g - 1] * f[Type[0]] / (gamma[0] * f[Type[g - 1]]))
+    T = np.real(abs(t)**2 * gamma[g - 1] * f[Type[0]] / (gamma[0] * f[Type[g - 1]]))
 
     return r, t, R, T
 
@@ -372,14 +370,14 @@ def fields_NL_TL(struct, beam, window):
         window (Window): description of the simulation domain
 
     Returns:
-        Hyn_t (np.array): complex amplitude of the field
-        Hyn_l (np.array): complex amplitude of Hy longitudinal
-        Exn_t (np.array): complex amplitude of Ex transverse
-        Exn_l (np.array): complex amplitude of Ex longitudinal
-        Ezn_l (np.array): complex amplitude of Ez longitudinal
-        rho_n (np.array): complex amplitude of charge density
-        jfx_n (np.array): complex amplitude of current density along x
-        jfz_n (np.array): complex amplitude of current density along z
+        Hyn_t (np.array): a matrix with the complex amplitude of the field
+        Hyn_l (np.array): a matrix with the complex amplitude of Hy longitudinal
+        Exn_t (np.array): a matrix with the complex amplitude of Ex transverse
+        Exn_l (np.array): a matrix with the complex amplitude of Ex longitudinal
+        Ezn_l (np.array): a matrix with the complex amplitude of Ez longitudinal
+        rho_n (np.array): a matrix with the complex amplitude of charge density
+        jfx_n (np.array): a matrix with the complex amplitude of current density along x
+        jfz_n (np.array): a matrix with the complex amplitude of current density along z
 
     Also, you should not use two adjacent nonlocal material layers, it doesn't work for the moment..
     """
@@ -412,7 +410,8 @@ def fields_NL_TL(struct, beam, window):
     thickness = thickness / d
 
     if pol == 0:
-        f = Mu  # print("Non local materials should be used with polarization = 1 (TM)")
+        print("Non local materials should be used with polarization = 1 (TM)")
+        return 0
     else:
         f = Epsilon
     # Wavevector in vacuum, no dimension
@@ -472,7 +471,7 @@ def fields_NL_TL(struct, beam, window):
         alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k_0 * np.sin(
             theta
         ) + 2 * np.pi * (nm - nmod)
-        print(nm, nmod)
+        
         gamma = [np.sqrt(layer_k[i] ** 2 - alpha**2) for i in range(g + 1)]
 
         if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
@@ -495,14 +494,16 @@ def fields_NL_TL(struct, beam, window):
 
             b1 = gf[k]
             b2 = gf[k + 1]
-            if beta2[k] == 0:  # la couche k est locale
+            if beta2[k] == 0:  # local layer
                 t = np.exp(1j * gamma[k] * thickness[k])
                 T[2 * k + 1] = np.array([[0, t], [t, 0]], dtype=complex)
-                if beta2[k + 1] == 0:  # interface local-local
+
+                if beta2[k + 1] == 0:  # local-local interface
                     T[2 * k + 2] = np.array(
                         [[b1 - b2, 2 * b2], [2 * b1, b2 - b1]], dtype=complex
                     ) / (b1 + b2)
-                else:  # interface local-non local
+
+                else:  # local-non local interface
                     Kl = np.sqrt(alpha**2 + kz_nl[k + 1])
                     omega = (alpha**2 / Kl) * (
                         1 / Epsilon[Type[k + 1]] - 1 / (1 + chi_b[k + 1])
@@ -520,7 +521,8 @@ def fields_NL_TL(struct, beam, window):
                         / (b1 + b2 - 1j * omega),
                         dtype=complex,
                     )
-            else:  # la couche k n'est pas locale
+
+            else:  # non-local layer
                 Kl = np.sqrt(alpha**2 + kz_nl[k])
                 omega = (alpha**2 / Kl) * (1 / Epsilon[Type[k]] - 1 / (1 + chi_b[k]))
                 t = np.exp(1j * gamma[k] * thickness[k])
@@ -529,7 +531,8 @@ def fields_NL_TL(struct, beam, window):
                     [[0, 0, t, 0], [0, 0, 0, l], [t, 0, 0, 0], [0, l, 0, 0]],
                     dtype=complex,
                 )
-                if beta2[k + 1] == 0:  # non-local - local
+
+                if beta2[k + 1] == 0:  # non-local - local interface
                     T[2 * k + 2] = np.array(
                         [
                             [b1 - b2 + 1j * omega, -2, 2 * b2],
@@ -543,13 +546,15 @@ def fields_NL_TL(struct, beam, window):
                         / (b1 + b2 - 1j * omega),
                         dtype=complex,
                     )
+
                 else:
                     # non-local non-local interface
                     print(
                         "We can't use cascadage for non local - non local layers (yet)"
                     )
+                    return None
 
-        # dernière couche
+        # last layer
         t = np.exp(1j * gamma[g] * thickness[g])
         T[2 * g + 1] = np.array([[0, t], [t, 0]], dtype=complex)
 
@@ -598,7 +603,7 @@ def fields_NL_TL(struct, beam, window):
                 # of 1 for the incident wave. If you want only the reflected
                 # field, take off the second term.
 
-                if beta2[k] == 0:
+                if beta2[k] == 0:  # local layer
 
                     H1 = I[2 * k][0, 0] * np.exp(1j * gamma[k] * h)
                     H2 = I[2 * k + 1][1, 0] * np.exp(1j * gamma[k] * (thickness[k] - h))
@@ -620,7 +625,7 @@ def fields_NL_TL(struct, beam, window):
 
                     t += 1
 
-                elif beta2[k] != 0 and beta2[k + 1] == 0:
+                elif beta2[k] != 0: # non-local layer
 
                     H1 = I[2 * k][0, 0] * np.exp(1j * gamma[k] * h)
                     H2 = I[2 * k + 1][2, 0] * np.exp(1j * gamma[k] * (thickness[k] - h))
