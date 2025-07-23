@@ -1,16 +1,20 @@
-
 import numpy as np
 import copy
 from PyMoosh.classes import conv_to_nm
 from PyMoosh.core import cascade
 
-def incoherent_coefficient_S(struct, incoherent_substrate, wavelength, incidence, polarization):
+
+def incoherent_coefficient_S(
+    struct, incoherent_substrate, wavelength, incidence, polarization
+):
     """
-    This function computes the reflection and transmission coefficients
+    This function computes the reflectance and transmittance coefficients
     of the structure, including an incoherent substrate.
+    If incoherent_substrate is True, the last but one layer is considered an incoherent substrate
 
     Args:
         struct (Structure): belongs to the Structure class
+        incoherent_substrate (boolean): whether the last but one layer is an incoherent substrate
         wavelength (float): wavelength of the incidence light (in nm)
         incidence (float): incidence angle in radians
         polarization (float): 0 for TE, 1 (or anything) for TM
@@ -54,7 +58,7 @@ def incoherent_coefficient_S(struct, incoherent_substrate, wavelength, incidence
     # Wavevector k_x, horizontal
     alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k_0 * np.sin(incidence)
     # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0**2 - np.ones(g) * alpha**2)
+    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g) * alpha ** 2)
     # Be cautious if the upper medium is a negative index one.
     if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
         gamma[0] = -gamma[0]
@@ -95,7 +99,7 @@ def incoherent_coefficient_S(struct, incoherent_substrate, wavelength, incidence
     for j in range(len(T) - 2):
         A[j + 1] = cascade(A[j], T[j + 1])
 
-    if not(incoherent_substrate):
+    if not (incoherent_substrate):
         # reflection coefficient of the whole structure
         r = A[len(A) - 1][0, 0]
         # transmission coefficient of the whole structure
@@ -103,27 +107,25 @@ def incoherent_coefficient_S(struct, incoherent_substrate, wavelength, incidence
         # Energy reflexion coefficient;
         R = np.real(abs(r) ** 2)
         # Energy transmission coefficient;
-        T = np.real(abs(t) ** 2 * gf[g - 1]/ (gf[0]))
+        T = np.real(abs(t) ** 2 * gf[g - 1] / (gf[0]))
 
         return R, T
     else:
         # In the current version, the only incoherent layer is a substrate, which
         # is just before the external medium
         kz_sub = gamma[-2]
-        loss_sub = np.exp(- 2 * np.imag(kz_sub) * thickness[-2])
+        loss_sub = np.exp(-2 * np.imag(kz_sub) * thickness[-2])
 
         # The matrix of the system from the top the the beginning of the substrate
-        S = np.abs(A[-3])**2
+        S = np.abs(A[-3]) ** 2
 
         n_sub = np.sqrt(Epsilon[Type[-2]] * Mu[Type[-2]] + 0j)
         n_out = np.sqrt(Epsilon[Type[-1]] * Mu[Type[-1]] + 0j)
-        rs = np.abs( (n_sub - n_out) / (n_sub + n_out))**2 # normal incidence 
-        ts = np.abs( (2*n_sub) / (n_sub + n_out))**2 # normal incidence 
+        rs = np.abs((n_sub - n_out) / (n_sub + n_out)) ** 2  # normal incidence
+        ts = np.abs((2 * n_sub) / (n_sub + n_out)) ** 2  # normal incidence
 
-
-        C2 = S[1, 0] / (1 - S[1, 1] * loss_sub**2 * rs)
-        R = S[0,0] + S[0, 1] * C2 * rs * loss_sub ** 2
-        T = C2 * loss_sub * ts * np.real(gf[g - 1]/ (gf[0]))
+        C2 = S[1, 0] / (1 - S[1, 1] * loss_sub ** 2 * rs)
+        R = S[0, 0] + S[0, 1] * C2 * rs * loss_sub ** 2
+        T = C2 * loss_sub * ts * np.real(gf[g - 1] / (gf[0]))
 
         return R, T
-    
