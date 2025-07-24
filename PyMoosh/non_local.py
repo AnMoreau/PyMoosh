@@ -208,7 +208,7 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
 
     alpha = np.sqrt(Epsilon[0]) * k_0 * np.sin(incidence)
     gamma = np.array(
-        np.sqrt([(1 + 0j) * Epsilon[i] * k_0**2 - alpha**2 for i in range(g)]),
+        np.sqrt([(1 + 0j) * Epsilon[i] * k_0 ** 2 - alpha ** 2 for i in range(g)]),
         dtype=complex,
     )
 
@@ -243,11 +243,13 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
             else:
                 # local non-local interface
                 Kl = np.sqrt(
-                    alpha**2
+                    alpha ** 2
                     + (omega_p[k + 1] ** 2 / beta2[k + 1])
                     * (1 / chi_f[k + 1] + 1 / (1 + chi_b[k + 1]))
                 )
-                omega = (alpha**2 / Kl) * (1 / Epsilon[k + 1] - 1 / (1 + chi_b[k + 1]))
+                omega = (alpha ** 2 / Kl) * (
+                    1 / Epsilon[k + 1] - 1 / (1 + chi_b[k + 1])
+                )
 
                 T.append(
                     np.array(
@@ -438,8 +440,8 @@ def fields_NL_TL(struct, beam, window):
 
     # helping parameters
     omega_p2 = [0] * (g + 1)  # wp^2
-    omega_beta = [0] * (g + 1)  # wp^2 / beta^2
-    kz_nl = [0] * (g + 1)
+    omega2_beta2 = [0] * (g + 1)  # wp^2 / beta^2
+    k_nl2 = [0] * (g + 1)
 
     for k in range(g):
         if struct.materials[Type[k]].specialType == "NonLocal":
@@ -449,8 +451,8 @@ def fields_NL_TL(struct, beam, window):
             omega_p[k] = omega_p[k] * d  # omega_p is normalized too
             # Compute helping parameters
             omega_p2[k] = omega_p[k] ** 2
-            omega_beta[k] = omega_p2[k] / beta2[k]
-            kz_nl[k] = (omega_beta[k]) * (1 / chi_f[k] + 1 / (1 + chi_b[k]))
+            omega2_beta2[k] = omega_p2[k] / beta2[k]
+            k_nl2[k] = (omega2_beta2[k]) * (1 / chi_f[k] + 1 / (1 + chi_b[k]))
 
     # Amplitude of the different modes
     nmodvect = np.arange(-nmod, nmod + 1)
@@ -504,7 +506,7 @@ def fields_NL_TL(struct, beam, window):
                     ) / (b1 + b2)
 
                 else:  # local-non local interface
-                    Kl = np.sqrt(alpha ** 2 + kz_nl[k + 1])
+                    Kl = np.sqrt(alpha ** 2 + k_nl2[k + 1])
                     omega = (alpha ** 2 / Kl) * (
                         1 / Epsilon[Type[k + 1]] - 1 / (1 + chi_b[k + 1])
                     )
@@ -523,7 +525,7 @@ def fields_NL_TL(struct, beam, window):
                     )
 
             else:  # non-local layer
-                Kl = np.sqrt(alpha ** 2 + kz_nl[k])
+                Kl = np.sqrt(alpha ** 2 + k_nl2[k])
                 omega = (alpha ** 2 / Kl) * (1 / Epsilon[Type[k]] - 1 / (1 + chi_b[k]))
                 t = np.exp(1j * gamma[k] * thickness[k])
                 l = np.exp(-1 * Kl * thickness[k])
@@ -627,12 +629,12 @@ def fields_NL_TL(struct, beam, window):
 
                 elif beta2[k] != 0:  # non-local layer
 
+                    Kl = np.sqrt(alpha ** 2 + k_nl2[k])
+
                     H1 = I[2 * k][0, 0] * np.exp(1j * gamma[k] * h)
                     H2 = I[2 * k + 1][2, 0] * np.exp(1j * gamma[k] * (thickness[k] - h))
                     H3 = I[2 * k][1, 0] * np.exp(-1 * Kl * h)
                     H4 = I[2 * k + 1][3, 0] * np.exp(-1 * Kl * (thickness[k] - h))
-
-                    Kl = np.sqrt(alpha ** 2 + kz_nl[k])
 
                     Hy_t[t, 0] = H1 + H2
 
@@ -815,10 +817,10 @@ def NLdispersion(alpha, struct, wavelength, polarization):
 
         else:  # if beta[k] != 0 :
             Kl = np.sqrt(
-                alpha**2
+                alpha ** 2
                 + (omega_p[k] ** 2 / beta2[k]) * (1 / chi_f[k] + 1 / (1 + chi_b[k]))
             )
-            omega = (alpha**2 / Kl) * (1 / Epsilon[k] - 1 / (1 + chi_b[k]))
+            omega = (alpha ** 2 / Kl) * (1 / Epsilon[k] - 1 / (1 + chi_b[k]))
             t = np.exp(1j * gamma[k] * thickness[k])
             l = np.exp(-Kl * thickness[k])
             T.append(
