@@ -17,13 +17,10 @@ def cascade(A, B):
     The result is a 2x2 scattering matrix.
 
     Args:
-        A (2x2, 3x3, 4x4 numpy array):
-        B (2x2, 3x3, 4x4 numpy array):
+        A (2x2 numpy array):
+        B (2x2 numpy array):
 
     """
-    # If the interface or the layer is non-local, the matrix won't be size 2x2 so return the non-local cascade.
-    # if np.shape(A) == (3,3) or (4,4) or np.shape(B) ==  (3,3) or (4,4) :
-    #    return cascade_nl(A,B)
     t = 1 / (1 - B[0, 0] * A[1, 1])
     S = np.zeros((2, 2), dtype=complex)
     S[0, 0] = A[0, 0] + A[0, 1] * B[0, 0] * A[1, 0] * t
