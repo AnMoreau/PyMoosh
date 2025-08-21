@@ -3,8 +3,9 @@ import copy
 from PyMoosh.classes import conv_to_nm
 from PyMoosh.core import cascade
 
-#TODO: check indices for follow_growth
-#TODO: add non normal incidence for substrate
+# TODO: check indices for follow_growth
+# TODO: add non normal incidence for substrate
+
 
 def incoherent_coefficient_S(
     struct, incoherent_substrate, wavelength, incidence, polarization
@@ -58,7 +59,7 @@ def incoherent_coefficient_S(
     # Wavevector k_x, horizontal
     alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k_0 * np.sin(incidence)
     # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g) * alpha ** 2)
+    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0**2 - np.ones(g) * alpha**2)
     # Be cautious if the upper medium is a negative index one.
     if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
         gamma[0] = -gamma[0]
@@ -119,20 +120,38 @@ def incoherent_coefficient_S(
         # The matrix of the system from the top the the beginning of the substrate
         S = np.abs(A[-3]) ** 2
 
+        cos_theta_sub = kz_sub / (k_0 * np.sqrt(Epsilon[Type[-2]] * Mu[Type[-2]]))
+        cos_theta_out = gamma[-1] /  (k_0 * np.sqrt(Epsilon[Type[-1]] * Mu[Type[-1]]))
         n_sub = np.sqrt(Epsilon[Type[-2]] * Mu[Type[-2]] + 0j)
         n_out = np.sqrt(Epsilon[Type[-1]] * Mu[Type[-1]] + 0j)
-        rs = np.abs((n_sub - n_out) / (n_sub + n_out)) ** 2  # normal incidence
-        ts = np.abs((2 * n_sub) / (n_sub + n_out)) ** 2  # normal incidence
 
-        C2 = S[1, 0] / (1 - S[1, 1] * loss_sub ** 2 * rs)
-        R = S[0, 0] + S[0, 1] * C2 * rs * loss_sub ** 2
+        if polarization:  # TM
+            denom = n_sub * cos_theta_out + n_out * cos_theta_sub
+            rs = (n_out * cos_theta_sub - n_sub * cos_theta_out) / denom
+            rs = np.abs(rs) ** 2
+            ts = np.abs((2 * n_out * cos_theta_sub) / denom) ** 2
+        else:  # TE
+            n_cos_sub = n_sub * cos_theta_sub
+            n_cos_out = n_out * cos_theta_out
+            denom = n_cos_sub + n_cos_out
+            rs = np.abs((n_cos_sub - n_cos_out) / denom) ** 2
+            ts = np.abs((2 * n_cos_sub) / denom) ** 2
+
+        C2 = S[1, 0] / (1 - S[1, 1] * loss_sub**2 * rs)
+        R = S[0, 0] + S[0, 1] * C2 * rs * loss_sub**2
         T = C2 * loss_sub * ts * np.real(gf[g - 1] / (gf[0]))
 
         return R, T
 
 
 def follow_growth_coefficient_S(
-    struct, incoherent_substrate, wavelength, incidence, polarization, layer_change, prev_comp=None
+    struct,
+    incoherent_substrate,
+    wavelength,
+    incidence,
+    polarization,
+    layer_change,
+    prev_comp=None,
 ):
     """
     This function computes the reflectance and transmittance coefficients
@@ -188,25 +207,27 @@ def follow_growth_coefficient_S(
 
     # Wavevector k_x, horizontal
     alpha = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]]) * k_0 * np.sin(incidence)
-    # Computation of the vertical wavevectors k_z
-    gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2 - np.ones(g) * alpha ** 2)
-    # Be cautious if the upper medium is a negative index one.
-    if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
-        gamma[0] = -gamma[0]
-
-    # Changing the determination of the square root to achieve perfect stability
-    if g > 2:
-        gamma[1 : g - 1] = gamma[1 : g - 1] * (1 - 2 * (np.imag(gamma[1 : g - 1]) < 0))
-    # Outgoing wave condition for the last medium
-    if (
-        np.real(Epsilon[Type[g - 1]]) < 0
-        and np.real(Mu[Type[g - 1]]) < 0
-        and np.real(gamma[g - 1]) != 0
-    ):
-        gamma[g - 1] = -gamma[g - 1]
-    gf = gamma / f[Type]
 
     if prev_comp is None:
+        # Computation of the vertical wavevectors k_z
+        gamma = np.sqrt(Epsilon[Type] * Mu[Type] * k_0**2 - np.ones(g) * alpha**2)
+        # Be cautious if the upper medium is a negative index one.
+        if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
+            gamma[0] = -gamma[0]
+
+        # Changing the determination of the square root to achieve perfect stability
+        if g > 2:
+            gamma[1 : g - 1] = gamma[1 : g - 1] * (
+                1 - 2 * (np.imag(gamma[1 : g - 1]) < 0)
+            )
+        # Outgoing wave condition for the last medium
+        if (
+            np.real(Epsilon[Type[g - 1]]) < 0
+            and np.real(Mu[Type[g - 1]]) < 0
+            and np.real(gamma[g - 1]) != 0
+        ):
+            gamma[g - 1] = -gamma[g - 1]
+        gf = gamma / f[Type]
 
         T = np.zeros(((2 * g, 2, 2)), dtype=complex)
 
@@ -235,6 +256,7 @@ def follow_growth_coefficient_S(
             for k in range(len(T) - 2):
                 A[k + 1] = cascade(A[k], T[k + 1])
                 H[k + 1] = cascade(T[len(T) - k - 2], H[k])
+            
             # reflection coefficient of the whole structure
             r = A[-1][0, 0]
             # transmission coefficient of the whole structure
@@ -242,14 +264,18 @@ def follow_growth_coefficient_S(
             # Energy reflexion coefficient;
             R = np.real(abs(r) ** 2)
             # Energy transmission coefficient;
-            T = np.real(abs(t) ** 2 * gf[g - 1] / (gf[0]))  
+            T = np.real(abs(t) ** 2 * gf[g - 1] / (gf[0]))
 
-            return R, T, [A[2*layer_change], H[2*(g-layer_change)]] #TODO: A and H mat indices to check
-        
+            return (
+                R,
+                T,
+                [A[2 * layer_change], H[-(2*layer_change+2)]],
+            )
+
         else:
             # In the current version, the only incoherent layer is a substrate, which
             # is just before the external medium
-        # Once the scattering matrixes have been prepared, now let us combine them
+            # Once the scattering matrixes have been prepared, now let us combine them
 
             H = np.zeros((len(T) - 3, 2, 2), dtype=complex)
             A = np.zeros((len(T) - 3, 2, 2), dtype=complex)
@@ -265,26 +291,67 @@ def follow_growth_coefficient_S(
 
             # The matrix of the system from the top the the beginning of the substrate
             S = np.abs(A[-1]) ** 2
+            print("The matrix we need", A[-1])
+            print("Does it work this way too?",
+                  cascade(cascade(A[2*layer_change], T[2*layer_change+1]), H[-(2*layer_change+2)]))
 
+            cos_theta_sub = kz_sub / (k_0 * np.sqrt(Epsilon[Type[-2]] * Mu[Type[-2]]))
+            cos_theta_out = gamma[-1] /  (k_0 * np.sqrt(Epsilon[Type[-1]] * Mu[Type[-1]]))
             n_sub = np.sqrt(Epsilon[Type[-2]] * Mu[Type[-2]] + 0j)
             n_out = np.sqrt(Epsilon[Type[-1]] * Mu[Type[-1]] + 0j)
-            rs = np.abs((n_sub - n_out) / (n_sub + n_out)) ** 2  # normal incidence
-            ts = np.abs((2 * n_sub) / (n_sub + n_out)) ** 2  # normal incidence
 
-            C2 = S[1, 0] / (1 - S[1, 1] * loss_sub ** 2 * rs)
-            R = S[0, 0] + S[0, 1] * C2 * rs * loss_sub ** 2
+            if polarization:  # TM
+                denom = n_sub * cos_theta_out + n_out * cos_theta_sub
+                rs = (n_out * cos_theta_sub - n_sub * cos_theta_out) / denom
+                rs = np.abs(rs) ** 2
+                ts = np.abs((2 * n_out * cos_theta_sub) / denom) ** 2
+            else:  # TE
+                n_cos_sub = n_sub * cos_theta_sub
+                n_cos_out = n_out * cos_theta_out
+                denom = n_cos_sub + n_cos_out
+                rs = np.abs((n_cos_sub - n_cos_out) / denom) ** 2
+                ts = np.abs((2 * n_cos_sub) / denom) ** 2
+
+            C2 = S[1, 0] / (1 - S[1, 1] * loss_sub**2 * rs)
+            R = S[0, 0] + S[0, 1] * C2 * rs * loss_sub**2
             T = C2 * loss_sub * ts * np.real(gf[g - 1] / (gf[0]))
 
-            return R, T, [A[2*layer_change], H[2*(g-layer_change-1)]] #TODO: A and H mat indices to check
+            return (
+                R,
+                T,
+                [A[2 * layer_change], H[-(2*layer_change+2)]],
+            )
     else:
         # prev_comp was given!
+
+        # Computation of the vertical wavevectors k_z
+        gamma_top = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]] * k_0**2 - alpha**2)
+        gamma_bot = np.sqrt(Epsilon[Type[g - 1]] * Mu[Type[g - 1]] * k_0**2 - alpha**2)
+        gamma_layer_change = np.sqrt(
+            Epsilon[Type[layer_change]] * Mu[Type[layer_change]] * k_0**2 - alpha**2
+        )
+        # Be cautious if the upper medium is a negative index one.
+        if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
+            gamma_top = -gamma_top
+        # Outgoing wave condition for the last medium
+        if (
+            np.real(Epsilon[Type[g - 1]]) < 0
+            and np.real(Mu[Type[g - 1]]) < 0
+            and np.real(gamma_bot) != 0
+        ):
+            gamma_bot = -gamma_bot
+        gf_top = gamma_top / f[Type[0]]
+        gf_bot = gamma_bot / f[Type[g - 1]]
+
         [S_top, S_bot, new_h] = prev_comp
-        t = np.exp((1j) * gamma[layer_change] * new_h)
+        t = np.exp((1j) * gamma_layer_change * new_h)
         T_new = np.array([[0, t], [t, 0]], dtype=complex)
 
         S = cascade(S_top, T_new)
         S = cascade(S, S_bot)
-        
+
+        print("The matrix we deserve", S)
+
         if not incoherent_substrate:
             # reflection coefficient of the whole structure
             r = S[0, 0]
@@ -293,21 +360,37 @@ def follow_growth_coefficient_S(
             # Energy reflexion coefficient;
             R = np.real(abs(r) ** 2)
             # Energy transmission coefficient;
-            T = np.real(abs(t) ** 2 * gf[g - 1] / (gf[0]))
+            T = np.real(abs(t) ** 2 * gf_bot / gf_top)
 
             return R, T, [S_top, S_bot]
-        
+
         else:
             # incoherent substrate
-            S = S**2 #TODO: If everything works as intended, this is all the way before the substrate
+            S = (
+                S**2
+            )  # TODO: If everything works as intended, this is all the way before the substrate
+
+            kz_sub = np.sqrt(Epsilon[Type[- 2]] * Mu[Type[- 2]] * k_0**2 - alpha**2)
+            loss_sub = np.exp(-2 * np.imag(kz_sub) * thickness[-2])
+            cos_theta_sub = kz_sub / (k_0 * np.sqrt(Epsilon[Type[-2]] * Mu[Type[-2]]))
+            cos_theta_out = np.sqrt(Epsilon[Type[- 1]] * Mu[Type[- 1]] * k_0**2 - alpha**2) /  (k_0 * np.sqrt(Epsilon[Type[-1]] * Mu[Type[-1]]))
             n_sub = np.sqrt(Epsilon[Type[-2]] * Mu[Type[-2]] + 0j)
             n_out = np.sqrt(Epsilon[Type[-1]] * Mu[Type[-1]] + 0j)
-            rs = np.abs((n_sub - n_out) / (n_sub + n_out)) ** 2  # normal incidence
-            ts = np.abs((2 * n_sub) / (n_sub + n_out)) ** 2  # normal incidence
 
-            C2 = S[1, 0] / (1 - S[1, 1] * loss_sub ** 2 * rs)
-            R = S[0, 0] + S[0, 1] * C2 * rs * loss_sub ** 2
-            T = C2 * loss_sub * ts * np.real(gf[g - 1] / (gf[0]))
+            if polarization:  # TM
+                denom = n_sub * cos_theta_out + n_out * cos_theta_sub
+                rs = (n_out * cos_theta_sub - n_sub * cos_theta_out) / denom
+                rs = np.abs(rs) ** 2
+                ts = np.abs((2 * n_out * cos_theta_sub) / denom) ** 2
+            else:  # TE
+                n_cos_sub = n_sub * cos_theta_sub
+                n_cos_out = n_out * cos_theta_out
+                denom = n_cos_sub + n_cos_out
+                rs = np.abs((n_cos_sub - n_cos_out) / denom) ** 2
+                ts = np.abs((2 * n_cos_sub) / denom) ** 2
+
+            C2 = S[1, 0] / (1 - S[1, 1] * loss_sub**2 * rs)
+            R = S[0, 0] + S[0, 1] * C2 * rs * loss_sub**2
+            T = C2 * loss_sub * ts * np.real(gf_bot / (gf_top))
 
             return R, T, [S_top, S_bot]
-
