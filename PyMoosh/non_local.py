@@ -208,7 +208,7 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
 
     alpha = np.sqrt(Epsilon[0]) * k_0 * np.sin(incidence)
     gamma = np.array(
-        np.sqrt([(1 + 0j) * Epsilon[i] * k_0 ** 2 - alpha ** 2 for i in range(g)]),
+        np.sqrt([(1 + 0j) * Epsilon[i] * k_0**2 - alpha**2 for i in range(g)]),
         dtype=complex,
     )
 
@@ -243,13 +243,11 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
             else:
                 # local non-local interface
                 Kl = np.sqrt(
-                    alpha ** 2
+                    alpha**2
                     + (omega_p[k + 1] ** 2 / beta2[k + 1])
                     * (1 / chi_f[k + 1] + 1 / (1 + chi_b[k + 1]))
                 )
-                omega = (alpha ** 2 / Kl) * (
-                    1 / Epsilon[k + 1] - 1 / (1 + chi_b[k + 1])
-                )
+                omega = (alpha**2 / Kl) * (1 / Epsilon[k + 1] - 1 / (1 + chi_b[k + 1]))
 
                 T.append(
                     np.array(
@@ -269,10 +267,10 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
 
         else:  # if beta[k] != 0 :
             Kl = np.sqrt(
-                alpha ** 2
+                alpha**2
                 + (omega_p[k] ** 2 / beta2[k]) * (1 / chi_f[k] + 1 / (1 + chi_b[k]))
             )
-            omega = (alpha ** 2 / Kl) * (1 / Epsilon[k] - 1 / (1 + chi_b[k]))
+            omega = (alpha**2 / Kl) * (1 / Epsilon[k] - 1 / (1 + chi_b[k]))
             t = np.exp(1j * gamma[k] * thickness[k])
             l = np.exp(-Kl * thickness[k])
             T.append(
@@ -458,7 +456,7 @@ def fields_NL_TL(struct, beam, window):
     nmodvect = np.arange(-nmod, nmod + 1)
     # First factor makes the gaussian beam, the second one the shift
     # a constant phase is missing, it's just a change in the time origin.
-    X = np.exp(-(w ** 2) * np.pi ** 2 * nmodvect ** 2) * np.exp(
+    X = np.exp(-(w**2) * np.pi**2 * nmodvect**2) * np.exp(
         -2 * 1j * np.pi * nmodvect * C
     )
 
@@ -466,7 +464,7 @@ def fields_NL_TL(struct, beam, window):
     T = [0] * (2 * g + 2)
     T[0] = np.array([[0, 1], [1, 0]], dtype=complex)
 
-    layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k_0 ** 2)
+    layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k_0**2)
 
     for nm in np.arange(2 * nmod + 1):
 
@@ -474,7 +472,7 @@ def fields_NL_TL(struct, beam, window):
             theta
         ) + 2 * np.pi * (nm - nmod)
 
-        gamma = [np.sqrt(layer_k[i] ** 2 - alpha ** 2) for i in range(g + 1)]
+        gamma = [np.sqrt(layer_k[i] ** 2 - alpha**2) for i in range(g + 1)]
 
         if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
             gamma[0] = -gamma[0]
@@ -487,7 +485,7 @@ def fields_NL_TL(struct, beam, window):
         if (
             np.real(Epsilon[Type[g]]) < 0
             and np.real(Mu[Type[g]]) < 0
-            and np.real(np.sqrt(layer_k[g] ** 2 - alpha ** 2)) != 0
+            and np.real(np.sqrt(layer_k[g] ** 2 - alpha**2)) != 0
         ):
             gamma[g] = -gamma[g]
         gf = gamma / f[Type]
@@ -506,8 +504,8 @@ def fields_NL_TL(struct, beam, window):
                     ) / (b1 + b2)
 
                 else:  # local-non local interface
-                    Kl = np.sqrt(alpha ** 2 + k_nl2[k + 1])
-                    omega = (alpha ** 2 / Kl) * (
+                    Kl = np.sqrt(alpha**2 + k_nl2[k + 1])
+                    omega = (alpha**2 / Kl) * (
                         1 / Epsilon[Type[k + 1]] - 1 / (1 + chi_b[k + 1])
                     )
                     T[2 * k + 2] = np.array(
@@ -525,8 +523,8 @@ def fields_NL_TL(struct, beam, window):
                     )
 
             else:  # non-local layer
-                Kl = np.sqrt(alpha ** 2 + k_nl2[k])
-                omega = (alpha ** 2 / Kl) * (1 / Epsilon[Type[k]] - 1 / (1 + chi_b[k]))
+                Kl = np.sqrt(alpha**2 + k_nl2[k])
+                omega = (alpha**2 / Kl) * (1 / Epsilon[Type[k]] - 1 / (1 + chi_b[k]))
                 t = np.exp(1j * gamma[k] * thickness[k])
                 l = np.exp(-1 * Kl * thickness[k])
                 T[2 * k + 1] = np.array(
@@ -629,7 +627,7 @@ def fields_NL_TL(struct, beam, window):
 
                 elif beta2[k] != 0:  # non-local layer
 
-                    Kl = np.sqrt(alpha ** 2 + k_nl2[k])
+                    Kl = np.sqrt(alpha**2 + k_nl2[k])
 
                     H1 = I[2 * k][0, 0] * np.exp(1j * gamma[k] * h)
                     H2 = I[2 * k + 1][2, 0] * np.exp(1j * gamma[k] * (thickness[k] - h))
@@ -645,16 +643,14 @@ def fields_NL_TL(struct, beam, window):
                     Ez_l[t, 0] = 1j * Kl / alpha * (H3 - H4)
 
                     rho[t, 0] = (
-                        (-1 * Kl ** 2 / alpha + 1j * alpha)
-                        * (1 + chi_b[k])
-                        * Ex_l[t, 0]
+                        (-1 * Kl**2 / alpha + 1j * alpha) * (1 + chi_b[k]) * Ex_l[t, 0]
                     )
 
                     prefac = (
                         (1 + chi_b[k])
                         * beta2[k]
                         / omega_p2[k]
-                        * (alpha ** 2 + 1j * Kl ** 2)
+                        * (alpha**2 + 1j * Kl**2)
                     )
                     Ex_tot = Ex_t[t, 0] + Ex_l[t, 0]
                     jfx[t, 0] = -1j * chi_f[k] * (Ex_tot + (prefac * Ex_l[t, 0]))
@@ -749,7 +745,7 @@ def NLdispersion(alpha, struct, wavelength, polarization):
             ].get_values_nl(wavelength)
 
     gamma = np.array(
-        np.sqrt([(1 + 0j) * Epsilon[i] * k_0 ** 2 - alpha ** 2 for i in range(g)]),
+        np.sqrt([(1 + 0j) * Epsilon[i] * k_0**2 - alpha**2 for i in range(g)]),
         dtype=complex,
     )
 
@@ -790,13 +786,11 @@ def NLdispersion(alpha, struct, wavelength, polarization):
             else:
                 # local non-local interface
                 Kl = np.sqrt(
-                    alpha ** 2
+                    alpha**2
                     + (omega_p[k + 1] ** 2 / beta2[k + 1])
                     * (1 / chi_f[k + 1] + 1 / (1 + chi_b[k + 1]))
                 )
-                omega = (alpha ** 2 / Kl) * (
-                    1 / Epsilon[k + 1] - 1 / (1 + chi_b[k + 1])
-                )
+                omega = (alpha**2 / Kl) * (1 / Epsilon[k + 1] - 1 / (1 + chi_b[k + 1]))
 
                 T.append(
                     np.array(
@@ -817,10 +811,10 @@ def NLdispersion(alpha, struct, wavelength, polarization):
 
         else:  # if beta[k] != 0 :
             Kl = np.sqrt(
-                alpha ** 2
+                alpha**2
                 + (omega_p[k] ** 2 / beta2[k]) * (1 / chi_f[k] + 1 / (1 + chi_b[k]))
             )
-            omega = (alpha ** 2 / Kl) * (1 / Epsilon[k] - 1 / (1 + chi_b[k]))
+            omega = (alpha**2 / Kl) * (1 / Epsilon[k] - 1 / (1 + chi_b[k]))
             t = np.exp(1j * gamma[k] * thickness[k])
             l = np.exp(-Kl * thickness[k])
             T.append(
