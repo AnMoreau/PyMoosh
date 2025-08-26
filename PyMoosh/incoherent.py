@@ -4,7 +4,7 @@ from PyMoosh.classes import conv_to_nm
 from PyMoosh.core import cascade
 
 # TODO: check indices for follow_growth
-# TODO: add non normal incidence for substrate
+# TODO: check why follow growth works only with a semi infinite last layer
 
 
 def incoherent_coefficient_S(
@@ -178,7 +178,7 @@ def follow_growth_coefficient_S(
     R and T are the energy coefficients (real quantities)
 
     .. warning: The transmission coefficients have a meaning only if the lower medium
-    is lossless, or they have no true meaning.
+    is lossless, or they have no true meaning. (also, the last layer should be semi-infinite)
     Incoherent warning: Only the last but one layer may be incoherent
     """
     # In order to get a phase that corresponds to the expected reflected coefficient,
@@ -250,12 +250,12 @@ def follow_growth_coefficient_S(
             H = np.zeros((len(T) - 1, 2, 2), dtype=complex)
             A = np.zeros((len(T) - 1, 2, 2), dtype=complex)
 
-            H[0] = T[2 * g - 1]
+            H[0] = T[2 * g - 2]
             A[0] = T[0]
 
             for k in range(len(T) - 2):
                 A[k + 1] = cascade(A[k], T[k + 1])
-                H[k + 1] = cascade(T[len(T) - k - 2], H[k])
+                H[k + 1] = cascade(T[2*g - k - 3], H[k])
             
             # reflection coefficient of the whole structure
             r = A[-1][0, 0]
@@ -269,7 +269,7 @@ def follow_growth_coefficient_S(
             return (
                 R,
                 T,
-                [A[2 * layer_change], H[-(2*layer_change+2)]],
+                [A[2 * layer_change], H[2*g-(2*layer_change+4)]],
             )
 
         else:
@@ -280,20 +280,17 @@ def follow_growth_coefficient_S(
             H = np.zeros((len(T) - 3, 2, 2), dtype=complex)
             A = np.zeros((len(T) - 3, 2, 2), dtype=complex)
 
-            H[0] = T[2 * g - 3]
+            H[0] = T[2*g - 4]
             A[0] = T[0]
 
             for k in range(len(T) - 4):
                 A[k + 1] = cascade(A[k], T[k + 1])
-                H[k + 1] = cascade(T[len(T) - k - 4], H[k])
+                H[k + 1] = cascade(T[2*g - k - 5], H[k])
             kz_sub = gamma[-2]
-            loss_sub = np.exp(-2 * np.imag(kz_sub) * thickness[-2])
+            loss_sub = np.abs(np.exp(-2 * np.imag(kz_sub) * thickness[-2]))
 
             # The matrix of the system from the top the the beginning of the substrate
             S = np.abs(A[-1]) ** 2
-            print("The matrix we need", A[-1])
-            print("Does it work this way too?",
-                  cascade(cascade(A[2*layer_change], T[2*layer_change+1]), H[-(2*layer_change+2)]))
 
             cos_theta_sub = kz_sub / (k_0 * np.sqrt(Epsilon[Type[-2]] * Mu[Type[-2]]))
             cos_theta_out = gamma[-1] /  (k_0 * np.sqrt(Epsilon[Type[-1]] * Mu[Type[-1]]))
@@ -319,7 +316,7 @@ def follow_growth_coefficient_S(
             return (
                 R,
                 T,
-                [A[2 * layer_change], H[-(2*layer_change+2)]],
+                [A[2 * layer_change], H[2*g-(2*layer_change+6)]],
             )
     else:
         # prev_comp was given!
@@ -350,8 +347,6 @@ def follow_growth_coefficient_S(
         S = cascade(S_top, T_new)
         S = cascade(S, S_bot)
 
-        print("The matrix we deserve", S)
-
         if not incoherent_substrate:
             # reflection coefficient of the whole structure
             r = S[0, 0]
@@ -366,12 +361,12 @@ def follow_growth_coefficient_S(
 
         else:
             # incoherent substrate
-            S = (
+            S = np.abs(
                 S**2
             )  # TODO: If everything works as intended, this is all the way before the substrate
 
             kz_sub = np.sqrt(Epsilon[Type[- 2]] * Mu[Type[- 2]] * k_0**2 - alpha**2)
-            loss_sub = np.exp(-2 * np.imag(kz_sub) * thickness[-2])
+            loss_sub = np.abs(np.exp(-2 * np.imag(kz_sub) * thickness[-2]))
             cos_theta_sub = kz_sub / (k_0 * np.sqrt(Epsilon[Type[-2]] * Mu[Type[-2]]))
             cos_theta_out = np.sqrt(Epsilon[Type[- 1]] * Mu[Type[- 1]] * k_0**2 - alpha**2) /  (k_0 * np.sqrt(Epsilon[Type[-1]] * Mu[Type[-1]]))
             n_sub = np.sqrt(Epsilon[Type[-2]] * Mu[Type[-2]] + 0j)
@@ -392,5 +387,6 @@ def follow_growth_coefficient_S(
             C2 = S[1, 0] / (1 - S[1, 1] * loss_sub**2 * rs)
             R = S[0, 0] + S[0, 1] * C2 * rs * loss_sub**2
             T = C2 * loss_sub * ts * np.real(gf_bot / (gf_top))
+
 
             return R, T, [S_top, S_bot]
