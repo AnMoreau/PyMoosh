@@ -24,6 +24,7 @@ def incoherent_spectrum_S(
         polarization (float): 0 for TE, 1 (or anything) for TM
 
     returns:
+        wavelengths (list): the input wavelengths
         R (float): Reflectance (energy reflection)
         T (float): Transmittance (energie transmission)
 
@@ -172,7 +173,7 @@ def incoherent_spectrum_S(
         return wavelengths, R, T
 
 
-def follow_growth_coefficient_S(
+def follow_growth_spectrum_S(
     struct,
     incoherent_substrate,
     wavelengths,
@@ -191,7 +192,7 @@ def follow_growth_coefficient_S(
     Args:
         struct (Structure): belongs to the Structure class
         incoherent_substrate (boolean): whether the last but one layer is an incoherent substrate
-        wavelength (float): wavelength of the incidence light (in nm)
+        wavelengths (list): wavelengths of the incidence light (in nm)
         incidence (float): incidence angle in radians
         polarization (float): 0 for TE, 1 (or anything) for TM
         layer_change (int): layer that will be changed
@@ -386,16 +387,16 @@ def follow_growth_coefficient_S(
         # prev_comp was given!
 
         # Computation of the vertical wavevectors k_z
-        gamma_top = np.sqrt(Epsilon[:, Type[0]] * Mu[:, Type[0]] * k_0[:,0]**2 - alpha**2)
-        gamma_bot = np.sqrt(Epsilon[:, Type[g - 1]] * Mu[:, Type[g - 1]] * k_0[:,0]**2 - alpha**2)
+        gamma_top = np.sqrt(Epsilon[:, Type[0]] * Mu[:, Type[0]] * k_0[:,0]**2 - alpha[:,0]**2)
+        gamma_bot = np.sqrt(Epsilon[:, Type[g - 1]] * Mu[:, Type[g - 1]] * k_0[:,0]**2 - alpha[:,0]**2)
         gamma_layer_change = np.sqrt(
-            Epsilon[Type[:, layer_change]] * Mu[:, Type[layer_change]] * k_0[:,0]**2 - alpha**2
+            Epsilon[:, Type[layer_change]] * Mu[:, Type[layer_change]] * k_0[:,0]**2 - alpha[:,0]**2
         )
+        # TODO: adapt to dispersive first medium
         # Be cautious if the upper medium is a negative index one.
-        if np.real(Epsilon[:, Type[0]]) < 0 and np.real(Mu[:, Type[0]]) < 0:
+        if np.real(Epsilon[0, Type[0]]) < 0 and np.real(Mu[0, Type[0]]) < 0:
             gamma_top = -gamma_top
         # Outgoing wave condition for the last medium
-        # TODO: adapt to dispersive last medium
         if (
             np.real(Epsilon[0, Type[g - 1]]) < 0
             and np.real(Mu[0, Type[g - 1]]) < 0
@@ -408,6 +409,7 @@ def follow_growth_coefficient_S(
         [S_top, S_bot, new_h] = prev_comp
         t = np.exp((1j) * gamma_layer_change * new_h)
         zeros, ones = np.zeros((len_wl, 1)), np.ones((len_wl, 1))
+        t.shape = (len_wl, 1)
         T_new = np.array([[zeros, t], [t, zeros]], dtype=complex)
 
         S = cascade_opti(S_top, T_new, len_wl)
@@ -421,7 +423,7 @@ def follow_growth_coefficient_S(
             # Energy reflexion coefficient;
             R = np.real(abs(r) ** 2)
             # Energy transmission coefficient;
-            kz_coeff = gamma[:, g - 1] * f[:, Type[0]] / (gamma[:, 0] * f[:, Type[g - 1]])
+            kz_coeff = gf_bot / gf_top
             kz_coeff.shape = (len_wl, 1)
             T = abs(t) ** 2 * np.real(kz_coeff)
 
@@ -431,16 +433,16 @@ def follow_growth_coefficient_S(
             # incoherent substrate
             S = np.abs(
                 S**2
-            )  # TODO: vectorize
+            )
 
-            kz_sub = np.sqrt(Epsilon[Type[-2]] * Mu[Type[-2]] * k_0**2 - alpha**2)
-            loss_sub = np.abs(np.exp(-2 * np.imag(kz_sub) * thickness[-2]))
-            cos_theta_sub = kz_sub / (k_0 * np.sqrt(Epsilon[Type[-2]] * Mu[Type[-2]]))
+            kz_sub = np.sqrt(Epsilon[:, Type[-2]] * Mu[:, Type[-2]] * k_0[:,0]**2 - alpha[:,0]**2)
+            loss_sub = np.abs(np.exp(-2 * np.imag(kz_sub) * thickness[0,-2]))
+            cos_theta_sub = kz_sub / (k_0[:,0] * np.sqrt(Epsilon[:, Type[-2]] * Mu[:, Type[-2]]))
             cos_theta_out = np.sqrt(
-                Epsilon[Type[-1]] * Mu[Type[-1]] * k_0**2 - alpha**2
-            ) / (k_0 * np.sqrt(Epsilon[Type[-1]] * Mu[Type[-1]]))
-            n_sub = np.sqrt(Epsilon[Type[-2]] * Mu[Type[-2]] + 0j)
-            n_out = np.sqrt(Epsilon[Type[-1]] * Mu[Type[-1]] + 0j)
+                Epsilon[:, Type[-1]] * Mu[:, Type[-1]] * k_0[:,0]**2 - alpha[:,0]**2
+            ) / (k_0[:,0] * np.sqrt(Epsilon[:, Type[-1]] * Mu[:, Type[-1]]))
+            n_sub = np.sqrt(Epsilon[:, Type[-2]] * Mu[:, Type[-2]] + 0j)
+            n_out = np.sqrt(Epsilon[:, Type[-1]] * Mu[:, Type[-1]] + 0j)
 
             if polarization:  # TM
                 denom = n_sub * cos_theta_out + n_out * cos_theta_sub
@@ -454,11 +456,12 @@ def follow_growth_coefficient_S(
                 rs = np.abs((n_cos_sub - n_cos_out) / denom) ** 2
                 ts = np.abs((2 * n_cos_sub) / denom) ** 2
 
-            C2 = S[1, 0] / (1 - S[1, 1] * loss_sub**2 * rs)
-            R = S[0, 0] + S[0, 1] * C2 * rs * loss_sub**2
-            T = C2 * loss_sub * ts * np.real(gf_bot / (gf_top))
+            C2 = S[1, 0][:,0] / (1 - S[1, 1][:,0] * loss_sub**2 * rs)
+            R = S[0, 0][:,0] + S[0, 1][:,0] * C2 * rs * loss_sub**2
+            kz_coeff = gf_bot / gf_top
+            T = C2 * loss_sub * ts * np.real(kz_coeff)
 
-            return R, T, [S_top, S_bot]
+            return wavelengths, R, T, [S_top, S_bot]
 
 
 
@@ -473,11 +476,12 @@ def full_stack_incoherent(
     Args:
         struct (Structure): belongs to the Structure class
         incoherent_substrate (boolean): whether the last but one layer is an incoherent substrate
-        wavelength (float): wavelength of the incidence light (in nm)
+        wavelengths (list): wavelengths of the incidence light (in nm)
         incidence (float): incidence angle in radians
         polarization (float): 0 for TE, 1 (or anything) for TM
 
     returns:
+        wavelengths (list): the input wavelengths
         R (float): Reflectance (energy reflection)
         T (float): Transmittance (energie transmission)
 
