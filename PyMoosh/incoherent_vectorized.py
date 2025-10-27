@@ -43,7 +43,6 @@ def incoherent_spectrum_S(
     len_mat = len(struct.materials)
     wavelengths.shape = (len_wl, 1)
 
-
     # The medium may be dispersive. The permittivity and permability of each
     # layer has to be computed each time.
     if struct.unit != "nm":
@@ -70,7 +69,7 @@ def incoherent_spectrum_S(
     Epsilon_first, Mu_first = Epsilon[:, Type[0]], Mu[:, Type[0]]
     Epsilon_first.shape, Mu_first.shape = (len_wl, 1), (len_wl, 1)
     alpha = np.sqrt(Epsilon_first * Mu_first) * k_0 * np.sin(incidence)
-    
+
     # Computation of the vertical wavevectors k_z. Array of shape (len_wl, len_mat).
     gamma = np.sqrt(
         Epsilon[:, Type] * Mu[:, Type] * k_0**2 - np.ones((len_wl, g)) * alpha**2
@@ -118,7 +117,7 @@ def incoherent_spectrum_S(
         b2 = gf[:, k + 1]
         b1.shape, b2.shape = (len_wl, 1), (len_wl, 1)
         T[2 * k + 2] = np.array([[b1 - b2, 2 * b2], [2 * b1, b2 - b1]]) / (b1 + b2)
-    
+
     t = np.exp((1j) * gamma[:, g - 1] * thickness[0, g - 1])
     t.shape = (len_wl, 1)
     T[2 * g - 1] = [[zeros, t], [t, zeros]]
@@ -149,8 +148,12 @@ def incoherent_spectrum_S(
 
         # The matrix of the system from the top the the beginning of the substrate
         S = np.abs(A[-3]) ** 2
-        cos_theta_sub = kz_sub / (k_0[:,0] * np.sqrt(Epsilon[:, Type[-2]] * Mu[:, Type[-2]]))
-        cos_theta_out = gamma[:, -1] / (k_0[:,0] * np.sqrt(Epsilon[:, Type[-1]] * Mu[:, Type[-1]]))
+        cos_theta_sub = kz_sub / (
+            k_0[:, 0] * np.sqrt(Epsilon[:, Type[-2]] * Mu[:, Type[-2]])
+        )
+        cos_theta_out = gamma[:, -1] / (
+            k_0[:, 0] * np.sqrt(Epsilon[:, Type[-1]] * Mu[:, Type[-1]])
+        )
         n_sub = np.sqrt(Epsilon[:, Type[-2]] * Mu[:, Type[-2]] + 0j)
         n_out = np.sqrt(Epsilon[:, Type[-1]] * Mu[:, Type[-1]] + 0j)
 
@@ -166,8 +169,8 @@ def incoherent_spectrum_S(
             rs = np.abs((n_cos_sub - n_cos_out) / denom) ** 2
             ts = np.abs((2 * n_cos_sub) / denom) ** 2
 
-        C2 = S[1, 0][:,0] / (1 - S[1, 1][:,0] * loss_sub**2 * rs)
-        R = S[0, 0][:,0] + S[0, 1][:,0] * C2 * rs * loss_sub**2
+        C2 = S[1, 0][:, 0] / (1 - S[1, 1][:, 0] * loss_sub**2 * rs)
+        R = S[0, 0][:, 0] + S[0, 1][:, 0] * C2 * rs * loss_sub**2
         kz_coeff = gamma[:, g - 1] * f[:, Type[0]] / (gamma[:, 0] * f[:, Type[g - 1]])
         T = C2 * loss_sub * ts * np.real(kz_coeff)
         return wavelengths, R, T
@@ -220,7 +223,6 @@ def follow_growth_spectrum_S(
     len_wl = len(wavelengths)
     len_mat = len(struct.materials)
     wavelengths.shape = (len_wl, 1)
-
 
     # The medium may be dispersive. The permittivity and permability of each
     # layer has to be computed each time.
@@ -297,7 +299,7 @@ def follow_growth_spectrum_S(
             b2 = gf[:, k + 1]
             b1.shape, b2.shape = (len_wl, 1), (len_wl, 1)
             T[2 * k + 2] = np.array([[b1 - b2, 2 * b2], [2 * b1, b2 - b1]]) / (b1 + b2)
-        
+
         t = np.exp((1j) * gamma[:, g - 1] * thickness[0, g - 1])
         t.shape = (len_wl, 1)
         T[2 * g - 1] = [[zeros, t], [t, zeros]]
@@ -322,7 +324,9 @@ def follow_growth_spectrum_S(
             # Energy reflexion coefficient;
             R = np.real(abs(r) ** 2)
             # Energy transmission coefficient;
-            kz_coeff = gamma[:, g - 1] * f[:, Type[0]] / (gamma[:, 0] * f[:, Type[g - 1]])
+            kz_coeff = (
+                gamma[:, g - 1] * f[:, Type[0]] / (gamma[:, 0] * f[:, Type[g - 1]])
+            )
             kz_coeff.shape = (len_wl, 1)
             T = abs(t) ** 2 * np.real(kz_coeff)
 
@@ -353,7 +357,9 @@ def follow_growth_spectrum_S(
             # The matrix of the system from the top the the beginning of the substrate
             S = np.abs(A[-1]) ** 2
 
-            cos_theta_sub = kz_sub / (k_0[:, 0] * np.sqrt(Epsilon[:, Type[-2]] * Mu[:, Type[-2]]))
+            cos_theta_sub = kz_sub / (
+                k_0[:, 0] * np.sqrt(Epsilon[:, Type[-2]] * Mu[:, Type[-2]])
+            )
             cos_theta_out = gamma[:, -1] / (
                 k_0[:, 0] * np.sqrt(Epsilon[:, Type[-1]] * Mu[:, Type[-1]])
             )
@@ -372,13 +378,15 @@ def follow_growth_spectrum_S(
                 rs = np.abs((n_cos_sub - n_cos_out) / denom) ** 2
                 ts = np.abs((2 * n_cos_sub) / denom) ** 2
 
-            C2 = S[1, 0][:,0] / (1 - S[1, 1][:,0] * loss_sub**2 * rs)
-            R = S[0, 0][:,0] + S[0, 1][:,0] * C2 * rs * loss_sub**2
-            kz_coeff = gamma[:, g - 1] * f[:, Type[0]] / (gamma[:, 0] * f[:, Type[g - 1]])
+            C2 = S[1, 0][:, 0] / (1 - S[1, 1][:, 0] * loss_sub**2 * rs)
+            R = S[0, 0][:, 0] + S[0, 1][:, 0] * C2 * rs * loss_sub**2
+            kz_coeff = (
+                gamma[:, g - 1] * f[:, Type[0]] / (gamma[:, 0] * f[:, Type[g - 1]])
+            )
             T = C2 * loss_sub * ts * np.real(kz_coeff)
 
             return (
-                wavelengths, 
+                wavelengths,
                 R,
                 T,
                 [A[2 * layer_change], H[2 * g - (2 * layer_change + 6)]],
@@ -387,10 +395,16 @@ def follow_growth_spectrum_S(
         # prev_comp was given!
 
         # Computation of the vertical wavevectors k_z
-        gamma_top = np.sqrt(Epsilon[:, Type[0]] * Mu[:, Type[0]] * k_0[:,0]**2 - alpha[:,0]**2)
-        gamma_bot = np.sqrt(Epsilon[:, Type[g - 1]] * Mu[:, Type[g - 1]] * k_0[:,0]**2 - alpha[:,0]**2)
+        gamma_top = np.sqrt(
+            Epsilon[:, Type[0]] * Mu[:, Type[0]] * k_0[:, 0] ** 2 - alpha[:, 0] ** 2
+        )
+        gamma_bot = np.sqrt(
+            Epsilon[:, Type[g - 1]] * Mu[:, Type[g - 1]] * k_0[:, 0] ** 2
+            - alpha[:, 0] ** 2
+        )
         gamma_layer_change = np.sqrt(
-            Epsilon[:, Type[layer_change]] * Mu[:, Type[layer_change]] * k_0[:,0]**2 - alpha[:,0]**2
+            Epsilon[:, Type[layer_change]] * Mu[:, Type[layer_change]] * k_0[:, 0] ** 2
+            - alpha[:, 0] ** 2
         )
         # TODO: adapt to dispersive first medium
         # Be cautious if the upper medium is a negative index one.
@@ -431,16 +445,20 @@ def follow_growth_spectrum_S(
 
         else:
             # incoherent substrate
-            S = np.abs(
-                S**2
-            )
+            S = np.abs(S**2)
 
-            kz_sub = np.sqrt(Epsilon[:, Type[-2]] * Mu[:, Type[-2]] * k_0[:,0]**2 - alpha[:,0]**2)
-            loss_sub = np.abs(np.exp(-2 * np.imag(kz_sub) * thickness[0,-2]))
-            cos_theta_sub = kz_sub / (k_0[:,0] * np.sqrt(Epsilon[:, Type[-2]] * Mu[:, Type[-2]]))
+            kz_sub = np.sqrt(
+                Epsilon[:, Type[-2]] * Mu[:, Type[-2]] * k_0[:, 0] ** 2
+                - alpha[:, 0] ** 2
+            )
+            loss_sub = np.abs(np.exp(-2 * np.imag(kz_sub) * thickness[0, -2]))
+            cos_theta_sub = kz_sub / (
+                k_0[:, 0] * np.sqrt(Epsilon[:, Type[-2]] * Mu[:, Type[-2]])
+            )
             cos_theta_out = np.sqrt(
-                Epsilon[:, Type[-1]] * Mu[:, Type[-1]] * k_0[:,0]**2 - alpha[:,0]**2
-            ) / (k_0[:,0] * np.sqrt(Epsilon[:, Type[-1]] * Mu[:, Type[-1]]))
+                Epsilon[:, Type[-1]] * Mu[:, Type[-1]] * k_0[:, 0] ** 2
+                - alpha[:, 0] ** 2
+            ) / (k_0[:, 0] * np.sqrt(Epsilon[:, Type[-1]] * Mu[:, Type[-1]]))
             n_sub = np.sqrt(Epsilon[:, Type[-2]] * Mu[:, Type[-2]] + 0j)
             n_out = np.sqrt(Epsilon[:, Type[-1]] * Mu[:, Type[-1]] + 0j)
 
@@ -456,18 +474,15 @@ def follow_growth_spectrum_S(
                 rs = np.abs((n_cos_sub - n_cos_out) / denom) ** 2
                 ts = np.abs((2 * n_cos_sub) / denom) ** 2
 
-            C2 = S[1, 0][:,0] / (1 - S[1, 1][:,0] * loss_sub**2 * rs)
-            R = S[0, 0][:,0] + S[0, 1][:,0] * C2 * rs * loss_sub**2
+            C2 = S[1, 0][:, 0] / (1 - S[1, 1][:, 0] * loss_sub**2 * rs)
+            R = S[0, 0][:, 0] + S[0, 1][:, 0] * C2 * rs * loss_sub**2
             kz_coeff = gf_bot / gf_top
             T = C2 * loss_sub * ts * np.real(kz_coeff)
 
             return wavelengths, R, T, [S_top, S_bot]
 
 
-
-def full_stack_incoherent(
-    struct, wavelength, incidence, polarization
-):
+def full_stack_incoherent(struct, wavelength, incidence, polarization):
     """
     This function computes the reflectance and transmittance coefficients
     of the structure, including an incoherent substrate.
@@ -554,7 +569,7 @@ def full_stack_incoherent(
     T[2 * g - 1] = [[0, t], [t, 0]]
 
     # Once the scattering matrixes have been prepared, now let us combine them
-    T = np.abs(T)**2 # Switching to full incoherent mode
+    T = np.abs(T) ** 2  # Switching to full incoherent mode
     A = np.zeros(((2 * g - 1, 2, 2)), dtype=float)
     A[0] = T[0]
 
@@ -562,7 +577,7 @@ def full_stack_incoherent(
         A[j + 1] = cascade(A[j], T[j + 1])
 
     # reflection coefficient of the whole structure
-    R = A[-1][0, 0] 
+    R = A[-1][0, 0]
     # transmission coefficient of the whole structure
     T = A[-1][1, 0] * np.real(gf[g - 1] / (gf[0]))
 

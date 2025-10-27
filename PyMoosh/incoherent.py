@@ -395,10 +395,7 @@ def follow_growth_coefficient_S(
             return R, T, [S_top, S_bot]
 
 
-
-def full_stack_incoherent(
-    struct, wavelength, incidence, polarization
-):
+def full_stack_incoherent(struct, wavelength, incidence, polarization):
     """
     This function computes the reflectance and transmittance coefficients
     of the structure, including an incoherent substrate.
@@ -484,7 +481,7 @@ def full_stack_incoherent(
     T[2 * g - 1] = [[0, t], [t, 0]]
 
     # Once the scattering matrixes have been prepared, now let us combine them
-    T = np.abs(T)**2 # Switching to full incoherent mode
+    T = np.abs(T) ** 2  # Switching to full incoherent mode
     A = np.zeros(((2 * g - 1, 2, 2)), dtype=float)
     A[0] = T[0]
 
@@ -492,7 +489,7 @@ def full_stack_incoherent(
         A[j + 1] = cascade(A[j], T[j + 1])
 
     # reflection coefficient of the whole structure
-    R = A[-1][0, 0] 
+    R = A[-1][0, 0]
     # transmission coefficient of the whole structure
     T = A[-1][1, 0] * np.real(gf[g - 1] / (gf[0]))
 
