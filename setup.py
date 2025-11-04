@@ -55,7 +55,7 @@ setup(
     name = find_name("PyMoosh", "__init__.py"),
     version = find_version("PyMoosh", "__init__.py"),
     author = find_author("PyMoosh", "__init__.py"),
-    author_email='antoine.moreau@uca.fr',
+    author_email='denis.langevin@univ-amu.fr',
     license='MIT',
     packages=['PyMoosh'],
     include_package_data=True,   # add data folder containing material dispersions

@@ -21,7 +21,7 @@ We are continuously developing PyMoosh, adding new features while prioritizing b
 
 ### Basic Installation
 
-**For Python 3.10:**
+**For Python <= 3.10:**
 
 ```bash
 pip install pymoosh
@@ -29,7 +29,9 @@ pip install pymoosh
 
 **For Python 3.11+:**
 
-Python 3.11+ requires using virtual environments:
+Python 3.11+ requires using virtual environments. For this, you may use either `venv` or [conda](https://docs.conda.io/projects/conda/en/latest/index.html). We recommend the latter.
+
+### `venv` installation (Linux mostly)
 ```bash
 # Create and activate a virtual environment
 python -m venv pymoosh-env
@@ -42,11 +44,11 @@ pymoosh-env\Scripts\activate
 pip install pymoosh
 ```
 
-### Conda Installation (Windows)
+### Conda Installation (any OS)
 ```bash
 # Create and activate environment
-conda create -n pymoosh python=3.10
-conda activate pymoosh
+conda create -n pymoosh python=X.XX # change for the Python version you want. If not important, 3.11 works fine
+conda activate pymoosh # activate the environment
 
 # Install dependencies first, then PyMoosh
 conda install -c conda-forge numpy scipy matplotlib jupyter
@@ -54,6 +56,10 @@ pip install pymoosh
 ```
 
 Remember to activate your environment each time you use PyMoosh.
+
+### Local installation
+
+Maybe you don't want to use `pip`, maybe you want to better control what parts of PyMoosh you use. In this case, you can copy the PyMoosh folder of this repository on your personal computer, and then any script saved in this folder can call PyMoosh directly!
 
 ## Quick Start Example
 
