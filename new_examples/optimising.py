@@ -52,6 +52,7 @@ for i, wav in enumerate(wav_list):
     r, t, R, T = PM.coefficient(structure, wav, angle, polar)
     reflectivity[i] = R
 
+plt.figure(1)
 plt.plot(wav_list, reflectivity)
 plt.xlabel("Wavelength (nm)")
 plt.ylabel("Reflectivity")
@@ -66,6 +67,7 @@ X_max = np.array([max_lay] * nb_layers)
 
 best, convergence = PM.differential_evolution(objective_function, budget, X_min, X_max)
 
+plt.figure(2)
 plt.plot(convergence)
 plt.xlabel("Iteration")
 plt.ylabel("Cost function")
@@ -86,3 +88,4 @@ for i, wav in enumerate(wav_list):
 plt.plot(wav_list, reflectivity)
 plt.xlabel("Wavelength (nm)")
 plt.ylabel("Reflectivity")
+plt.show()

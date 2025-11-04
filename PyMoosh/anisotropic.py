@@ -6,7 +6,10 @@ import numpy as np
 import copy
 from numpy import linalg as la_np
 from PyMoosh.classes import Material, Structure, conv_to_nm
-from refractiveindex import RefractiveIndexMaterial
+
+import sys
+if (sys.version_info[0] >= 3 and sys.version_info[1] >= 10):
+    from refractiveindex import RefractiveIndexMaterial
 
 
 def rotate_permittivity(eps, angle_rad, axis="z"):
@@ -308,7 +311,7 @@ class AniMaterial(Material):
         """
         epsilon_medium = []
         for material in self.material_list:
-            if issubclass(material.__class__, RefractiveIndexMaterial):
+            if (sys.version_info[0] >= 3 and sys.version_info[1] >= 10) and issubclass(material.__class__, RefractiveIndexMaterial):
                 try:
                     k = material.get_extinction_coefficient(wavelength)
                     epsilon_medium.append(

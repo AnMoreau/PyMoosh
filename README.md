@@ -17,7 +17,7 @@ We are continuously developing PyMoosh, adding new features while prioritizing b
 
 ### Requirements
 - **Python 3.10 or higher** is required for RefractiveIndex library integration
-- If Python 3.10+ is problematic, contact us for a version without RefractiveIndex
+- If your Python version is older than this, PyMoosh will be installed without the RefractiveIndex library.
 
 ### Basic Installation
 
@@ -114,6 +114,8 @@ PyMoosh has been released with a trilogy of tutorial papers, that are open acces
 1. **Official PyMoosh Presentation Paper**  
    [Journal of the Optical Society of America B, 41(2), A67-A78 (2024)](https://opg.optica.org/josab/fulltext.cfm?uri=josab-41-2-A67)
 
+   And the [up-to-date version on ArXiv](https://arxiv.org/abs/2309.00654), with minor typo corrections.
+
    If you use PyMoosh in your research, please cite:
    ```bibtex
    @article{langevin2024pymoosh,
@@ -156,11 +158,13 @@ Excitation of a surface plasmon using a prism coupler in the Kretschman Raether 
 
 Here is a list of contributors to PyMoosh (one way or another) so far:
 
+* Sarah Abdul-salam
 * Pauline Bennet (@Ellawin)
 * Tristan Berthelot (@Tilmedor)
 * Anorld Capo-Chichi
 * Pierre Chevalier
 * Aidan Costard (@Dratsa)
+* Hassan Fawaz (@hbfawaz)
 * Denis Langevin (@Milloupe)
 * Demetrio Macias
 * Téo Mottin (@HawhawPdB)

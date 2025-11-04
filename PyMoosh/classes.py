@@ -7,7 +7,10 @@ import re
 import matplotlib.pyplot as plt
 from scipy.special import wofz
 import json
-from refractiveindex import RefractiveIndexMaterial
+
+import sys
+if (sys.version_info[0] >= 3 and sys.version_info[1] >= 10):
+    from refractiveindex import RefractiveIndexMaterial
 
 
 def conv_to_nm(length, unit):
