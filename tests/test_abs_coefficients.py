@@ -1,5 +1,6 @@
 import numpy as np
 from context import PM
+from context import alt_methods
 import matplotlib.pyplot as plt
 
 
@@ -42,7 +43,7 @@ if (R+T+np.sum(a)!=1):
 # print(a, R, T)
 #
 # #
-a_a, r_a, t_a, R_a, T_a = PM.absorption_A(chose,wav,incidence,0)
+a_a, r_a, t_a, R_a, T_a = alt_methods.absorption_A(chose,wav,incidence,0)
 
 
 
@@ -88,7 +89,7 @@ print()
 
 
 
-a_a, r_a, t_a, R_a, T_a = PM.absorption_A(chose,wav,incidence,1)
+a_a, r_a, t_a, R_a, T_a = alt_methods.absorption_A(chose,wav,incidence,1)
 
 
 
@@ -130,7 +131,7 @@ if (R+T+np.sum(a)!=1):
     print("total energy (should be one)", R+T+np.sum(a))
 
 
-a_a, r_a, t_a, R_a, T_a = PM.absorption_A(chose,wav,incidence,0)
+a_a, r_a, t_a, R_a, T_a = alt_methods.absorption_A(chose,wav,incidence,0)
 
 
 
@@ -175,7 +176,7 @@ print(a, R, T)
 
 
 
-a_a, r_a, t_a, R_a, T_a = PM.absorption_A(chose,wav,incidence,1)
+a_a, r_a, t_a, R_a, T_a = alt_methods.absorption_A(chose,wav,incidence,1)
 
 
 
@@ -225,7 +226,7 @@ if (R+T+np.sum(a)!=1):
     print("total energy (should be one)", R+T+np.sum(a))
 
 
-a_a, r_a, t_a, R_a, T_a = PM.absorption_A(chose,wav,incidence,0)
+a_a, r_a, t_a, R_a, T_a = alt_methods.absorption_A(chose,wav,incidence,0)
 
 
 if (np.sum(abs(r-r_a))> eps):
@@ -265,7 +266,7 @@ if (R+T+np.sum(a)!=1):
     print("total energy (should be one)", R+T+np.sum(a))
 
 
-a_a, r_a, t_a, R_a, T_a = PM.absorption_A(chose,wav,incidence,1)
+a_a, r_a, t_a, R_a, T_a = alt_methods.absorption_A(chose,wav,incidence,1)
 
 
 if (np.sum(abs(r-r_a))> eps):
@@ -305,7 +306,7 @@ if (R+T+np.sum(a)!=1):
     print("total energy (should be one)", R+T+np.sum(a))
 
 
-a_a, r_a, t_a, R_a, T_a = PM.absorption_A(chose,wav,incidence,0)
+a_a, r_a, t_a, R_a, T_a = alt_methods.absorption_A(chose,wav,incidence,0)
 
 
 if (np.sum(abs(r-r_a))> eps):
@@ -345,7 +346,7 @@ if (R+T+np.sum(a)!=1):
     print("total energy (should be one)", R+T+np.sum(a))
 
 
-a_a, r_a, t_a, R_a, T_a = PM.absorption_A(chose,wav,incidence,1)
+a_a, r_a, t_a, R_a, T_a = alt_methods.absorption_A(chose,wav,incidence,1)
 
 
 if (np.sum(abs(r-r_a))> eps):
@@ -394,7 +395,7 @@ if (R+T+np.sum(a)!=1):
     print("total energy (should be one)", R+T+np.sum(a))
 
 
-a_a, r_a, t_a, R_a, T_a = PM.absorption_A(chose,wav,incidence,0)
+a_a, r_a, t_a, R_a, T_a = alt_methods.absorption_A(chose,wav,incidence,0)
 
 
 if (np.sum(abs(r-r_a))> eps):
@@ -434,7 +435,7 @@ if (R+T+np.sum(a)!=1):
     print("total energy (should be one)", R+T+np.sum(a))
 
 
-a_a, r_a, t_a, R_a, T_a = PM.absorption_A(chose,wav,incidence,1)
+a_a, r_a, t_a, R_a, T_a = alt_methods.absorption_A(chose,wav,incidence,1)
 
 
 if (np.sum(abs(r-r_a))> eps):
@@ -473,7 +474,7 @@ a, r, t, R, T = PM.absorption_S(chose,wav,incidence,0)
 if (R+T+np.sum(a)!=1):
     print("total energy (should be one)", R+T+np.sum(a))
 
-a_a, r_a, t_a, R_a, T_a = PM.absorption_A(chose,wav,incidence,0)
+a_a, r_a, t_a, R_a, T_a = alt_methods.absorption_A(chose,wav,incidence,0)
 
 if (np.sum(abs(r-r_a))> eps):
     print("Problem with two layers and Abeles coeff refl in TE")
@@ -512,7 +513,7 @@ if (R+T+np.sum(a)!=1):
     print("total energy (should be one)", R+T+np.sum(a))
 
 
-a_a, r_a, t_a, R_a, T_a = PM.absorption_A(chose,wav,incidence,1)
+a_a, r_a, t_a, R_a, T_a = alt_methods.absorption_A(chose,wav,incidence,1)
 
 
 

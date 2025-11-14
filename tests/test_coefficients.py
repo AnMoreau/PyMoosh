@@ -1,5 +1,6 @@
 import numpy as np
 from context import PM
+from context import alt_methods
 import matplotlib.pyplot as plt
 import math
 
@@ -41,16 +42,16 @@ r, t, R, T = PM.coefficient_S(chose,wav,incidence,0)
 
 
 
-r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose,wav,incidence,0)
+r_ab, t_ab, R_ab, T_ab = alt_methods.coefficient_A(chose,wav,incidence,0)
 
 
-r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,0)
+r_t, t_t, R_t, T_t = alt_methods.coefficient_T(chose,wav,incidence,0)
 
 
-r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,0)
+r_dn, t_dn, R_dn, T_dn = alt_methods.coefficient_DN(chose,wav,incidence,0)
 
 
-r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,0)
+r_i, t_i, R_i, T_i = alt_methods.coefficient_I(chose,wav,incidence,0)
 
 if (abs(r-r_ab)> eps):
     print("Problem with single interface and abeles coeff refl in TE")
@@ -102,16 +103,16 @@ r, t, R, T = PM.coefficient_S(chose,wav,incidence,1)
 
 
 
-r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose,wav,incidence,1)
+r_ab, t_ab, R_ab, T_ab = alt_methods.coefficient_A(chose,wav,incidence,1)
 
 
-r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,1)
+r_t, t_t, R_t, T_t = alt_methods.coefficient_T(chose,wav,incidence,1)
 
 
-r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,1)
+r_dn, t_dn, R_dn, T_dn = alt_methods.coefficient_DN(chose,wav,incidence,1)
 
 
-r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,1)
+r_i, t_i, R_i, T_i = alt_methods.coefficient_I(chose,wav,incidence,1)
 
 
 if (abs(r-r_ab)> eps):
@@ -164,15 +165,15 @@ r, t, R, T = PM.coefficient_S(chose,wav,incidence,0)
 
 
 
-r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose,wav,incidence,0)
+r_ab, t_ab, R_ab, T_ab = alt_methods.coefficient_A(chose,wav,incidence,0)
 
 
-r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,0)
+r_t, t_t, R_t, T_t = alt_methods.coefficient_T(chose,wav,incidence,0)
 
-r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,0)
+r_dn, t_dn, R_dn, T_dn = alt_methods.coefficient_DN(chose,wav,incidence,0)
 
 
-r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,0)
+r_i, t_i, R_i, T_i = alt_methods.coefficient_I(chose,wav,incidence,0)
 
 
 if (abs(r-r_ab)> eps):
@@ -225,16 +226,16 @@ r, t, R, T = PM.coefficient_S(chose,wav,incidence,1)
 
 
 
-r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose,wav,incidence,1)
+r_ab, t_ab, R_ab, T_ab = alt_methods.coefficient_A(chose,wav,incidence,1)
 
 
-r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,1)
+r_t, t_t, R_t, T_t = alt_methods.coefficient_T(chose,wav,incidence,1)
 
 
-r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,1)
+r_dn, t_dn, R_dn, T_dn = alt_methods.coefficient_DN(chose,wav,incidence,1)
 
 
-r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,1)
+r_i, t_i, R_i, T_i = alt_methods.coefficient_I(chose,wav,incidence,1)
 
 
 if (abs(r-r_ab)> eps):
@@ -296,15 +297,15 @@ r, t, R, T = PM.coefficient_S(chose,wav,incidence,0)
 
 
 
-r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose,wav,incidence,0)
+r_ab, t_ab, R_ab, T_ab = alt_methods.coefficient_A(chose,wav,incidence,0)
 
 
-r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,0)
+r_t, t_t, R_t, T_t = alt_methods.coefficient_T(chose,wav,incidence,0)
 
-r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,0)
+r_dn, t_dn, R_dn, T_dn = alt_methods.coefficient_DN(chose,wav,incidence,0)
 
 
-r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,0)
+r_i, t_i, R_i, T_i = alt_methods.coefficient_I(chose,wav,incidence,0)
 
 if (abs(r-r_ab)> eps):
     print("Problem with single interface and abeles coeff refl in TE")
@@ -356,16 +357,16 @@ r, t, R, T = PM.coefficient_S(chose,wav,incidence,1)
 
 
 
-r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose,wav,incidence,1)
+r_ab, t_ab, R_ab, T_ab = alt_methods.coefficient_A(chose,wav,incidence,1)
 
 
-r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,1)
+r_t, t_t, R_t, T_t = alt_methods.coefficient_T(chose,wav,incidence,1)
 
 
-r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,1)
+r_dn, t_dn, R_dn, T_dn = alt_methods.coefficient_DN(chose,wav,incidence,1)
 
 
-r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,1)
+r_i, t_i, R_i, T_i = alt_methods.coefficient_I(chose,wav,incidence,1)
 
 if (abs(r-r_ab)> eps):
     print("Problem with single interface and abeles coeff refl in TM")
@@ -417,15 +418,15 @@ r, t, R, T = PM.coefficient_S(chose,wav,incidence,0)
 
 
 
-r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose,wav,incidence,0)
+r_ab, t_ab, R_ab, T_ab = alt_methods.coefficient_A(chose,wav,incidence,0)
 
 
-r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,0)
+r_t, t_t, R_t, T_t = alt_methods.coefficient_T(chose,wav,incidence,0)
 
-r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,0)
+r_dn, t_dn, R_dn, T_dn = alt_methods.coefficient_DN(chose,wav,incidence,0)
 
 
-r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,0)
+r_i, t_i, R_i, T_i = alt_methods.coefficient_I(chose,wav,incidence,0)
 
 if (abs(r-r_ab)> eps):
     print("Problem with two layers and abeles coeff refl in TE")
@@ -477,16 +478,16 @@ r, t, R, T = PM.coefficient_S(chose,wav,incidence,1)
 
 
 
-r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose,wav,incidence,1)
+r_ab, t_ab, R_ab, T_ab = alt_methods.coefficient_A(chose,wav,incidence,1)
 
 
-r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,1)
+r_t, t_t, R_t, T_t = alt_methods.coefficient_T(chose,wav,incidence,1)
 
 
-r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,1)
+r_dn, t_dn, R_dn, T_dn = alt_methods.coefficient_DN(chose,wav,incidence,1)
 
 
-r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,1)
+r_i, t_i, R_i, T_i = alt_methods.coefficient_I(chose,wav,incidence,1)
 
 if (abs(r-r_ab)> eps):
     print("Problem with two layers and abeles coeff refl in TM")
@@ -547,16 +548,16 @@ r, t, R, T = PM.coefficient_S(chose,wav,incidence,0)
 
 
 
-r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose,wav,incidence,0)
+r_ab, t_ab, R_ab, T_ab = alt_methods.coefficient_A(chose,wav,incidence,0)
 
 
-r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,0)
+r_t, t_t, R_t, T_t = alt_methods.coefficient_T(chose,wav,incidence,0)
 
 
-r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,0)
+r_dn, t_dn, R_dn, T_dn = alt_methods.coefficient_DN(chose,wav,incidence,0)
 
 
-r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,0)
+r_i, t_i, R_i, T_i = alt_methods.coefficient_I(chose,wav,incidence,0)
 
 if (abs(r-r_ab)> eps):
     print("Problem with single interface and abeles coeff refl in TE")
@@ -608,16 +609,16 @@ r, t, R, T = PM.coefficient_S(chose,wav,incidence,1)
 
 
 
-r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose,wav,incidence,1)
+r_ab, t_ab, R_ab, T_ab = alt_methods.coefficient_A(chose,wav,incidence,1)
 
 
-r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,1)
+r_t, t_t, R_t, T_t = alt_methods.coefficient_T(chose,wav,incidence,1)
 
 
-r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,1)
+r_dn, t_dn, R_dn, T_dn = alt_methods.coefficient_DN(chose,wav,incidence,1)
 
 
-r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,1)
+r_i, t_i, R_i, T_i = alt_methods.coefficient_I(chose,wav,incidence,1)
 
 if (abs(r-r_ab)> eps):
     print("Problem with single interface and abeles coeff refl in TM")
@@ -669,15 +670,15 @@ r, t, R, T = PM.coefficient_S(chose,wav,incidence,0)
 
 
 
-r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose,wav,incidence,0)
+r_ab, t_ab, R_ab, T_ab = alt_methods.coefficient_A(chose,wav,incidence,0)
 
 
-r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,0)
+r_t, t_t, R_t, T_t = alt_methods.coefficient_T(chose,wav,incidence,0)
 
-r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,0)
+r_dn, t_dn, R_dn, T_dn = alt_methods.coefficient_DN(chose,wav,incidence,0)
 
 
-r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,0)
+r_i, t_i, R_i, T_i = alt_methods.coefficient_I(chose,wav,incidence,0)
 
 if (abs(r-r_ab)> eps):
     print("Problem with two layers and abeles coeff refl in TE")
@@ -729,15 +730,15 @@ r, t, R, T = PM.coefficient_S(chose,wav,incidence,1)
 
 
 
-r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(chose,wav,incidence,1)
+r_ab, t_ab, R_ab, T_ab = alt_methods.coefficient_A(chose,wav,incidence,1)
 
 
-r_t, t_t, R_t, T_t = PM.coefficient_T(chose,wav,incidence,1)
+r_t, t_t, R_t, T_t = alt_methods.coefficient_T(chose,wav,incidence,1)
 
-r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(chose,wav,incidence,1)
+r_dn, t_dn, R_dn, T_dn = alt_methods.coefficient_DN(chose,wav,incidence,1)
 
 
-r_i, t_i, R_i, T_i = PM.coefficient_I(chose,wav,incidence,1)
+r_i, t_i, R_i, T_i = alt_methods.coefficient_I(chose,wav,incidence,1)
 
 
 if (abs(r-r_ab)> eps):

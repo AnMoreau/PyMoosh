@@ -1,5 +1,6 @@
 import numpy as np
 from context import PM
+from context import modes
 import matplotlib.pyplot as plt
 import itertools
 
@@ -10,7 +11,7 @@ stack = [0,1,0]
 thickness = [0,500,0]
 formap = PM.Structure(materials, stack, thickness)
 
-X,Y,T = PM.complex_map(formap,600.,0.,[1.,np.sqrt(2)],[-0.1,0.1],100,100)
+X,Y,T = modes.complex_map(formap,600.,0.,[1.,np.sqrt(2)],[-0.1,0.1],100,100)
 
 plt.imshow(np.log(np.abs(T)), cmap='jet', extent=[X.min(), X.max(), Y.min(), Y.max()])
 #plt.imshow(np.angle(T), cmap='jet', extent=[X.min(), X.max(), Y.min(), Y.max()])

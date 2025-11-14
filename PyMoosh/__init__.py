@@ -24,11 +24,6 @@ and many other things...
 
 """
 __name__ = "PyMoosh"
-__version__ = "4.0"
-__date__ = "11/04/2025"  # MM/DD/YYY
-__author__ = "Antoine Moreau and Denis Langevin"
-
-
 ## make accessible everything from `core` directly from the PyMoosh base package
 from PyMoosh.core import *
 from PyMoosh.classes import *

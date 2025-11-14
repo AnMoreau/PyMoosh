@@ -2,7 +2,9 @@ import numpy as np
 from context import PM
 import matplotlib.pyplot as plt
 import csv
-from PyMoosh.non_local import *
+
+from context import non_local as nl
+
 #Xbest =  [11.6644913, 8.9e+14, 3.53201120e+12,  1.92864068e+30,  9.718*10**14]
 #        [chi_b,      w_p,     gamma,           beta_0,          tau         ]
 
@@ -37,7 +39,7 @@ def nl_function(wavelength, chi_b):
 
     return beta2, chi_b, chi_f, w_p
 
-mat_non_local = NLMaterial([nl_function, 11.6644913])
+mat_non_local = nl.NLMaterial([nl_function, 11.6644913])
 materials = [14.2129, 15.6816, mat_non_local]
 
 stack = [1, 2, 0]
@@ -45,7 +47,7 @@ thickness = [30, 105, 30]
 theta = np.pi * 37 / 180
 pol = 1.0
 
-chose = NLStructure(materials,stack,thickness, verbose=False)
+chose = nl.NLStructure(materials,stack,thickness, verbose=False)
 
 wl, r, t, R, T = PM.spectrum(chose, theta, pol, 5000, 8000, 300)
 
@@ -142,13 +144,11 @@ import matplotlib.pyplot as plt
 
 
 
-from PyMoosh.non_local import fields_NL_TL, NLcoefficient
-
 wavelength_list = np.linspace(5000, 8000, 3001)
 Rs = np.zeros_like(wavelength_list)
 
 for i, wav in enumerate(wavelength_list):
-    r, t, R, T = NLcoefficient(chose, wav, np.pi*37/180, 1)
+    r, t, R, T = nl.NLcoefficient(chose, wav, np.pi*37/180, 1)
     Rs[i] = R
 
 plt.figure(1)
@@ -159,7 +159,7 @@ wavelength = 6683
 window = PM.Window(70*wavelength,0.4,10, 2)
 beam = PM.Beam(wavelength,38.7/180*np.pi,1,10*wavelength)
 chose = PM.Structure(materials,stack,thickness, verbose=False)
-Hyn_t, Hyn_l, Exn_t, Exn_l, Ezn_t, Ezn_l, rhon, jfx_n, jfz_n = fields_NL_TL(chose,beam,window)
+Hyn_t, Hyn_l, Exn_t, Exn_l, Ezn_t, Ezn_l, rhon, jfx_n, jfz_n = nl.fields_NL_TL(chose,beam,window)
 
 # plt.figure(5)
 # plt.subplot(2, 1, 1)

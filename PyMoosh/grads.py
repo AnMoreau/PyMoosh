@@ -1,6 +1,7 @@
 """
 This file contains all functions that helps with computing gradients
 """
+# TODO: work on this
 
 import numpy as np
 import copy

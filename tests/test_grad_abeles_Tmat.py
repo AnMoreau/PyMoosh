@@ -1,5 +1,6 @@
 import numpy as np
 import PyMoosh as PM
+from context import alt_methods
 import matplotlib.pyplot as plt
 
 

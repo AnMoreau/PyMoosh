@@ -1,7 +1,7 @@
 import numpy as np
-import PyMoosh as PM
+from context import PM
+from context import alt_methods
 import matplotlib.pyplot as plt
-
 
 incidence = 10/180*np.pi
 polarisation = 0
@@ -30,11 +30,11 @@ for i in range(1):
     chose = PM.Structure(materials,stack,epaisseurs, verbose=True)
     r, t, R, T = PM.coefficient(chose,wav,incidence,polarisation)
 
-    r_ab, t_ab, R_ab, T_ab = PM.abeles_coefficients(chose,wav,incidence,polarisation)
+    r_ab, t_ab, R_ab, T_ab = alt_methods.coefficient_A(chose,wav,incidence,polarisation)
 
 
     chose = PM.Structure(materials,stack,epaisseurs, verbose=True)
-    r_t, t_t, R_t, T_t = PM.TMatrix_coefficients(chose,wav,incidence,polarisation)
+    r_t, t_t, R_t, T_t = alt_methods.coefficient_T(chose,wav,incidence,polarisation)
 
 
     print("POP")

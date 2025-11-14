@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "PyMoosh"
+authors = [
+  {name = "Denis Langevin", email = "denis.langevin@univ-amu.fr"},
+  {name = "Antoine Moreau", email = "antoine.moreau@uca.fr"}]
+version = "4.0.1"
+description = "A scattering matrix formalism to solve Maxwell's equations in a multilayered structure."
+readme = "README.md"
+requires-python = ">=3.7"
+license = {text = "MIT"}
+keywords = ["multilayer optics", "photonic simulation", "optimization"]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Science/Research",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Programming Language :: Python :: 3",
+]
+dependencies = [
+  "numpy",
+  "matplotlib",
+  "scipy",
+  "refractiveindex; python_version >= '3.10'"
+]
+
+
+[project.urls]
+Homepage = "https://github.com/AnMoreau/PyMoosh"
+Repository = "https://github.com/AnMoreau/PyMoosh/stable"
+Documentation = "https://github.com/AnMoreau/PyMoosh#readme"
+
+[tool.setuptools.packages.find]
+include = ["PyMoosh*"]
+
+[tool.setuptools]
+include-package-data = true
+zip-safe = false

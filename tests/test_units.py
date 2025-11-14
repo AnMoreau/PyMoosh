@@ -1,5 +1,6 @@
 import numpy as np
 from context import PM
+from context import alt_methods
 import matplotlib.pyplot as plt
 from time import time
 
@@ -69,7 +70,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(multi_stack1,wav,incidence,0)
+    r_ab, t_ab, R_ab, T_ab = alt_methods.coefficient_A(multi_stack1,wav,incidence,0)
     b = time()
     rs_a_te_um.append(R_ab)
     ts_a_te_um.append(T_ab)
@@ -77,7 +78,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_t, t_t, R_t, T_t = PM.coefficient_T(multi_stack1,wav,incidence,0)
+    r_t, t_t, R_t, T_t = alt_methods.coefficient_T(multi_stack1,wav,incidence,0)
     b = time()
     rs_t_te_um.append(R_t)
     ts_t_te_um.append(T_t)
@@ -85,7 +86,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(multi_stack1,wav,incidence,0)
+    r_dn, t_dn, R_dn, T_dn = alt_methods.coefficient_DN(multi_stack1,wav,incidence,0)
     b = time()
     rs_dn_te_um.append(R_dn)
     ts_dn_te_um.append(T_dn)
@@ -93,7 +94,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_i, t_i, R_i, T_i = PM.coefficient_I(multi_stack1,wav,incidence,0)
+    r_i, t_i, R_i, T_i = alt_methods.coefficient_I(multi_stack1,wav,incidence,0)
     b = time()
     rs_i_te_um.append(R_i)
 
@@ -109,7 +110,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(multi_stack1,wav,incidence,1)
+    r_ab, t_ab, R_ab, T_ab = alt_methods.coefficient_A(multi_stack1,wav,incidence,1)
     b = time()
     rs_a_tm_um.append(R_ab)
     ts_a_tm_um.append(T_ab)
@@ -117,7 +118,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_t, t_t, R_t, T_t = PM.coefficient_T(multi_stack1,wav,incidence,1)
+    r_t, t_t, R_t, T_t = alt_methods.coefficient_T(multi_stack1,wav,incidence,1)
     b = time()
     rs_t_tm_um.append(R_t)
     ts_t_tm_um.append(T_t)
@@ -125,7 +126,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(multi_stack1,wav,incidence,1)
+    r_dn, t_dn, R_dn, T_dn = alt_methods.coefficient_DN(multi_stack1,wav,incidence,1)
     b = time()
     rs_dn_tm_um.append(R_dn)
     ts_dn_tm_um.append(T_dn)
@@ -133,7 +134,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_i, t_i, R_i, T_i = PM.coefficient_I(multi_stack1,wav,incidence,1)
+    r_i, t_i, R_i, T_i = alt_methods.coefficient_I(multi_stack1,wav,incidence,1)
     b = time()
     rs_i_tm_um.append(R_i)
 
@@ -223,7 +224,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(multi_stack1,wav,incidence,0)
+    r_ab, t_ab, R_ab, T_ab = alt_methods.coefficient_A(multi_stack1,wav,incidence,0)
     b = time()
     rs_a_te_nm.append(R_ab)
     ts_a_te_nm.append(T_ab)
@@ -231,7 +232,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_t, t_t, R_t, T_t = PM.coefficient_T(multi_stack1,wav,incidence,0)
+    r_t, t_t, R_t, T_t = alt_methods.coefficient_T(multi_stack1,wav,incidence,0)
     b = time()
     rs_t_te_nm.append(R_t)
     ts_t_te_nm.append(T_t)
@@ -239,7 +240,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(multi_stack1,wav,incidence,0)
+    r_dn, t_dn, R_dn, T_dn = alt_methods.coefficient_DN(multi_stack1,wav,incidence,0)
     b = time()
     rs_dn_te_nm.append(R_dn)
     ts_dn_te_nm.append(T_dn)
@@ -247,7 +248,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_i, t_i, R_i, T_i = PM.coefficient_I(multi_stack1,wav,incidence,0)
+    r_i, t_i, R_i, T_i = alt_methods.coefficient_I(multi_stack1,wav,incidence,0)
     b = time()
     rs_i_te_nm.append(R_i)
 
@@ -263,7 +264,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_ab, t_ab, R_ab, T_ab = PM.coefficient_A(multi_stack1,wav,incidence,1)
+    r_ab, t_ab, R_ab, T_ab = alt_methods.coefficient_A(multi_stack1,wav,incidence,1)
     b = time()
     rs_a_tm_nm.append(R_ab)
     ts_a_tm_nm.append(T_ab)
@@ -271,7 +272,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_t, t_t, R_t, T_t = PM.coefficient_T(multi_stack1,wav,incidence,1)
+    r_t, t_t, R_t, T_t = alt_methods.coefficient_T(multi_stack1,wav,incidence,1)
     b = time()
     rs_t_tm_nm.append(R_t)
     ts_t_tm_nm.append(T_t)
@@ -279,7 +280,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_dn, t_dn, R_dn, T_dn = PM.coefficient_DN(multi_stack1,wav,incidence,1)
+    r_dn, t_dn, R_dn, T_dn = alt_methods.coefficient_DN(multi_stack1,wav,incidence,1)
     b = time()
     rs_dn_tm_nm.append(R_dn)
     ts_dn_tm_nm.append(T_dn)
@@ -287,7 +288,7 @@ for nb_couches in layers:
 
     multi_stack1 = PM.Structure(materials,stack,epaisseurs, verbose=False, unit=unit, si_units=True)
     a = time()
-    r_i, t_i, R_i, T_i = PM.coefficient_I(multi_stack1,wav,incidence,1)
+    r_i, t_i, R_i, T_i = alt_methods.coefficient_I(multi_stack1,wav,incidence,1)
     b = time()
     rs_i_tm_nm.append(R_i)
 

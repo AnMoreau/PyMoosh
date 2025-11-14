@@ -1,5 +1,6 @@
 import numpy as np
 from context import PM
+from context import modes
 import matplotlib.pyplot as plt
 import itertools
 
@@ -22,4 +23,4 @@ neff_min, neff_max = 1., 2.
 
 chose = PM.Structure(materials, stack, epaisseurs)
 
-indices, follow_modes = PM.follow_guided_modes(chose, wavs, 0, neff_min, neff_max, format="n")
+indices, follow_modes = modes.follow_guided_modes(chose, wavs, 0, neff_min, neff_max, format="n")
