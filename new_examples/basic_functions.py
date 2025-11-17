@@ -1,4 +1,3 @@
-
 import numpy as np
 import PyMoosh as PM
 
@@ -6,10 +5,10 @@ import PyMoosh as PM
 
 ### Setting up the studied structure
 # Defining materials
-material_list = [1.,"Si","Water"]
+material_list = [1.0, "Si", "Water"]
 
 # Defining the vertical order of the materials
-stack = [0,1,2,1]
+stack = [0, 1, 2, 1]
 
 # Defining the thickness of each layer
 thickness = [300, 200, 500, 200]
@@ -18,14 +17,14 @@ thickness = [300, 200, 500, 200]
 struct = PM.Structure(material_list, stack, thickness)
 
 ### Simple calculations
-wavelength = 700 # nm !
+wavelength = 700  # nm !
 
-angle_inc = np.pi / 4 # rad
+angle_inc = np.pi / 4  # rad
 
-pol = 1 # 0 for TE, 1 for TM
+pol = 1  # 0 for TE, 1 for TM
 
 # Calculation
-r, t, R, T = PM.coefficient(struct,wavelength,angle_inc,pol)
+r, t, R, T = PM.coefficient(struct, wavelength, angle_inc, pol)
 
 
 ### Spectrum
@@ -36,11 +35,11 @@ nb_wav = 150
 wavs, r, t, R, T = PM.spectrum(struct, wavelength, angle_inc, wav_beg, wav_end, nb_wav)
 
 import matplotlib.pyplot as plt
+
 plt.plot(wavs, R)
 plt.xlabel("wavelength (nm)")
 plt.ylabel("Reflectivity")
 plt.show()
-
 
 
 ################################################
@@ -60,21 +59,25 @@ print(np.sqrt(epsilon))
 
 ## Studying a single interface
 
-interface = PM.Structure([1.,2.25],[0, 1],[10*wavelength, 10*wavelength])
+interface = PM.Structure([1.0, 2.25], [0, 1], [10 * wavelength, 10 * wavelength])
 
 # Wavelength
 wavelength = 600
 # Incidence angle
-angle_beg = 0.
-angle_end = np.pi/6.
+angle_beg = 0.0
+angle_end = np.pi / 6.0
 nb_angle = 200
 # Polarization
-pol = 1.
+pol = 1.0
 
 # For TE polarization
-incidence, r, t, R, T = PM.angular(interface, wavelength, 0., angle_beg, angle_end, nb_angle)
+incidence, r, t, R, T = PM.angular(
+    interface, wavelength, 0.0, angle_beg, angle_end, nb_angle
+)
 # For TM polarization, same incidence angles
-incidence, r_p, t_p, R_p, T_p = PM.angular(interface, wavelength, 1., angle_beg, angle_end, nb_angle)
+incidence, r_p, t_p, R_p, T_p = PM.angular(
+    interface, wavelength, 1.0, angle_beg, angle_end, nb_angle
+)
 
 # Visualization of the result
 import matplotlib.pyplot as plt
@@ -82,12 +85,10 @@ import matplotlib.pyplot as plt
 plt.figure(1)
 plt.plot(incidence, R, label="TE polarisation")
 plt.plot(incidence, R_p, label="TM polarisation")
-plt.ylabel('Reflectance')
+plt.ylabel("Reflectance")
 # plt.ylim(0,1)
 plt.legend()
 plt.show()
-
-
 
 
 # interface = PM.Structure([1.,"Si"],[0, 1],[10*wavelength, 10*wavelength])

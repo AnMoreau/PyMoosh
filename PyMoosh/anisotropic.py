@@ -8,7 +8,8 @@ from numpy import linalg as la_np
 from PyMoosh.classes import Material, Structure, conv_to_nm
 
 import sys
-if (sys.version_info[0] >= 3 and sys.version_info[1] >= 10):
+
+if sys.version_info[0] >= 3 and sys.version_info[1] >= 10:
     from refractiveindex import RefractiveIndexMaterial
 
 
@@ -311,7 +312,9 @@ class AniMaterial(Material):
         """
         epsilon_medium = []
         for material in self.material_list:
-            if (sys.version_info[0] >= 3 and sys.version_info[1] >= 10) and issubclass(material.__class__, RefractiveIndexMaterial):
+            if (sys.version_info[0] >= 3 and sys.version_info[1] >= 10) and issubclass(
+                material.__class__, RefractiveIndexMaterial
+            ):
                 try:
                     k = material.get_extinction_coefficient(wavelength)
                     epsilon_medium.append(

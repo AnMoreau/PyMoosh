@@ -5,7 +5,7 @@ import csv
 
 from context import non_local as nl
 
-#Xbest =  [11.6644913, 8.9e+14, 3.53201120e+12,  1.92864068e+30,  9.718*10**14]
+# Xbest =  [11.6644913, 8.9e+14, 3.53201120e+12,  1.92864068e+30,  9.718*10**14]
 #        [chi_b,      w_p,     gamma,           beta_0,          tau         ]
 
 # wavelength_list = np.linspace(5000, 8000, 3001)
@@ -27,17 +27,19 @@ def wrapper_exemple(P, wl) :
     return P[0], chi_f, P[1], np.sqrt(P[3] - 1j * P[4] * w)
 """
 
-def nl_function(wavelength, chi_b):
-    w_p = 8.9e+14
-    gamma = 3.53201120e+12
-    beta_0 = np.sqrt(1.92864068e+30)
-    tau = 9.718*10**14
 
-    w = 2*np.pi*299792458*1e9 / wavelength
+def nl_function(wavelength, chi_b):
+    w_p = 8.9e14
+    gamma = 3.53201120e12
+    beta_0 = np.sqrt(1.92864068e30)
+    tau = 9.718 * 10**14
+
+    w = 2 * np.pi * 299792458 * 1e9 / wavelength
     beta2 = beta_0**2 - 1.0j * w * tau
-    chi_f = - w_p**2/(w * (w + 1j * gamma))
+    chi_f = -(w_p**2) / (w * (w + 1j * gamma))
 
     return beta2, chi_b, chi_f, w_p
+
 
 mat_non_local = nl.NLMaterial([nl_function, 11.6644913])
 materials = [14.2129, 15.6816, mat_non_local]
@@ -47,7 +49,7 @@ thickness = [30, 105, 30]
 theta = np.pi * 37 / 180
 pol = 1.0
 
-chose = nl.NLStructure(materials,stack,thickness, verbose=False)
+chose = nl.NLStructure(materials, stack, thickness, verbose=False)
 
 wl, r, t, R, T = PM.spectrum(chose, theta, pol, 5000, 8000, 300)
 
@@ -69,7 +71,7 @@ import matplotlib.pyplot as plt
 # plt.show()
 
 
-#%% Optimization
+# %% Optimization
 
 
 # wavelength_list = np.linspace(5000, 8000, 3001)
@@ -140,15 +142,14 @@ import matplotlib.pyplot as plt
 # plt.show()
 
 
-#%%
-
+# %%
 
 
 wavelength_list = np.linspace(5000, 8000, 3001)
 Rs = np.zeros_like(wavelength_list)
 
 for i, wav in enumerate(wavelength_list):
-    r, t, R, T = nl.NLcoefficient(chose, wav, np.pi*37/180, 1)
+    r, t, R, T = nl.NLcoefficient(chose, wav, np.pi * 37 / 180, 1)
     Rs[i] = R
 
 plt.figure(1)
@@ -156,10 +157,12 @@ plt.plot(wavelength_list, Rs)
 plt.show()
 
 wavelength = 6683
-window = PM.Window(70*wavelength,0.4,10, 2)
-beam = PM.Beam(wavelength,38.7/180*np.pi,1,10*wavelength)
-chose = PM.Structure(materials,stack,thickness, verbose=False)
-Hyn_t, Hyn_l, Exn_t, Exn_l, Ezn_t, Ezn_l, rhon, jfx_n, jfz_n = nl.fields_NL_TL(chose,beam,window)
+window = PM.Window(70 * wavelength, 0.4, 10, 2)
+beam = PM.Beam(wavelength, 38.7 / 180 * np.pi, 1, 10 * wavelength)
+chose = PM.Structure(materials, stack, thickness, verbose=False)
+Hyn_t, Hyn_l, Exn_t, Exn_l, Ezn_t, Ezn_l, rhon, jfx_n, jfz_n = nl.fields_NL_TL(
+    chose, beam, window
+)
 
 # plt.figure(5)
 # plt.subplot(2, 1, 1)
@@ -171,43 +174,88 @@ Hyn_t, Hyn_l, Exn_t, Exn_l, Ezn_t, Ezn_l, rhon, jfx_n, jfz_n = nl.fields_NL_TL(c
 # plt.tight_layout()
 
 plt.figure(2, figsize=(7, 10))
-plt.subplot(5,2,1)
-plt.imshow(np.real(Hyn_l),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 1)
+plt.imshow(
+    np.real(Hyn_l),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(Hyn_l)")
 plt.colorbar()
-plt.subplot(5,2,2)
-plt.imshow(np.real(Hyn_t),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 2)
+plt.imshow(
+    np.real(Hyn_t),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(Hyn_t)")
 plt.colorbar()
 
-plt.subplot(5,2,3)
-plt.imshow(np.real(Exn_l),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 3)
+plt.imshow(
+    np.real(Exn_l),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(Exn_l)")
 plt.colorbar()
-plt.subplot(5,2,4)
-plt.imshow(np.real(Exn_t),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 4)
+plt.imshow(
+    np.real(Exn_t),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(Exn_t)")
 plt.colorbar()
 
-plt.subplot(5,2,5)
-plt.imshow(np.real(Ezn_l),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 5)
+plt.imshow(
+    np.real(Ezn_l),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(Ezn_l)")
 plt.colorbar()
-plt.subplot(5,2,6)
-plt.imshow(np.real(Ezn_t),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 6)
+plt.imshow(
+    np.real(Ezn_t),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(Ezn_t)")
 plt.colorbar()
 
-plt.subplot(5,2,7)
-plt.imshow(np.real(rhon),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 7)
+plt.imshow(
+    np.real(rhon),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(rhon)")
 plt.colorbar()
-plt.subplot(5,2,8)
-plt.imshow(np.real(jfx_n),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 8)
+plt.imshow(
+    np.real(jfx_n),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(jfx_n)")
 plt.colorbar()
-plt.subplot(5,2,9)
-plt.imshow(np.real(jfz_n),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 9)
+plt.imshow(
+    np.real(jfz_n),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(jfz_n)")
 plt.colorbar()
 
@@ -218,43 +266,88 @@ plt.tight_layout()
 plt.savefig(f"mine_PyMoosh/stagiaire_a_integrer/non_local_order2_reals.pdf")
 
 plt.figure(3, figsize=(7, 10))
-plt.subplot(5,2,1)
-plt.imshow(np.abs(Hyn_l),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 1)
+plt.imshow(
+    np.abs(Hyn_l),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(Hyn_l)")
 plt.colorbar()
-plt.subplot(5,2,2)
-plt.imshow(np.abs(Hyn_t),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 2)
+plt.imshow(
+    np.abs(Hyn_t),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(Hyn_t)")
 plt.colorbar()
 
-plt.subplot(5,2,3)
-plt.imshow(np.abs(Exn_l),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 3)
+plt.imshow(
+    np.abs(Exn_l),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(Exn_l)")
 plt.colorbar()
-plt.subplot(5,2,4)
-plt.imshow(np.abs(Exn_t),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 4)
+plt.imshow(
+    np.abs(Exn_t),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(Exn_t)")
 plt.colorbar()
 
-plt.subplot(5,2,5)
-plt.imshow(np.abs(Ezn_l),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 5)
+plt.imshow(
+    np.abs(Ezn_l),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(Ezn_l)")
 plt.colorbar()
-plt.subplot(5,2,6)
-plt.imshow(np.abs(Ezn_t),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 6)
+plt.imshow(
+    np.abs(Ezn_t),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(Ezn_t)")
 plt.colorbar()
 
-plt.subplot(5,2,7)
-plt.imshow(np.abs(rhon),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 7)
+plt.imshow(
+    np.abs(rhon),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(rhon)")
 plt.colorbar()
-plt.subplot(5,2,8)
-plt.imshow(np.abs(jfx_n),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 8)
+plt.imshow(
+    np.abs(jfx_n),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(jfx_n)")
 plt.colorbar()
-plt.subplot(5,2,9)
-plt.imshow(np.abs(jfz_n),cmap='seismic',extent=[0,window.width,0,sum(chose.thickness)],aspect='auto')
+plt.subplot(5, 2, 9)
+plt.imshow(
+    np.abs(jfz_n),
+    cmap="seismic",
+    extent=[0, window.width, 0, sum(chose.thickness)],
+    aspect="auto",
+)
 plt.title("Re(jfz_n)")
 plt.colorbar()
 
@@ -266,10 +359,12 @@ plt.savefig(f"mine_PyMoosh/stagiaire_a_integrer/non_local_order2_abs.pdf")
 
 
 wavelength = 7451
-window = PM.Window(2,0.4,1.,0.1)
-beam = PM.Beam(wavelength,38.7/180*np.pi,1,100*wavelength)
-chose = PM.Structure(materials,stack,thickness, verbose=False)
-Hyn_t, Hyn_l, Exn_t, Exn_l, Ezn_t, Ezn_l, rhon, jfx_n, jfz_n = fields_NL_TL(chose,beam,window)
+window = PM.Window(2, 0.4, 1.0, 0.1)
+beam = PM.Beam(wavelength, 38.7 / 180 * np.pi, 1, 100 * wavelength)
+chose = PM.Structure(materials, stack, thickness, verbose=False)
+Hyn_t, Hyn_l, Exn_t, Exn_l, Ezn_t, Ezn_l, rhon, jfx_n, jfz_n = fields_NL_TL(
+    chose, beam, window
+)
 
 
 plt.figure(6)

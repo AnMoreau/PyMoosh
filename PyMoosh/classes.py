@@ -9,7 +9,8 @@ from scipy.special import wofz
 import json
 
 import sys
-if (sys.version_info[0] >= 3 and sys.version_info[1] >= 10):
+
+if sys.version_info[0] >= 3 and sys.version_info[1] >= 10:
     from refractiveindex import RefractiveIndexMaterial
 
 
@@ -135,7 +136,9 @@ class Structure:
 
         return epsilon, mu
 
-    def plot_stack(self, wavelength=None, lim_eps_colors=[1.5, 4], precision=3, mode="show"):
+    def plot_stack(
+        self, wavelength=None, lim_eps_colors=[1.5, 4], precision=3, mode="show"
+    ):
         """plot layerstack
 
         evaluate materials at given wavelength for labels
@@ -166,7 +169,7 @@ class Structure:
         if _thick[-1] == 0:
             _thick[-1] = 0.1 * tot_thick
 
-        fig, ax = plt.subplots(figsize=(7,7))
+        fig, ax = plt.subplots(figsize=(7, 7))
         ## define colors for layers of different ref.indices
         if any(isinstance(x, str) for x in _mats):
             colors = [".3"] + [f"C{i}" for i in range(len(_thick) - 2)] + [".3"]
@@ -220,7 +223,7 @@ class Structure:
         plt.ylabel("D (nm)")
         plt.xticks([])
         plt.gca().invert_yaxis()
-        if (mode == "show"):
+        if mode == "show":
             plt.show()
         else:
             return ax
