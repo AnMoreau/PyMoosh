@@ -2,6 +2,9 @@
 
 A Python-based Multilayer Optics Optimization and Simulation Hub !
 
+
+![PyMoosh logo](pymoosh_logo.png)
+
 ## A versatile tool for teaching and research in optics
 
 PyMoosh is a versatile numerical tool written in Python that simulates light interaction with multilayered structures.
