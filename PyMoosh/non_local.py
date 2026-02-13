@@ -370,10 +370,11 @@ def fields_NL_TL(struct, beam, window):
         window (Window): description of the simulation domain
 
     Returns:
-        Hyn_t (np.array): a matrix with the complex amplitude of the field
+        Hyn_t (np.array): a matrix with the complex amplitude of Hy transverse
         Hyn_l (np.array): a matrix with the complex amplitude of Hy longitudinal
         Exn_t (np.array): a matrix with the complex amplitude of Ex transverse
         Exn_l (np.array): a matrix with the complex amplitude of Ex longitudinal
+        Ezn_t (np.array): a matrix with the complex amplitude of Ez transverse
         Ezn_l (np.array): a matrix with the complex amplitude of Ez longitudinal
         rho_n (np.array): a matrix with the complex amplitude of charge density
         jfx_n (np.array): a matrix with the complex amplitude of current density along x
