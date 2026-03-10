@@ -643,20 +643,38 @@ def fields_NL_TL(struct, beam, window):
                     Ex_l[t, 0] = H3 + H4
                     Ez_l[t, 0] = 1j * Kl / alpha * (H3 - H4)
 
+                    # Everything is normalized with eps_0 = 1, here
+                    # rho_new = 1j*eps_0*(1+chi_b)*(kx**2-kappa_L**2)/kx*Exn_l
                     rho[t, 0] = (
-                        (-1 * Kl**2 / alpha + 1j * alpha) * (1 + chi_b[k]) * Ex_l[t, 0]
+                        (-1j * Kl**2 / alpha + 1j * alpha) * (1 + chi_b[k]) * Ex_l[t, 0]
                     )
 
+                    # prefac = (
+                    #     (1 + chi_b[k])
+                    #     * beta2[k]
+                    #     / omega_p2[k]
+                    #     * (alpha**2 + 1j * Kl**2)
+                    # )
                     prefac = (
-                        (1 + chi_b[k])
+                        (1 + chi_b)
                         * beta2[k]
                         / omega_p2[k]
-                        * (alpha**2 + 1j * Kl**2)
+                        * (-(Kl**2) + alpha**2)
                     )
+                    # jfx_new = -1j*omega*eps_0*chi_f*(Exn_t + Exn_l -
+                    #                                  (1+chi_b)*beta2_nm_sq/omega_p_rad_s**2*(kappa_L**2-kx**2)*Exn_l)
+                    # jfz_new = -1j*omega*eps_0*chi_f*(Ezn_t + Ezn_l -
+                    #                                  (1+chi_b)*beta2_nm_sq/omega_p_rad_s**2*(kappa_L**2-kx**2)*Ezn_l)
+
                     Ex_tot = Ex_t[t, 0] + Ex_l[t, 0]
-                    jfx[t, 0] = -1j * chi_f[k] * (Ex_tot + (prefac * Ex_l[t, 0]))
                     Ez_tot = Ez_t[t, 0] + Ez_l[t, 0]
-                    jfz[t, 0] = -1j * chi_f[k] * (Ez_tot + (prefac * Ez_l[t, 0]))
+
+                    jfx[t, 0] = (
+                        -1j * omega * chi_f[k] * (Ex_tot + (prefac * Ex_l[t, 0]))
+                    )
+                    jfz[t, 0] = (
+                        -1j * omega * chi_f[k] * (Ez_tot + (prefac * Ez_l[t, 0]))
+                    )
                     t += 1
             h = 0
 
