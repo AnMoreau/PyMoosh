@@ -7,7 +7,7 @@ name = "PyMoosh"
 authors = [
   {name = "Denis Langevin", email = "denis.langevin@univ-amu.fr"},
   {name = "Antoine Moreau", email = "antoine.moreau@uca.fr"}]
-version = "4.0.1"
+version = "4.1.0"
 description = "A scattering matrix formalism to solve Maxwell's equations in a multilayered structure."
 readme = "README.md"
 requires-python = ">=3.7"

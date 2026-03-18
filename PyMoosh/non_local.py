@@ -173,9 +173,9 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
     if struct.unit != "nm":
         wavelength = conv_to_nm(wavelength, struct.unit)
 
-    Epsilon_mat, Mu_mat = struct.polarizability(wavelength)
+    Epsilon, Mu = struct.polarizability(wavelength)
     Type = struct.layer_type
-    Epsilon = [Epsilon_mat[i] for i in Type]
+    
     thickness = copy.deepcopy(struct.thickness)
     # In order to ensure that the phase reference is at the beginning
     # of the first layer.
@@ -206,9 +206,9 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
                 Type[k]
             ].get_values_nl(wavelength)
 
-    alpha = np.sqrt(Epsilon[0]) * k_0 * np.sin(incidence)
+    alpha = np.sqrt(Epsilon[Type[0]]) * k_0 * np.sin(incidence)
     gamma = np.array(
-        np.sqrt([(1 + 0j) * Epsilon[i] * k_0**2 - alpha**2 for i in range(g)]),
+        np.sqrt([(1 + 0j) * Epsilon[Type[i]] * k_0**2 - alpha**2 for i in range(g)]),
         dtype=complex,
     )
 
@@ -222,8 +222,8 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
         if np.imag(gamma[k + 1]) < 0:
             gamma[k + 1] *= -1
 
-        b1 = gamma[k] / f[k]
-        b2 = gamma[k + 1] / f[k + 1]
+        b1 = gamma[k] / f[Type[k]]
+        b2 = gamma[k + 1] / f[Type[k + 1]]
         # print(f"b1 vaut {b1} \nb2 vaut {b2}")
 
         # local layer matrix
@@ -247,7 +247,7 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
                     + (omega_p[k + 1] ** 2 / beta2[k + 1])
                     * (1 / chi_f[k + 1] + 1 / (1 + chi_b[k + 1]))
                 )
-                omega = (alpha**2 / Kl) * (1 / Epsilon[k + 1] - 1 / (1 + chi_b[k + 1]))
+                omega = (alpha**2 / Kl) * (1 / Epsilon[Type[k + 1]] - 1 / (1 + chi_b[k + 1]))
 
                 T.append(
                     np.array(
@@ -270,7 +270,7 @@ def NLcoefficient(struct, wavelength, incidence, polarization):
                 alpha**2
                 + (omega_p[k] ** 2 / beta2[k]) * (1 / chi_f[k] + 1 / (1 + chi_b[k]))
             )
-            omega = (alpha**2 / Kl) * (1 / Epsilon[k] - 1 / (1 + chi_b[k]))
+            omega = (alpha**2 / Kl) * (1 / Epsilon[Type[k]] - 1 / (1 + chi_b[k]))
             t = np.exp(1j * gamma[k] * thickness[k])
             l = np.exp(-Kl * thickness[k])
             T.append(
@@ -656,7 +656,7 @@ def fields_NL_TL(struct, beam, window):
                     #     * (alpha**2 + 1j * Kl**2)
                     # )
                     prefac = (
-                        (1 + chi_b)
+                        (1 + chi_b[k])
                         * beta2[k]
                         / omega_p2[k]
                         * (-(Kl**2) + alpha**2)
