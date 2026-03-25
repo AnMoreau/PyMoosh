@@ -27,6 +27,7 @@ dependencies = [
 ]
 
 
+
 [project.urls]
 Homepage = "https://github.com/AnMoreau/PyMoosh"
 Repository = "https://github.com/AnMoreau/PyMoosh/stable"
@@ -34,6 +35,17 @@ Documentation = "https://github.com/AnMoreau/PyMoosh#readme"
 
 [tool.setuptools.packages.find]
 include = ["PyMoosh*"]
+
+
+[project.optional-dependencies]
+docs = [
+    "jupyter-book",
+]
+
+dev = [
+    "pytest",
+]
+
 
 [tool.setuptools]
 include-package-data = true
