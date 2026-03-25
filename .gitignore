@@ -17,3 +17,6 @@ Fig/*
 *.svg
 TODO.txt
 tests/*
+
+# MyST build outputs
+_build
