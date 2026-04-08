@@ -815,7 +815,7 @@ def spectrum_list(struct, incidence, polarization, wavelengths, method="S"):
         return spectrum_A_list(struct, incidence, polarization, wavelengths)
 
 
-def spectrum_S_list(struct, incidence, polarization, wavelengths):
+def spectrum_S_list(struct, incidence, polarization, wavelength_list):
     """
     Represents the reflexion coefficient (reflectance and phase) for a
     multilayered structure. This is an vectorized version of the :coefficient:
@@ -825,7 +825,7 @@ def spectrum_S_list(struct, incidence, polarization, wavelengths):
         structure (Structure): the object describing the multilayer
         incidence (float): incidence angle in radians
         polarization (float): 0 for TE, 1 for TM
-        wavelengths (list): wavelengths of the spectrum
+        wavelength_list (list): wavelengths of the spectrum
 
     Returns:
         r (numpy complex array): reflexion coefficient for each wavelength
@@ -842,8 +842,9 @@ def spectrum_S_list(struct, incidence, polarization, wavelengths):
 
     # The medium may be dispersive. The permittivity and permability of each
     # layer has to be computed each time.
-    len_wl = len(wavelengths)
+    len_wl = len(wavelength_list)
     len_mat = len(struct.materials)
+    wavelengths = np.copy(wavelength_list)
     wavelengths.shape = (len_wl, 1)
 
     if struct.unit != "nm":
@@ -951,7 +952,7 @@ def spectrum_S_list(struct, incidence, polarization, wavelengths):
     return r, t, R, T
 
 
-def spectrum_A_list(struct, incidence, polarization, wavelengths, absorb=False):
+def spectrum_A_list(struct, incidence, polarization, wavelength_list, absorb=False):
     """
     This function computes the reflection and transmission coefficients
     of the structure using the (true) Abeles matrix formalism.
@@ -961,7 +962,7 @@ def spectrum_A_list(struct, incidence, polarization, wavelengths, absorb=False):
         struct (Structure): belongs to the Structure class
         incidence (float): incidence angle in radians
         polarization (float): 0 for TE, 1 (or anything) for TM
-        wavelengths (float): wavelength of the incidence light (in nm)
+        wavelength_list (float): wavelength of the incidence light (in nm)
 
     returns:
         r (complex): reflection coefficient, phase origin at first interface
@@ -982,8 +983,9 @@ def spectrum_A_list(struct, incidence, polarization, wavelengths, absorb=False):
 
     # The medium may be dispersive. The permittivity and permability of each
     # layer has to be computed each time.
-    len_wl = len(wavelengths)
+    len_wl = len(wavelength_list)
     len_mat = len(struct.materials)
+    wavelengths = np.copy(wavelength_list)
     wavelengths.shape = (len_wl, 1)
 
     if struct.unit != "nm":
@@ -1168,7 +1170,7 @@ def angular_list(structure, wavelength, polarization, angles, method="S"):
     # theta min and max in degrees this time !
 
 
-def angular_S_list(structure, wavelength, polarization, angles):
+def angular_S_list(structure, wavelength, polarization, angle_list):
     """
     Represents the reflexion coefficient (reflectance and phase) for a
     multilayered structure with varying angle.
@@ -1177,7 +1179,7 @@ def angular_S_list(structure, wavelength, polarization, angles):
         structure (Structure): the object describing the multilayer
         wavelength (float): the working wavelength in nm
         polarization (float): 0 for TE, 1 for TM
-        angles (float): angles of incidence in degrees
+        angle_list (float): angles of incidence in degrees
 
     Returns:
         r (numpy complex array): reflexion coefficient for each angle
@@ -1189,7 +1191,7 @@ def angular_S_list(structure, wavelength, polarization, angles):
     other functions.
 
     """
-    angles = angles * np.pi / 180
+    angles = angle_list * np.pi / 180
     len_an = len(angles)
     len_mat = len(structure.materials)
     angles.shape = (len_an, 1)
@@ -1300,7 +1302,7 @@ def angular_S_list(structure, wavelength, polarization, angles):
     return r, t, R, T
 
 
-def angular_A_list(structure, wavelength, polarization, angles, absorb=False):
+def angular_A_list(structure, wavelength, polarization, angle_list, absorb=False):
     """
 
     Represents the reflexion coefficient (reflectance and phase) for a
@@ -1310,7 +1312,7 @@ def angular_A_list(structure, wavelength, polarization, angles, absorb=False):
         structure (Structure): the object describing the multilayer
         wavelength (float): the working wavelength in nm
         polarization (float): 0 for TE, 1 for TM
-        angles (float): angles of incidence in degrees
+        angle_list (float): angles of incidence in degrees
 
     Returns:
         r (numpy complex array): reflexion coefficient for each angle
@@ -1328,7 +1330,7 @@ def angular_A_list(structure, wavelength, polarization, angles, absorb=False):
     # The medium may be dispersive. The permittivity and permability of each
     # layer has to be computed each time.
 
-    angles = angles * np.pi / 180
+    angles = angle_list * np.pi / 180
     len_an = len(angles)
     len_mat = len(structure.materials)
     angles.shape = (len_an, 1)
