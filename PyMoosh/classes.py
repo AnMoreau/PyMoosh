@@ -240,17 +240,19 @@ class Beam:
         incidence (float): Incidence angle in radians
         polarization (int) : '0' for TE polarization, TM otherwise
         waist (float): waist of the incident beam along the $x$ direction
-
-    """
+        starting position (float): relative distance from the first layer (along the z axe) -> by default, it starts with 0, increasing it will 
+                                start the beam inside the structure. For example, a start position of 50 will initiate the beam at 50nm
+                                underneath the surface."""
 
     def __init__(
-        self, wavelength, incidence, polarization, horizontal_waist, unit="nm"
+        self, wavelength, incidence, polarization, horizontal_waist, distance = 0, unit="nm"
     ):
 
         if unit != "nm":
             wavelength = conv_to_nm(wavelength, unit)
             horizontal_waist = conv_to_nm(horizontal_waist, unit)
-
+            distance = conv_to_nm(distance, unit)
+        self.distance = distance
         self.wavelength = wavelength
         self.incidence = incidence
         tmp = incidence * 180 / np.pi
@@ -273,6 +275,7 @@ class Window:
         beam_relative_position (float): relative position of the source
         horizontal_pixel_size (float): size in nm of a pixel, horizontally
         vertical_pixel_size (float): size in nm of a pixel, vertically
+        adaptation: if resonance mods are detected, the window size will adapt itself to avoid resonances
 
     The number of pixel for each layer will be computed later, but the number of
     pixel horizontally is computed and stored in nx.
@@ -288,6 +291,7 @@ class Window:
         beam_relative_position,
         horizontal_pixel_size,
         vertical_pixel_size,
+        adapt = "auto",
         unit="nm",
     ):
 
@@ -301,6 +305,7 @@ class Window:
         self.px = float(horizontal_pixel_size)
         self.py = float(vertical_pixel_size)
         self.nx = int(np.floor(width / self.px))
+        self.adapt = adapt
         print("Pixels horizontally:", self.nx)
 
 
@@ -367,8 +372,8 @@ class Material:
 
             elif (
                 isinstance(mat, list)
-                and (isinstance(mat[0], float) or isinstance(mat[0], complex))
-                and (isinstance(mat[1], float) or isinstance(mat[1], complex))
+                and (isinstance(mat[0], float) or isinstance(mat[0], complex) or isinstance(mat[1], int))
+                and (isinstance(mat[1], float) or isinstance(mat[1], complex) or isinstance(mat[1], int))
             ):
                 # magnetic == [complex, complex]
                 # iterable: if list or similar --> magnetic

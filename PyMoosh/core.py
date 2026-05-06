@@ -57,7 +57,7 @@ def absorption(struct, wavelength, incidence, polarization):
     return absorption_S(struct, wavelength, incidence, polarization)
 
 
-def field(struct, beam, window):
+def field(struct, beam, window, onlyreflected = None):
     """Computes the electric (TE polarization) or magnetic (TM) field inside
     a multilayered structure illuminated by a gaussian beam.
 
@@ -65,6 +65,7 @@ def field(struct, beam, window):
         struct (Structure): description (materials,thicknesses)of the multilayer
         beam (Beam): description of the incidence beam
         window (Window): description of the simulation domain
+        onlyreflected field: None by default, if True it will only shows the reflected field, if False it will only shows the incident field
 
     Returns:
         En (np.array): a matrix with the complex amplitude of the field
@@ -72,33 +73,42 @@ def field(struct, beam, window):
     Afterwards the matrix may be used to represent either the modulus or the
     real part of the field.
     """
-
     # Wavelength in vacuum.
     lam = beam.wavelength
     # Computation of all the permittivities/permeabilities
     Epsilon, Mu = struct.polarizability(lam)
     thickness = np.array(struct.thickness)
+    # Position where the beam waste is taken
+    Dphi = beam.distance
     w = beam.waist
     pol = beam.polarization
     d = window.width
     theta = beam.incidence
+    pixDphi = Dphi/d
     C = window.C
     ny = np.floor(thickness / window.py)
     nx = window.nx
     Type = struct.layer_type
+    transmission = 1
+    reflexion = 1
+    if onlyreflected:
+        transmission = 0
+    elif onlyreflected == False:
+        reflexion = 0
     print("Pixels vertically:", int(sum(ny)))
 
     # Number of modes retained for the description of the field
     # so that the last mode has an amplitude < 1e-3 - you may want
     # to change it if the structure present reflexion coefficients
     # that are subject to very swift changes with the angle of incidence.
-
+    
     nmod = int(np.floor(0.83660 * d / w))
 
     # ----------- Do not touch this part ---------------
     l = lam / d
     w = w / d
     thickness = thickness / d
+
 
     if pol == 0:
         f = Mu
@@ -117,8 +127,8 @@ def field(struct, beam, window):
     # a constant phase is missing, it's just a change in the time origin.
     gauss = np.exp(-(w**2) * pi**2 * nmodvect**2)
     phase = np.exp(-2 * 1j * pi * nmodvect * C)
-    X = gauss * phase
-
+    X = gauss * phase 
+    
     layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k_0**2)
 
     # Scattering matrix corresponding to no interface.
@@ -144,10 +154,15 @@ def field(struct, beam, window):
             gamma[g] = -np.sqrt(layer_k[g] ** 2 - alpha**2)
         else:
             gamma[g] = np.sqrt(layer_k[g] ** 2 - alpha**2)
-
+        
+        # Suppression of vanishing mod when the waist distance is not 0, to avoid amplifications and overwhelming amplitudes 
+        if (np.imag(gamma[0]) > 0) and (pixDphi > 0):
+            gamma[0] = 0
+        
+        
         gf = gamma / f[Type]
         for k in range(g):
-            t = np.exp(1j * gamma[k] * thickness[k])
+            t = np.exp(1j * gamma[k] * (thickness[k]))
             T[2 * k + 1] = np.array([[0, t], [t, 0]])
             b1 = gf[k]
             b2 = gf[k + 1]
@@ -179,20 +194,22 @@ def field(struct, beam, window):
         t = 0
 
         E = np.zeros((int(np.sum(ny)), 1), dtype=complex)
+
         for k in range(g + 1):
             for m in range(int(ny[k])):
                 h = h + float(thickness[k]) / ny[k]
                 # The expression for the field used here is based on the assumption
                 # that the structure is illuminated from above only, with an Amplitude
                 # of 1 for the incident wave. If you want only the reflected
-                # field, take off the second term.
-                E[t, 0] = I[2 * k][0, 0] * np.exp(1j * gamma[k] * h) + I[2 * k + 1][
-                    1, 0
-                ] * np.exp(1j * gamma[k] * (thickness[k] - h))
+                # field, take off first term. It can be done by changing the value of "onlyreflected" into True
+                E[t, 0] = transmission*(I[2 * k][0, 0] * np.exp(1j * gamma[k] * h)) + reflexion*(I[2 * k + 1][
+                    1, 0] * np.exp(1j * gamma[k] * (thickness[k] - h)))
                 t += 1
             h = 0
-        E = E * np.exp(1j * alpha * np.arange(0, nx) / nx)
-        En = En + X[int(nm)] * E
+        E = E * np.exp(1j * alpha * np.arange(0, nx) / nx) 
+        # We can now add the phase on gamma for the waist distance (we use gamma[0] because the phase is implemented in the first layer)
+        E *= np.exp(-1j * gamma[0] * pixDphi)
+        En = En + X[int(nm)] * E 
 
     return En
 
