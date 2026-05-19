@@ -106,10 +106,10 @@ def asymptcoef(struct, beam):
     pol = beam.polarization
     theta = beam.incidence
     nk0 = np.sqrt(struct.materials[0].permittivity) * 2 * np.pi / lam
-    dtheta = np.pi / (180 * 100)
+    dtheta = np.pi / (180 * 10000)
     phase = []    
     R = []
-    N = 101
+    N = 1001
     Theta = np.linspace(-dtheta, dtheta, N)
     for i in  Theta:
         r = coefficient_S(struct, lam, (theta + i), pol)[0]
@@ -120,12 +120,12 @@ def asymptcoef(struct, beam):
     phase = np.array(phase)
     # Because of the size of the array we must redefine dtheta
     dtheta *= 2 / (N-1)
-    dphase = np.gradient((phase), dtheta)/(c0)
+    dphase = diff((phase), dtheta)/(c0)
     R = np.array(R)
-    dR = np.gradient(R, dtheta)
+    dR = diff(R, dtheta)
     dc0 = nk0 * np.sin(theta) / c0**3
     # Reshaping the previous arrays to avoid incertitude propagation (the first and last values of a gradient array are wrong)
-    ddR = np.gradient(dR, dtheta)
+    ddR = diff(dR, dtheta)
     # Now we take the centred values (corresponding to the right incidence angle)
     R = R[int(N/2)]
     dR = dR[int(N/2)]
@@ -134,6 +134,12 @@ def asymptcoef(struct, beam):
     dR2 = dc0 * dR + ddR / c0**2
     widthlim = (dR**2 / (c0 * R)**2 - dR2 / R) / 2
     return -float(np.real(dphase[int(N/2)])), float(np.real(widthlim))
+
+def diff(A, step):
+    D = []
+    for i in range(1, len(A)-2):
+        D.append((A[i + 1] - A[i - 1]) / (2 * step))
+    return np.array(D)
 
 def NSfield(struct, beam, window, onlyreflected = None):
     """Computes the electric (TE polarization) or magnetic (TM) field inside
