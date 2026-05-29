@@ -136,6 +136,38 @@ class Structure:
 
         return epsilon, mu
 
+    def get_max_wavelength_range(self):
+        """
+        Returns and prints the maximum wavelength range in case some materials are given by experimental data
+        Args:
+            None
+        Returns:
+            min_wav, max_wav (float): minimum and maximum wavelengths over which to interpolate
+        """
+        min_wav, max_wav = -1, -1
+        for mat in self.materials:
+            mat_min, mat_max = -1, -1
+            if mat.type == "ExpData":
+                mat_min = np.min(mat.wavelength_list)
+                mat_max = np.max(mat.wavelength_list)
+            elif mat.type == "RefractiveIndexInfo":
+                from_RII = mat.material.get_wl_range(unit="nm")
+                if from_RII is not None:
+                    mat_min, mat_max = from_RII
+            if mat_min > 0:
+                print(
+                    f"[{mat_min},{mat_max}] wavelength bounds forced by Material {mat.name}"
+                )
+                min_wav = max(mat_min, min_wav)
+                max_wav = min(mat_max, max_wav) if max_wav > -1 else mat_max
+        if min_wav < max_wav:
+            print(f"Overall wavelength bounds are: [{min_wav},{max_wav}]")
+        else:
+            print(
+                "Oops, you seem to have incompatible wavelengths! Look in the above lines to know more."
+            )
+        return min_wav, max_wav
+
     def plot_stack(
         self, wavelength=None, lim_eps_colors=[1.5, 4], precision=3, mode="show"
     ):
@@ -397,7 +429,7 @@ class Material:
                     model = material_data["model"]
 
                     if model == "ExpData":
-                        # Experimnental data to be interpolated
+                        # Experimental data to be interpolated
                         self.type = "ExpData"
                         self.name = "ExpData: " + str(mat)
 
@@ -481,6 +513,14 @@ class Material:
             self.permittivity_function = mat[0]
             self.params = [mat[i + 1] for i in range(len(mat) - 1)]
             self.name = "Customfunction: " + str(mat[0])
+
+        elif specialType == "ExpData":
+            # Experimental data to be interpolated
+            self.type = "ExpData"
+            self.specialType = specialType
+            self.wavelength_list = np.array(mat[0], dtype=float)
+            self.permittivities = np.array(mat[1], dtype=complex)
+            self.name = "ExpData given by user"
 
         elif specialType == "ModelMu":
             # Two custom functions that take more parameters than simply the wavelength
