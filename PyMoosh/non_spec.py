@@ -61,6 +61,57 @@ def profil_tot(struct, beam, window, type = "abs"):
         inter = E
     return inter
 
+
+def getA(struct, beam, window):
+    """
+    This function will return the angular shift and the spectral enlargement
+    Args:
+        struct (Structure): the structure used
+        beam (Beam): the beam used
+        window (Window): the window used (big enough to avoid resonances during computation using the function "field")
+
+    Returns:
+        dtheta: the angular shift (in radiant)
+        enlar: the angular enlargement (in radiant)
+    """
+    
+    waist = beam.waist
+    lam = beam.wavelength
+
+    In = profil_In(struct, beam, window)
+    X = np.arange(0,len(In)) * window.px # * window.px to get the physical shift and not the pixel shift
+    
+    foA =0    
+    nk0 = np.sqrt(struct.materials[struct.layer_type[0]].permittivity) * 2 * np.pi / lam
+    alpha0 = nk0 * np.sin(beam.incidence)
+    N = 1000
+    theta = np.linspace(-85 * np.pi / 180, 85 * np.pi / 180, N)
+    alpha = nk0 * np.sin(theta)
+    alphac = alpha - np.ones(N) * alpha0
+    
+    x0 = np.trapezoid(X * np.abs(In)**2)/np.trapezoid(np.abs(In)**2)
+    HIncBeam = waist / (2 * np.sqrt(np.pi)) * np.exp(-waist**2 * alphac**2 / 4) * np.exp(-1j * alpha * x0)
+    
+    R = []
+    for i in theta:
+        R.append(coefficient_S(struct, lam, i, beam.polarization)[0])
+    R = np.array(R)
+    
+    tfH_r = HIncBeam * R
+    foA = np.trapezoid(alpha * np.abs(tfH_r)**2) / np.trapezoid(np.abs(tfH_r)**2)
+    
+    theta0 = np.arcsin(foA / nk0)
+    
+    dtheta = theta0 - beam.incidence
+    
+    varIn = np.trapezoid((alpha - np.ones(len(alpha)) * alpha0)**2 * np.abs(HIncBeam)**2)/np.trapezoid(np.abs(HIncBeam)**2) 
+    varOut = np.trapezoid((alpha - np.ones(len(alpha)) * (alpha0 + dtheta))**2 * np.abs(tfH_r)**2)/np.trapezoid(np.abs(tfH_r)**2)
+    print("Largeur spectral du faisceau incident",varIn)
+    enlar = np.arcsin(varOut / nk0) - np.arcsin(varIn / nk0)
+    
+    return float(dtheta), float(enlar)
+
+
 def deltas(struct, beam, window, rel = True):
     """
     Args:
@@ -88,7 +139,7 @@ def deltas(struct, beam, window, rel = True):
     Delta = varOut - varIn
     
     if rel:
-        return float(delta) / beam.waist, varOut / beam.waist
+        return float(delta) / beam.waist, varOut / varIn
     else:
         return float(delta), float(Delta)
 
@@ -105,7 +156,7 @@ def asymptcoef(struct, beam):
     lam = beam.wavelength
     pol = beam.polarization
     theta = beam.incidence
-    nk0 = np.sqrt(struct.materials[0].permittivity) * 2 * np.pi / lam
+    nk0 = np.sqrt(struct.materials[struct.layer_type[0]].permittivity) * 2 * np.pi / lam
     dtheta = np.pi / (180 * 10000)
     phase = []    
     R = []
@@ -143,7 +194,7 @@ def diff(A, step):
 
 def NSfield(struct, beam, window, onlyreflected = None):
     """Computes the electric (TE polarization) or magnetic (TM) field inside
-    a multilayered structure illuminated by a gaussian beam.
+    a multilayered structure illuminated by a gaussian beam (at the first interface).
 
     Args:
         struct (Structure): description (materials,thicknesses)of the multilayer
@@ -207,8 +258,8 @@ def NSfield(struct, beam, window, onlyreflected = None):
     nmodvect = np.arange(-nmod, nmod + 1)
     # First factor makes the gaussian beam, the second one the shift
     # a constant phase is missing, it's just a change in the time origin.
-    gauss = np.exp(-(w**2) * pi**2 * nmodvect**2)
-    phase = np.exp(-2 * 1j * pi * nmodvect * C)
+    gauss = np.exp(-(w**2) * np.pi**2 * nmodvect**2)
+    phase = np.exp(-2 * 1j * np.pi * nmodvect * C)
     X = gauss * phase 
     
     layer_k = np.sqrt(Epsilon[Type] * Mu[Type] * k_0**2)
@@ -219,7 +270,7 @@ def NSfield(struct, beam, window, onlyreflected = None):
     for nm in np.arange(2 * nmod + 1):
 
         n_0 = np.sqrt(Epsilon[Type[0]] * Mu[Type[0]])
-        alpha = n_0 * k_0 * sin(theta) + 2 * pi * (nm - nmod)
+        alpha = n_0 * k_0 * np.sin(theta) + 2 * pi * (nm - nmod)
         gamma = np.sqrt(layer_k**2 - np.ones(g + 1) * alpha**2)
 
         if np.real(Epsilon[Type[0]]) < 0 and np.real(Mu[Type[0]]) < 0:
