@@ -75,7 +75,7 @@ def Lorentz(wav, f, omega, gamma, eps):
 def DrudeLorentz(wav, omega_p, Gamma0, f, omega, gamma):
     """
     Drude Lorentz model, using both lorentzian resonances and a plasma frequency
-    f0, Gamma0 and omega_p are the chi_f parameters (eps_inf, plasma frequency)
+    Gamma0 and omega_p are the chi_f parameters (eps_inf, plasma frequency)
     f, gamma, omega, sigma are the chi_b parameters (Lorentz resonances)
     f, gamma, omega, sigma must be lists (np arrays) of the same lengths
     They are given in eV (wav in nm)

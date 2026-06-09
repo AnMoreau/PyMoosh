@@ -51,7 +51,7 @@ pol = 1.0
 
 chose = nl.NLStructure(materials, stack, thickness, verbose=False)
 
-wl, r, t, R, T = PM.spectrum(chose, theta, pol, 5000, 8000, 300)
+wl, r, t, R_loc, T = PM.spectrum(chose, theta, pol, 5000, 8000, 300)
 
 import matplotlib.pyplot as plt
 
@@ -154,6 +154,8 @@ for i, wav in enumerate(wavelength_list):
 
 plt.figure(1)
 plt.plot(wavelength_list, Rs)
+plt.plot(wl, R_loc, label="local")
+plt.legend()
 plt.show()
 
 wavelength = 6683
@@ -362,7 +364,7 @@ wavelength = 7451
 window = PM.Window(2, 0.4, 1.0, 0.1)
 beam = PM.Beam(wavelength, 38.7 / 180 * np.pi, 1, 100 * wavelength)
 chose = PM.Structure(materials, stack, thickness, verbose=False)
-Hyn_t, Hyn_l, Exn_t, Exn_l, Ezn_t, Ezn_l, rhon, jfx_n, jfz_n = fields_NL_TL(
+Hyn_t, Hyn_l, Exn_t, Exn_l, Ezn_t, Ezn_l, rhon, jfx_n, jfz_n = nl.fields_NL_TL(
     chose, beam, window
 )
 
