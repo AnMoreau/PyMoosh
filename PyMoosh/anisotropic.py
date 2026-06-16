@@ -187,6 +187,8 @@ class AniStructure(Structure):
             mat_lay_i = self.materials[self.layer_type[layer]]
             if mat_lay_i.type != "Anisotropic":
                 return mat_lay_i.get_permittivity(wavelength) * Id_3
+            elif mat_lay_i.specialType == "matrix_ANI":
+                return mat_lay_i.permittivity_tensor
             else:
                 return mat_lay_i.get_permittivity_ani(wavelength) * Id_3
         else:
@@ -196,6 +198,8 @@ class AniStructure(Structure):
                 mat_lay_i = self.materials[i]
                 if mat_lay_i.type != "Anisotropic":
                     eps_tens_list.append(mat_lay_i.get_permittivity(wavelength) * Id_3)
+                elif mat_lay_i.specialType == "matrix_ANI":
+                    eps_tens_list.append(mat_lay_i.permittivity_tensor)
                 else:
                     eps_tens_list.append(
                         mat_lay_i.get_permittivity_ani(wavelength) * Id_3
@@ -263,7 +267,17 @@ class AniMaterial(Material):
             if verbose:
                 print("Anisotropic material of indices ", str(mat))
 
-        if specialType == "Model_ANI":
+        elif specialType == "matrix_ANI":
+            # Directly giving the anisotropic material with 9 epsilon components
+            if np.shape(mat) != (3,3):
+                print(f"Warning: matrix anisotropic material expects a 3x3 matrix, but you gave {np.shape(mat)}.")
+            self.specialType = specialType
+            self.permittivity_tensor = mat
+            self.name = "Anisotropic material" + str(mat)
+            if verbose:
+                print("Anisotropic material defined by the tensor ", str(mat))
+
+        elif specialType == "Model_ANI":
             # User defined Anisotropic material defined with functions
             if len(mat) < 2 or len(mat) > 3:
                 print(
@@ -492,7 +506,7 @@ def Berreman_method(struct, layer_number, wl, theta_entry):  # AV_Added#
     eps_R = struct.rotate_permittivity_tensor(
         eps, struct.ani_rot_angle[layer_number], struct.ani_rot_axis[layer_number]
     )
-
+    print("DEBUGG Berreman layer_number", layer_number, "eps_R", eps_R, "n_entry", n_entry)
     # Delta matrix  (i.e Berreman matrix)
 
     eps_xx = eps_R[0, 0]
@@ -522,6 +536,7 @@ def Berreman_method(struct, layer_number, wl, theta_entry):  # AV_Added#
             ],
         ]
     )
+    print("DEBUGG Berreman Delta", Delta)
 
     q, P = la_np.eig(Delta)
     # q is the row vector containing unsorted Delta's eigenvalues and
@@ -557,20 +572,43 @@ def Berreman_method(struct, layer_number, wl, theta_entry):  # AV_Added#
         Sx_list.append(Sx)
         Sy_list.append(Sy)
         Sz_list.append(Sz)
-        # poynting = [Sx, Sy, Sz]
+        print("DEBUGG Berreman absorbing", k, [Sx, Sy, Sz])
+        print("DEBUGG Berreman absorbing", np.isreal(Sz))
         if np.isreal(Sz):
             # We sort first along real Poynting values
+            print("Debugg case 1")
             test_variable = np.real(Sz)
         else:
             # and then we sort complex Poynting values wrt their imaginary parts
+            print("Debugg case 2")
             test_variable = np.imag(Sz)
         if test_variable > 0:
             # There'll always be one positive and one negative value.
             # The positive is going down (like transmission)
+            print("Debugg case A")
             id_trans.append(k)
         else:
             # The negative is going up (like reflection)
+            print("Debugg case B")
             id_refl.append(k)
+        
+        if (len(id_refl) < 2 or len(id_trans) < 2):
+            # TODO: this is a quick attempt at fixing in edge cases, to consolidate
+            list_sort_Kz = []
+            if all(np.isreal(q) for q in q):
+                for k in range(0, 4, 1):
+                    q_k = q[k]
+                    list_sort_Kz.append(np.real(q_k))
+            else:
+                for k in range(0, 4, 1):
+                    q_k = q[k]
+                    list_sort_Kz.append(np.imag(q_k))
+            sorted_indices = np.argsort(list_sort_Kz)
+            print("Debugg KZ APPROACH", sorted_indices)
+            
+            id_refl = [sorted_indices[0], sorted_indices[1]]
+            id_trans = [sorted_indices[2], sorted_indices[3]]
+            
     Cp0 = calc_cp(Sx_list[id_trans[0]], Sy_list[id_trans[0]])
     Cp1 = calc_cp(Sx_list[id_trans[1]], Sy_list[id_trans[1]])
     if np.abs(Cp0 - Cp1) > thr:

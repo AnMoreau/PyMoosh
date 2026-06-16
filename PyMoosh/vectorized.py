@@ -1506,3 +1506,37 @@ def angular_A_list(structure, wavelength, polarization, angle_list, absorb=False
 
         angles = angles * 180 / np.pi
         return r, t, R, T, absorb
+
+
+def angular_rad(
+    structure, wavelength, polarization, theta_min_rad, theta_max_rad, len_an, method="S"
+):
+    """
+    Wrapper to choose between S matrices (stability) and Abélès (speeeed)
+
+    theta in rad!
+    """
+
+    theta_min, theta_max = theta_min_rad*180/np.pi, theta_max_rad*180/np.pi
+    if method == "S":
+        return angular_S(
+            structure, wavelength, polarization, theta_min, theta_max, len_an
+        )
+    elif method == "A":
+        return angular_A(
+            structure, wavelength, polarization, theta_min, theta_max, len_an
+        )
+    
+
+
+def angular_rad_list(structure, wavelength, polarization, angles_rad, method="S"):
+    """
+    Wrapper to choose between S matrices (stability) and Abélès (speeeed)
+
+    angles in rad!
+    """
+    angles = angles_rad*180/np.pi
+    if method == "S":
+        return angular_S_list(structure, wavelength, polarization, angles)
+    elif method == "A":
+        return angular_A_list(structure, wavelength, polarization, angles)

@@ -54,13 +54,13 @@ wavelength = 600
 interface = PM.Structure([1.0, 2.25], [0, 1], [10 * wavelength, 10 * wavelength])
 
 # For TE polarization
-angles, sr, st, sR, sT = PM.angular_S(interface, wavelength, 0.0, 0.0, 89.0, 20)
+angles, sr, st, sR, sT = PM.angular(interface, wavelength, 0.0, 0.0, 90, 20)
 # For TM polarization, same incidence angles
-angles, sr_p, st_p, sR_p, sT_p = PM.angular_S(interface, wavelength, 1.0, 0.0, 89.0, 20)
+angles, sr_p, st_p, sR_p, sT_p = PM.angular_rad(interface, wavelength, 0.0, 0.0, np.pi/2, 20)
 
-angles, ar, at, aR, aT = PM.angular_A(interface, wavelength, 0, 0.0, 89.0, 20)
-# For TM polarization, same incidence angles
-angles, ar_p, at_p, aR_p, aT_p = PM.angular_A(interface, wavelength, 1.0, 0.0, 89.0, 20)
+# angles, ar, at, aR, aT = PM.angular_A(interface, wavelength, 0, 0.0, 89.0, 20)
+# # For TM polarization, same incidence angles
+# angles, ar_p, at_p, aR_p, aT_p = PM.angular_A(interface, wavelength, 1.0, 0.0, 89.0, 20)
 
 # Visualization of the result
 import matplotlib.pyplot as plt
@@ -68,10 +68,10 @@ import matplotlib.pyplot as plt
 plt.rcParams["figure.dpi"] = 150
 
 plt.figure(2)
-plt.plot(angles, np.abs(sR), label="Smat TE polarisation")
-plt.plot(angles, np.abs(sR_p), label="Smat TM polarisation")
-plt.plot(angles, np.abs(aR), "+", label="Amat TE polarisation")
-plt.plot(angles, np.abs(aR_p), "+", label="Amat TM polarisation")
+plt.plot(angles, np.abs(sR), label="rad")
+plt.plot(angles, np.abs(sR_p), label="deg")
+# plt.plot(angles, np.abs(aR), "+", label="Amat TE polarisation")
+# plt.plot(angles, np.abs(aR_p), "+", label="Amat TM polarisation")
 plt.ylabel("r")
 # plt.ylim(-1,1)
 plt.legend()
