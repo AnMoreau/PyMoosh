@@ -4,7 +4,7 @@ solar panel efficiency computations
 """
 
 from PyMoosh.classes import conv_to_nm
-from PyMoosh.core import absorption, cascade
+from PyMoosh.core import absorption, cascade, absorption_S
 import copy
 import numpy as np
 
@@ -8056,7 +8056,8 @@ def photo(
 ):
     """Computes the theoretical short circuit current when the quantum yield is
     assummed to be 1 (ie no recombination of charge carrier) using the
-    :absorption: function for the solar spectrum (AM 1.5).
+    :absorption: function for the solar spectrum (AM 1.5)
+
 
     Args:
         structure (Structure): the object describing the multilayer
@@ -8074,7 +8075,6 @@ def photo(
         total_current: short circuit current in mA/cm^2
         total_current_max: short circuit current with unity absorbance (mA/cm^2)
         wavelength_list (numpy array): list of considered wavelengths
-        spectrum: AM 1.5 solar Spectrum
         current_density: current by wavelength unit (mA/cm^2/nm)
     """
 
@@ -8083,17 +8083,15 @@ def photo(
 
     photon_density = np.zeros(number_points, dtype=float)
     total_absorbed = np.zeros(number_points, dtype=float)
-    spectrum = np.zeros(number_points, dtype=float)
 
     for k in range(number_points):
-        absorb, r, t, R, T = absorption(struct, wavelength_list[k], theta, polarization)
+        absorb, _, _, _, _ = absorption(struct, wavelength_list[k], theta, polarization)
         photon_density[k] = solar(wavelength_list[k], unit=struct.unit)
         total_absorbed[k] = np.sum(absorb[active_layers])
-        spectrum[k] = am1_5(wavelength_list[k], unit=struct.unit)
 
     current_density = np.multiply(photon_density, total_absorbed)
-    total_current_max = np.trapz(photon_density, wavelength_list) * 1e3
-    total_current = np.trapz(current_density, wavelength_list) * 1e3
+    total_current_max = np.trapezoid(photon_density, wavelength_list) * 1e3
+    total_current = np.trapezoid(current_density, wavelength_list) * 1e3
     conversion_efficiency = total_current / total_current_max
 
     return (
@@ -8138,18 +8136,16 @@ def opti_photo(
 
     photon_density = np.zeros(number_points, dtype=float)
     total_absorbed = np.zeros(number_points, dtype=float)
-    spectrum = np.zeros(number_points, dtype=float)
 
-    absorb, r, t, R, T = absorption(
+    absorb, _, _, _, _ = absorption(
         struct, wavelength_list, theta, polarization, wavelength_opti=True
     )
     photon_density = solar(wavelength_list, unit=struct.unit)
     total_absorbed = np.sum(absorb[:, active_layers])
-    spectrum = am1_5(wavelength_list, unit=struct.unit)
 
     current_density = np.multiply(photon_density, total_absorbed)
-    total_current_max = np.trapz(photon_density, wavelength_list) * 1e3
-    total_current = np.trapz(current_density, wavelength_list) * 1e3
+    total_current_max = np.trapezoid(photon_density, wavelength_list) * 1e3
+    total_current = np.trapezoid(current_density, wavelength_list) * 1e3
     conversion_efficiency = total_current / total_current_max
 
     return (
@@ -8159,6 +8155,59 @@ def opti_photo(
         wavelength_list,
         photon_density,
         total_absorbed,
+    )
+
+
+def opti_photo_lab(
+    struct, incidence, polarization, active_layers, wavelength_list, inc_light
+):  # numpy friendly
+    """Computes the theoretical short circuit current when the quantum yield is
+    assummed to be 1 (ie no recombination of charge carrier) using the
+    :absorption: function for the given inc_light power density 
+
+    Args:
+        structure (Structure): the object describing the multilayer
+        incidence (float): incidence angle in degrees
+        .. warning: not meant/tested for non-normal incidence, actually.
+        polarization (float): 0 for TE, 1 for TM
+        .. warning: meaningless in normal incidence
+        active_layers(list): list of integers corresponding to the active layers
+        wav_list (list): list of wavelengths for the computation
+        inc_light (list): power density of the light source (W/m2/nm pleause)
+
+
+    Returns:
+        total_current: short circuit current in mA/cm^2
+        total_current_max: short circuit current with unity absorbance (mA/cm^2)
+        current_density: current by wavelength unit (mA/cm^2/nm)
+        current_density: maximum current by wavelength unit (mA/cm^2/nm)
+    """
+    #TODO: code wavelength opti absorption
+
+    theta = incidence * np.pi / 180
+    wavelength_list = np.array(wavelength_list)
+    number_points = len(wavelength_list)
+    e = 1.6e-19
+    h = 6.63e-34
+    c = 299792458e9
+    max_current_density = inc_light * e * wavelength_list / (1e4 * h * c) # W/m2/nm to A/cm2/nm
+
+    total_absorbed = np.zeros(number_points, dtype=float)
+    absorb = np.zeros(number_points, dtype=float)
+
+    for i in range(len(wavelength_list)):
+        a, _, _, _, _ = absorption_S(struct, wavelength_list[i], theta, polarization, layers=active_layers)
+        absorb[i]= np.sum(np.abs(a))
+
+    current_density = np.multiply(max_current_density, absorb)
+    total_current_max = np.trapezoid(max_current_density, wavelength_list) * 1e3
+    total_current = np.trapezoid(current_density, wavelength_list) * 1e3
+
+    return (
+        total_current,
+        total_current_max,
+        current_density,
+        max_current_density
     )
 
 
@@ -8285,6 +8334,6 @@ def gx(struct, incidence, polarization, wl_min, wl_max, number_points, pixel_siz
             h = 0
         Q[i] *= photon_density[i]
 
-    g = np.trapz(Q, wavelength_list, axis=0)
+    g = np.trapezoid(Q, wavelength_list, axis=0)
     x = np.linspace(0, sum(thickness), len(g))
     return x, g
