@@ -141,7 +141,7 @@ def complex_map(
 
 
 def guided_modes(
-    struct, wavelength, polarization, neff_min, neff_max, initial_points=40
+    struct, wavelength, polarization, neff_min, neff_max, keep_only_converged_mode = False, initial_points=40
 ):
     """
     This function explores the complex plane, looking for zeros of the
@@ -155,6 +155,7 @@ def guided_modes(
         polarization: 0 for TE, 1 for TM
         neff_min: minimum value of the effective index expected
         neff_max: maximum value of the effective index expected
+        keep_only_converged_mode (bool): if true only the modes for which steepest has converged are returned
 
     Returns:
         modes (list, complex): complex effective index identified as
@@ -168,13 +169,17 @@ def guided_modes(
     neff_start = np.linspace(neff_min, neff_max, initial_points, dtype=complex)
     modes = []
     for neff in neff_start:
-        solution = steepest(neff, tolerance, 1000, struct, wavelength, polarization)
+        solution = steepest(neff, tolerance, 1000, struct, wavelength, polarization, keep_only_converged_mode)
 
-        if len(modes) == 0:
-            modes.append(solution)
-        elif min(abs(modes - solution)) > 1e-5 * k_0:
-            modes.append(solution)
-
+        if ~np.isnan(solution):
+            if len(modes) == 0:
+                modes.append(solution)
+            elif min(abs(modes - solution)) > 1e-5 * k_0:
+                modes.append(solution)
+                
+    modes = np.array(modes)
+    modes = modes[~np.isnan(modes)]
+    
     return modes
 
 
@@ -340,7 +345,7 @@ def follow_guided_modes(
     return modes, follow_modes
 
 
-def steepest(start, tol, step_max, struct, wl, pol):
+def steepest(start, tol, step_max, struct, wl, pol, keep_only_converged_solution = False):
     """
     Steepest descent to find a zero of the `dispersion`
     function. The advantage of looking for a zero is that you
@@ -355,6 +360,7 @@ def steepest(start, tol, step_max, struct, wl, pol):
         struct (Structure): the object describing the multilayer
         wl (float): wavelength in vacuum
         pol: 0 for TE, 1 for TM
+        keep_only_converged_solution (bool): if true a non converged solution return a Nan
 
     Returns:
 
@@ -404,6 +410,7 @@ def steepest(start, tol, step_max, struct, wl, pol):
 
     # print("End of the loop")
     if step == step_max:
+        if keep_only_converged_solution: return z * np.nan
         print("Warning: maximum number of steps reached. Final n_eff:", z / k_0)
 
     return z / k_0
